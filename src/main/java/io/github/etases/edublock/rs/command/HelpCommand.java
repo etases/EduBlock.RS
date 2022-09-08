@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * The command to display all available commands
+ */
 public class HelpCommand extends Command {
     public HelpCommand() {
         super("help");

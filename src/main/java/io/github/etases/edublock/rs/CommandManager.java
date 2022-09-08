@@ -14,7 +14,7 @@ import java.util.Map;
 public class CommandManager {
     private final Map<String, Command> commands = new CaseInsensitiveStringHashMap<>();
 
-    public CommandManager() {
+    CommandManager() {
         addCommand(new HelpCommand());
         addCommand(new StopCommand());
     }

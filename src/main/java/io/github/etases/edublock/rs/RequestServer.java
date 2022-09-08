@@ -55,6 +55,11 @@ public class RequestServer {
         commandManager.disable();
     }
 
+    /**
+     * Get the list of controllers to use in the server
+     *
+     * @return the list of controllers
+     */
     private List<Class<? extends Controller>> getControllers() {
         return List.of(
                 HelloController.class

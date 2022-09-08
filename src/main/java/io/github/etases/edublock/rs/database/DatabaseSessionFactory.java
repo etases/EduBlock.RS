@@ -9,8 +9,14 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
+/**
+ * The database session factory
+ */
 @Getter
 public class DatabaseSessionFactory {
+    /**
+     * The session factory
+     */
     private final SessionFactory sessionFactory;
 
     public DatabaseSessionFactory() {

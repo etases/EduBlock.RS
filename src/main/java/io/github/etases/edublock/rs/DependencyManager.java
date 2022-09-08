@@ -8,7 +8,13 @@ import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * The dependency manager, which stores all dependencies
+ */
 public class DependencyManager {
+    /**
+     * The injector
+     */
     @Getter
     private final Injector injector;
 
