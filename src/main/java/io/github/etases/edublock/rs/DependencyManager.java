@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import io.github.etases.edublock.rs.dependency.DatabaseSessionFactoryModule;
+import io.github.etases.edublock.rs.dependency.ServerInstanceModule;
 import lombok.Getter;
 
 import java.util.List;
@@ -17,14 +18,17 @@ public class DependencyManager {
      */
     @Getter
     private final Injector injector;
+    private final RequestServer requestServer;
 
-    DependencyManager() {
+    DependencyManager(RequestServer requestServer) {
+        this.requestServer = requestServer;
         injector = Guice.createInjector(getModules());
     }
 
     private List<Module> getModules() {
         return List.of(
-                new DatabaseSessionFactoryModule()
+                new DatabaseSessionFactoryModule(),
+                new ServerInstanceModule(requestServer)
         );
     }
 }

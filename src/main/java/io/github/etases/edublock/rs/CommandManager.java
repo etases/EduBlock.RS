@@ -1,8 +1,6 @@
 package io.github.etases.edublock.rs;
 
 import io.github.etases.edublock.rs.api.command.Command;
-import io.github.etases.edublock.rs.command.HelpCommand;
-import io.github.etases.edublock.rs.command.StopCommand;
 import me.hsgamer.hscore.collections.map.CaseInsensitiveStringHashMap;
 
 import java.util.Collection;
@@ -12,11 +10,10 @@ import java.util.Map;
  * The command manager, which stores all terminal commands
  */
 public class CommandManager {
-    private final Map<String, Command> commands = new CaseInsensitiveStringHashMap<>();
+    private final Map<String, Command> commands;
 
     CommandManager() {
-        addCommand(new HelpCommand());
-        addCommand(new StopCommand());
+        commands = new CaseInsensitiveStringHashMap<>();
     }
 
     /**

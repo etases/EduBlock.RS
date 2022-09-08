@@ -1,5 +1,7 @@
 package io.github.etases.edublock.rs.terminal;
 
+import com.google.inject.Inject;
+import io.github.etases.edublock.rs.RequestServer;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
@@ -11,15 +13,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static io.github.etases.edublock.rs.RequestServer.getInstance;
-
 /**
  * The terminal console, which also handles the incoming terminal commands
  */
 public class ServerTerminal {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerTerminal.class);
+    static LineReader lineReader;
     private boolean running = true;
-    private LineReader lineReader;
+    @Inject
+    private RequestServer requestServer;
 
     /**
      * Init the terminal
@@ -66,7 +68,7 @@ public class ServerTerminal {
      */
     private void runCommand(String command) {
         String[] split = command.split(" ", 2);
-        if (!getInstance().getCommandManager().handleCommand(split[0], split.length > 1 ? split[1] : "")) {
+        if (!requestServer.getCommandManager().handleCommand(split[0], split.length > 1 ? split[1] : "")) {
             LOGGER.warn("No command was found");
         }
     }

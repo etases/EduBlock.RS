@@ -1,14 +1,17 @@
 package io.github.etases.edublock.rs.command;
 
+import com.google.inject.Inject;
+import io.github.etases.edublock.rs.RequestServer;
 import io.github.etases.edublock.rs.api.command.Command;
 import org.tinylog.Logger;
-
-import static io.github.etases.edublock.rs.RequestServer.getInstance;
 
 /**
  * The command to stop the server
  */
 public class StopCommand extends Command {
+    @Inject
+    private RequestServer requestServer;
+
     public StopCommand() {
         super("stop");
     }
@@ -16,7 +19,7 @@ public class StopCommand extends Command {
     @Override
     public void runCommand(String argument) {
         Logger.info("Shutting down!");
-        getInstance().stop();
+        requestServer.stop();
     }
 
     @Override

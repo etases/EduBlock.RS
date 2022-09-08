@@ -1,5 +1,6 @@
 package io.github.etases.edublock.rs.command;
 
+import com.google.inject.Inject;
 import io.github.etases.edublock.rs.RequestServer;
 import io.github.etases.edublock.rs.api.command.Command;
 import org.tinylog.Logger;
@@ -12,6 +13,9 @@ import java.util.List;
  * The command to display all available commands
  */
 public class HelpCommand extends Command {
+    @Inject
+    private RequestServer requestServer;
+
     public HelpCommand() {
         super("help");
     }
@@ -21,7 +25,7 @@ public class HelpCommand extends Command {
         Logger.info("Available commands: ");
         int usageLength = 0;
         int descLength = 0;
-        List<Command> commands = new ArrayList<>(RequestServer.getInstance().getCommandManager().getCommands());
+        List<Command> commands = new ArrayList<>(requestServer.getCommandManager().getCommands());
         commands.sort(Comparator.comparing(Command::getName));
         for (Command command : commands) {
             usageLength = Math.max(usageLength, command.getUsage().length());
