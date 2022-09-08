@@ -1,4 +1,4 @@
-package io.github.etases.edublock.rs.manager;
+package io.github.etases.edublock.rs;
 
 import io.github.etases.edublock.rs.api.command.Command;
 import io.github.etases.edublock.rs.command.HelpCommand;
