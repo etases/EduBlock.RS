@@ -19,7 +19,6 @@ import static io.github.etases.edublock.rs.RequestServer.getInstance;
 public class ServerTerminal {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerTerminal.class);
     private boolean running = true;
-    private Terminal terminal;
     private LineReader lineReader;
 
     /**
@@ -28,7 +27,7 @@ public class ServerTerminal {
      * @throws IOException if there is an I/O error
      */
     public void init() throws IOException {
-        terminal = TerminalBuilder.builder()
+        Terminal terminal = TerminalBuilder.builder()
                 .system(true)
                 .jansi(true)
                 .build();
