@@ -23,11 +23,10 @@ public class DatabaseSessionFactory {
         System.setProperty("org.jboss.logging.provider", "slf4j");
 
         Driver driver = new H2MemoryDriver();
-        HibernateClient client = new HibernateClient(
-                Setting.create(driver)
-                        .setClientProperty(AvailableSettings.DIALECT, H2Dialect.class.getName()),
-                driver
-        );
+        Setting setting = Setting.create(driver)
+                .setClientProperty(AvailableSettings.DIALECT, H2Dialect.class.getName());
+
+        HibernateClient client = new HibernateClient(setting, driver);
         sessionFactory = client.buildSessionFactory();
     }
 }
