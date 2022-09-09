@@ -1,10 +1,8 @@
 package io.github.etases.edublock.rs;
 
-import io.github.etases.edublock.rs.api.command.Command;
-import io.github.etases.edublock.rs.api.controller.Controller;
-import io.github.etases.edublock.rs.command.HelpCommand;
-import io.github.etases.edublock.rs.command.StopCommand;
-import io.github.etases.edublock.rs.controller.HelloController;
+import io.github.etases.edublock.rs.api.Handler;
+import io.github.etases.edublock.rs.handler.CommandHandler;
+import io.github.etases.edublock.rs.handler.HelloHandler;
 import io.github.etases.edublock.rs.terminal.ServerTerminal;
 import io.javalin.Javalin;
 import lombok.Getter;
@@ -20,10 +18,10 @@ public class RequestServer {
     private final Javalin server;
 
     private RequestServer() {
+        server = Javalin.create();
         commandManager = new CommandManager();
         dependencyManager = new DependencyManager(this);
         terminal = dependencyManager.getInjector().getInstance(ServerTerminal.class);
-        server = Javalin.create();
     }
 
     public static void main(String[] args) {
@@ -38,8 +36,7 @@ public class RequestServer {
             return;
         }
 
-        getControllers().forEach(clazz -> dependencyManager.getInjector().getInstance(clazz).setup(server));
-        getCommands().forEach(clazz -> commandManager.addCommand(dependencyManager.getInjector().getInstance(clazz)));
+        getHandlers().forEach(clazz -> dependencyManager.getInjector().getInstance(clazz).setup());
 
         server.start(7070);
         terminal.start();
@@ -52,25 +49,14 @@ public class RequestServer {
     }
 
     /**
-     * Get the list of controllers to use in the server
+     * Get the list of handlers to use in the server
      *
-     * @return the list of controllers
+     * @return the list of handlers
      */
-    private List<Class<? extends Controller>> getControllers() {
+    private List<Class<? extends Handler>> getHandlers() {
         return List.of(
-                HelloController.class
-        );
-    }
-
-    /**
-     * Get the list of commands to use in the terminal
-     *
-     * @return the list of commands
-     */
-    private List<Class<? extends Command>> getCommands() {
-        return List.of(
-                HelpCommand.class,
-                StopCommand.class
+                CommandHandler.class,
+                HelloHandler.class
         );
     }
 }

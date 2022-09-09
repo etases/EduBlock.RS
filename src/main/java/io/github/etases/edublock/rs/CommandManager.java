@@ -1,6 +1,6 @@
 package io.github.etases.edublock.rs;
 
-import io.github.etases.edublock.rs.api.command.Command;
+import io.github.etases.edublock.rs.api.Command;
 import me.hsgamer.hscore.collections.map.CaseInsensitiveStringHashMap;
 
 import java.util.Collection;

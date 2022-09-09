@@ -2,7 +2,7 @@ package io.github.etases.edublock.rs.command;
 
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.RequestServer;
-import io.github.etases.edublock.rs.api.command.Command;
+import io.github.etases.edublock.rs.api.Command;
 import org.tinylog.Logger;
 
 /**

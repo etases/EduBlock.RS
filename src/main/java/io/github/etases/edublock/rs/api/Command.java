@@ -1,4 +1,4 @@
-package io.github.etases.edublock.rs.api.command;
+package io.github.etases.edublock.rs.api;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
