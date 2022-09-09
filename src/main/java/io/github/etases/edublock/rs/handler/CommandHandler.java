@@ -4,13 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import io.github.etases.edublock.rs.CommandManager;
 import io.github.etases.edublock.rs.api.Command;
-import io.github.etases.edublock.rs.api.Handler;
+import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.command.HelpCommand;
 import io.github.etases.edublock.rs.command.StopCommand;
 
 import java.util.List;
 
-public class CommandHandler implements Handler {
+public class CommandHandler implements ServerHandler {
     @Inject
     private CommandManager commandManager;
     @Inject
