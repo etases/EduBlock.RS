@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.Optional;
 
 @RequiredArgsConstructor
-public class JWTProvider {
+public class JwtProvider {
     private final Algorithm algorithm;
     private final JWTVerifier verifier;
 

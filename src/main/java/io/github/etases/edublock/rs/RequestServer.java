@@ -4,7 +4,7 @@ import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.handler.CommandHandler;
 import io.github.etases.edublock.rs.handler.HelloHandler;
 import io.github.etases.edublock.rs.handler.JwtHandler;
-import io.github.etases.edublock.rs.jwt.JWTAccessManager;
+import io.github.etases.edublock.rs.jwt.JwtAccessManager;
 import io.github.etases.edublock.rs.terminal.ServerTerminal;
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
@@ -89,6 +89,6 @@ public class RequestServer {
                         )
         ));
 
-        config.accessManager(new JWTAccessManager("role", Roles.getRoleMapping(), Roles.ANYONE));
+        config.accessManager(new JwtAccessManager("role", Roles.getRoleMapping(), Roles.ANYONE));
     }
 }

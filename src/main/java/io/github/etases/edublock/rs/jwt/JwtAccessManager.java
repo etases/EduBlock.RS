@@ -11,23 +11,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class JWTAccessManager implements AccessManager {
+public class JwtAccessManager implements AccessManager {
     private final String userRoleClaim;
     private final Map<String, RouteRole> rolesMapping;
     private final RouteRole defaultRole;
 
-    public JWTAccessManager(String userRoleClaim, Map<String, RouteRole> rolesMapping, RouteRole defaultRole) {
+    public JwtAccessManager(String userRoleClaim, Map<String, RouteRole> rolesMapping, RouteRole defaultRole) {
         this.userRoleClaim = userRoleClaim;
         this.rolesMapping = rolesMapping;
         this.defaultRole = defaultRole;
     }
 
     private RouteRole extractRole(Context context) {
-        if (!JavalinJWT.containsJWT(context)) {
+        if (!JwtUtil.containsJwt(context)) {
             return defaultRole;
         }
 
-        DecodedJWT jwt = JavalinJWT.getDecodedFromContext(context);
+        DecodedJWT jwt = JwtUtil.getDecodedFromContext(context);
         String userLevel = jwt.getClaim(userRoleClaim).asString();
 
         return Optional.ofNullable(rolesMapping.get(userLevel)).orElse(defaultRole);

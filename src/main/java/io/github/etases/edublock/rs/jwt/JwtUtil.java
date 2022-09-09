@@ -9,13 +9,12 @@ import lombok.experimental.UtilityClass;
 import java.util.Optional;
 
 @UtilityClass
-public final class JavalinJWT {
+public final class JwtUtil {
 
     private static final String CONTEXT_ATTRIBUTE = "jwt";
-    private static final String COOKIE_KEY = "jwt";
 
 
-    public static boolean containsJWT(Context context) {
+    public static boolean containsJwt(Context context) {
         return context.attribute(CONTEXT_ATTRIBUTE) != null;
     }
 
@@ -28,7 +27,7 @@ public final class JavalinJWT {
         Object attribute = context.attribute(CONTEXT_ATTRIBUTE);
 
         if (!(attribute instanceof DecodedJWT)) {
-            throw new InternalServerErrorResponse("The context carried invalid object as JavalinJWT");
+            throw new InternalServerErrorResponse("The context carried invalid object as JwtUtil");
         }
 
         return (DecodedJWT) attribute;
@@ -46,23 +45,9 @@ public final class JavalinJWT {
                 });
     }
 
-    public static Optional<String> getTokenFromCookie(Context context) {
-        return Optional.ofNullable(context.cookie(COOKIE_KEY));
-    }
-
-    public static Context addTokenToCookie(Context context, String token) {
-        return context.cookie(COOKIE_KEY, token);
-    }
-
-    public static Handler createHeaderDecodeHandler(JWTProvider jwtProvider) {
+    public static Handler createHeaderDecodeHandler(JwtProvider jwtProvider) {
         return context -> getTokenFromHeader(context)
                 .flatMap(jwtProvider::validateToken)
-                .ifPresent(jwt -> JavalinJWT.addDecodedToContext(context, jwt));
-    }
-
-    public static Handler createCookieDecodeHandler(JWTProvider jwtProvider) {
-        return context -> getTokenFromCookie(context)
-                .flatMap(jwtProvider::validateToken)
-                .ifPresent(jwt -> JavalinJWT.addDecodedToContext(context, jwt));
+                .ifPresent(jwt -> JwtUtil.addDecodedToContext(context, jwt));
     }
 }
