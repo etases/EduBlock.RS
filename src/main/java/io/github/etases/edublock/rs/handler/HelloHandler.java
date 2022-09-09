@@ -1,7 +1,6 @@
 package io.github.etases.edublock.rs.handler;
 
 import com.google.inject.Inject;
-import io.github.etases.edublock.rs.Roles;
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.javalin.Javalin;
 
@@ -11,6 +10,6 @@ public class HelloHandler implements ServerHandler {
 
     @Override
     public void setup() {
-        server.get("/", ctx -> ctx.result("Hello World"), Roles.values());
+        server.get("/", ctx -> ctx.result("Hello World"));
     }
 }
