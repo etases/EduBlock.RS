@@ -3,7 +3,7 @@ package io.github.etases.edublock.rs.handler;
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
-import io.github.etases.edublock.rs.database.entity.User;
+import io.github.etases.edublock.rs.entity.User;
 import io.javalin.Javalin;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import org.hibernate.SessionFactory;

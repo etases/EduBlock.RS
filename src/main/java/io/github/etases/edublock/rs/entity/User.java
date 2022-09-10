@@ -1,4 +1,4 @@
-package io.github.etases.edublock.rs.database.entity;
+package io.github.etases.edublock.rs.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,6 +1,6 @@
-package io.github.etases.edublock.rs.database;
+package io.github.etases.edublock.rs;
 
-import io.github.etases.edublock.rs.database.entity.User;
+import io.github.etases.edublock.rs.entity.User;
 import lombok.Getter;
 import me.hsgamer.hscore.database.Driver;
 import me.hsgamer.hscore.database.Setting;
@@ -16,13 +16,13 @@ import java.util.List;
  * The database session factory
  */
 @Getter
-public class DatabaseSessionFactory {
+public class DatabaseManager {
     /**
      * The session factory
      */
     private final SessionFactory sessionFactory;
 
-    public DatabaseSessionFactory() {
+    public DatabaseManager(RequestServer requestServer) {
         System.setProperty("org.jboss.logging.provider", "slf4j");
 
         Driver driver = new H2MemoryDriver();

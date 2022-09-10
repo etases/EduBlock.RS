@@ -3,7 +3,6 @@ package io.github.etases.edublock.rs;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import io.github.etases.edublock.rs.dependency.DatabaseSessionFactoryModule;
 import io.github.etases.edublock.rs.dependency.ServerInstanceModule;
 import lombok.Getter;
 
@@ -27,7 +26,6 @@ public class DependencyManager {
 
     private List<Module> getModules() {
         return List.of(
-                new DatabaseSessionFactoryModule(),
                 new ServerInstanceModule(requestServer)
         );
     }

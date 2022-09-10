@@ -20,6 +20,7 @@ public class RequestServer {
     private final CommandManager commandManager;
     private final ServerBuilder serverBuilder;
     private final MainConfig mainConfig;
+    private final DatabaseManager databaseManager;
     private final DependencyManager dependencyManager;
     private final ServerTerminal terminal;
     private Javalin server;
@@ -35,6 +36,7 @@ public class RequestServer {
         }));
         commandManager = new CommandManager();
         serverBuilder = new ServerBuilder();
+        databaseManager = new DatabaseManager(this);
         dependencyManager = new DependencyManager(this);
         terminal = dependencyManager.getInjector().getInstance(ServerTerminal.class);
     }
