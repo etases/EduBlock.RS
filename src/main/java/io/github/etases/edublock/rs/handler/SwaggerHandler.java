@@ -8,7 +8,10 @@ import io.javalin.plugin.openapi.OpenApiOptions;
 import io.javalin.plugin.openapi.OpenApiPlugin;
 import io.javalin.plugin.openapi.ui.SwaggerOptions;
 import io.javalin.plugin.openapi.utils.OpenApiVersionUtil;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 
 public class SwaggerHandler extends SimpleServerHandler {
     @Inject
@@ -25,11 +28,16 @@ public class SwaggerHandler extends SimpleServerHandler {
     @Override
     protected void setupConfig(JavalinConfig config) {
         config.registerPlugin(new OpenApiPlugin(
-                new OpenApiOptions(
-                        new Info()
-                                .version(getClass().getPackage().getImplementationVersion())
-                                .description("EduBlock Request Server")
-                )
+                new OpenApiOptions(() -> {
+                    Info info = new Info()
+                            .version(getClass().getPackage().getImplementationVersion())
+                            .description("EduBlock Request Server");
+                    Components components = new Components().addSecuritySchemes(
+                            "bearerAuth",
+                            new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")
+                    );
+                    return new OpenAPI().info(info).components(components);
+                })
                         .path("/swagger-docs")
                         .swagger(
                                 new SwaggerOptions("/swagger")
