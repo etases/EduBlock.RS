@@ -1,4 +1,4 @@
-package io.github.etases.edublock.rs.handler.jwt;
+package io.github.etases.edublock.rs.internal.jwt;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;

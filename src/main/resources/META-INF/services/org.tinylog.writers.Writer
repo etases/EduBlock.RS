@@ -1,4 +1,4 @@
-io.github.etases.edublock.rs.terminal.ServerConsoleWriter
+io.github.etases.edublock.rs.internal.terminal.ServerConsoleWriter
 org.tinylog.writers.ConsoleWriter
 org.tinylog.writers.FileWriter
 org.tinylog.writers.JdbcWriter

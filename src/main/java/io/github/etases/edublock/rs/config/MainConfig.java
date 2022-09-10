@@ -1,7 +1,7 @@
 package io.github.etases.edublock.rs.config;
 
 import io.github.etases.edublock.rs.config.converter.JwtPropertiesConverter;
-import io.github.etases.edublock.rs.handler.jwt.JwtProperties;
+import io.github.etases.edublock.rs.internal.jwt.JwtProperties;
 import me.hsgamer.hscore.config.annotation.ConfigPath;
 
 public interface MainConfig {

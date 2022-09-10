@@ -1,6 +1,6 @@
 package io.github.etases.edublock.rs.config.converter;
 
-import io.github.etases.edublock.rs.handler.jwt.JwtProperties;
+import io.github.etases.edublock.rs.internal.jwt.JwtProperties;
 import me.hsgamer.hscore.config.annotation.converter.Converter;
 
 import java.util.Map;

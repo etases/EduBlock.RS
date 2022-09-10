@@ -3,7 +3,7 @@ package io.github.etases.edublock.rs;
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.handler.*;
-import io.github.etases.edublock.rs.terminal.ServerTerminal;
+import io.github.etases.edublock.rs.internal.terminal.ServerTerminal;
 import io.javalin.Javalin;
 import lombok.Getter;
 import me.hsgamer.hscore.config.proxy.ConfigGenerator;
@@ -25,7 +25,7 @@ public class RequestServer {
     private final ServerTerminal terminal;
     private Javalin server;
 
-    private RequestServer() {
+    RequestServer() {
         mainConfig = ConfigGenerator.newInstance(MainConfig.class, new SimpleConfig<>(new File(".", "config.yml"), new YamlFile(), (file, yamlFile) -> {
             yamlFile.setConfigurationFile(file);
             try {

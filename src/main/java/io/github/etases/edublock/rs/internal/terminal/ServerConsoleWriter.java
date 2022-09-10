@@ -1,11 +1,11 @@
-package io.github.etases.edublock.rs.terminal;
+package io.github.etases.edublock.rs.internal.terminal;
 
 import org.tinylog.core.LogEntry;
 import org.tinylog.writers.AbstractFormatPatternWriter;
 
 import java.util.Map;
 
-import static io.github.etases.edublock.rs.terminal.ServerTerminal.lineReader;
+import static io.github.etases.edublock.rs.internal.terminal.ServerTerminal.lineReader;
 
 /**
  * The customized writer for {@link ServerConsoleWriter}.

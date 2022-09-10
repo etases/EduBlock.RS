@@ -1,4 +1,4 @@
-package io.github.etases.edublock.rs.terminal;
+package io.github.etases.edublock.rs.internal.terminal;
 
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.RequestServer;

@@ -1,4 +1,4 @@
-package io.github.etases.edublock.rs.dependency;
+package io.github.etases.edublock.rs.internal.dependency;
 
 import com.google.inject.AbstractModule;
 import io.github.etases.edublock.rs.CommandManager;
