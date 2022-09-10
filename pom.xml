@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <core.version>4.1.26</core.version>
         <javalin.version>4.6.4</javalin.version>
         <tinylog.version>2.5.0</tinylog.version>
@@ -23,7 +23,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.10.1</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -55,7 +55,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.3.0</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <minimizeJar>true</minimizeJar>
@@ -115,8 +115,13 @@
         </dependency>
         <dependency>
             <groupId>me.hsgamer</groupId>
-            <artifactId>hscore-config-annotated</artifactId>
+            <artifactId>hscore-config-proxy</artifactId>
             <version>${core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.carleslc.Simple-YAML</groupId>
+            <artifactId>Simple-Yaml</artifactId>
+            <version>1.8.1</version>
         </dependency>
 
         <!-- Common -->
@@ -141,13 +146,6 @@
             <groupId>me.hsgamer</groupId>
             <artifactId>hscore-database-h2</artifactId>
             <version>${core.version}</version>
-        </dependency>
-
-        <!-- YAML -->
-        <dependency>
-            <groupId>me.carleslc.Simple-YAML</groupId>
-            <artifactId>Simple-Yaml</artifactId>
-            <version>1.8.1</version>
         </dependency>
 
         <!-- Lombok -->

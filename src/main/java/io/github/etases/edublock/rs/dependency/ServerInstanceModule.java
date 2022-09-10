@@ -3,7 +3,8 @@ package io.github.etases.edublock.rs.dependency;
 import com.google.inject.AbstractModule;
 import io.github.etases.edublock.rs.CommandManager;
 import io.github.etases.edublock.rs.RequestServer;
-import io.javalin.Javalin;
+import io.github.etases.edublock.rs.ServerBuilder;
+import io.github.etases.edublock.rs.config.MainConfig;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -16,7 +17,8 @@ public class ServerInstanceModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(RequestServer.class).toInstance(requestServer);
-        bind(Javalin.class).toInstance(requestServer.getServer());
         bind(CommandManager.class).toInstance(requestServer.getCommandManager());
+        bind(ServerBuilder.class).toInstance(requestServer.getServerBuilder());
+        bind(MainConfig.class).toInstance(requestServer.getMainConfig());
     }
 }

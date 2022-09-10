@@ -1,8 +1,7 @@
-package io.github.etases.edublock.rs.jwt;
+package io.github.etases.edublock.rs.handler.jwt;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.javalin.http.Context;
-import io.javalin.http.Handler;
 import io.javalin.http.InternalServerErrorResponse;
 import lombok.experimental.UtilityClass;
 
@@ -43,11 +42,5 @@ public final class JwtUtil {
 
                     return Optional.of(split[1]);
                 });
-    }
-
-    public static Handler createHeaderDecodeHandler(JwtProvider jwtProvider) {
-        return context -> getTokenFromHeader(context)
-                .flatMap(jwtProvider::validateToken)
-                .ifPresent(jwt -> JwtUtil.addDecodedToContext(context, jwt));
     }
 }

@@ -5,6 +5,8 @@
 *.ipr
 *.iws
 
+config.yml
+
 # IntelliJ
 out/
 

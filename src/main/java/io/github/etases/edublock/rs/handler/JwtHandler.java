@@ -1,23 +1,53 @@
 package io.github.etases.edublock.rs.handler;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.JWTCreator;
 import com.google.inject.Inject;
-import io.github.etases.edublock.rs.api.ServerHandler;
-import io.github.etases.edublock.rs.jwt.JwtProvider;
-import io.github.etases.edublock.rs.jwt.JwtUtil;
+import io.github.etases.edublock.rs.ServerBuilder;
+import io.github.etases.edublock.rs.api.SimpleServerHandler;
+import io.github.etases.edublock.rs.config.MainConfig;
+import io.github.etases.edublock.rs.handler.jwt.JwtProvider;
 import io.javalin.Javalin;
+import io.javalin.core.JavalinConfig;
+import io.javalin.core.security.RouteRole;
+import me.hsgamer.hscore.collections.map.CaseInsensitiveStringHashMap;
 
-public class JwtHandler implements ServerHandler {
+import java.util.Map;
+
+public class JwtHandler extends SimpleServerHandler {
+    private static final String USER_ROLE_CLAIM = "role";
+    private final JwtProvider provider;
+
     @Inject
-    private Javalin server;
+    public JwtHandler(ServerBuilder serverBuilder, MainConfig mainConfig) {
+        super(serverBuilder);
+        provider = new JwtProvider(USER_ROLE_CLAIM, mainConfig.getJwtProperties());
+    }
 
     @Override
-    public void setup() {
-        Algorithm algorithm = Algorithm.HMAC256("very_secret");
-        JWTVerifier verifier = JWT.require(algorithm).build();
-        JwtProvider provider = new JwtProvider(algorithm, verifier);
-        server.before(JwtUtil.createHeaderDecodeHandler(provider));
+    protected void setupConfig(JavalinConfig config) {
+        config.accessManager(provider.createAccessManager(Roles.getRoleMapping(), Roles.ANYONE));
+    }
+
+    @Override
+    protected void setupServer(Javalin server) {
+        server.before(provider.createHeaderDecodeHandler());
+    }
+
+    public enum Roles implements RouteRole {
+        ANYONE,
+        USER,
+        ADMIN;
+
+        public static Map<String, RouteRole> getRoleMapping() {
+            Map<String, RouteRole> roleMap = new CaseInsensitiveStringHashMap<>();
+            for (Roles role : Roles.values()) {
+                roleMap.put(role.name(), role);
+            }
+            return roleMap;
+        }
+
+        public JWTCreator.Builder addRoleToToken(JWTCreator.Builder builder) {
+            return builder.withClaim(USER_ROLE_CLAIM, name());
+        }
     }
 }
