@@ -2,10 +2,7 @@ package io.github.etases.edublock.rs;
 
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
-import io.github.etases.edublock.rs.handler.CommandHandler;
-import io.github.etases.edublock.rs.handler.HelloHandler;
-import io.github.etases.edublock.rs.handler.JwtHandler;
-import io.github.etases.edublock.rs.handler.SwaggerHandler;
+import io.github.etases.edublock.rs.handler.*;
 import io.github.etases.edublock.rs.terminal.ServerTerminal;
 import io.javalin.Javalin;
 import lombok.Getter;
@@ -79,7 +76,8 @@ public class RequestServer {
                 CommandHandler.class,
                 HelloHandler.class,
                 JwtHandler.class,
-                SwaggerHandler.class
+                SwaggerHandler.class,
+                UserHandler.class
         );
     }
 }

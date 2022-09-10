@@ -2,6 +2,7 @@ package io.github.etases.edublock.rs.dependency;
 
 import com.google.inject.AbstractModule;
 import io.github.etases.edublock.rs.database.DatabaseSessionFactory;
+import org.hibernate.SessionFactory;
 
 /**
  * A module for Guice to provide the {@link DatabaseSessionFactory}
@@ -9,6 +10,8 @@ import io.github.etases.edublock.rs.database.DatabaseSessionFactory;
 public class DatabaseSessionFactoryModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(DatabaseSessionFactory.class).asEagerSingleton();
+        DatabaseSessionFactory sessionFactory = new DatabaseSessionFactory();
+        bind(DatabaseSessionFactory.class).toInstance(sessionFactory);
+        bind(SessionFactory.class).toInstance(sessionFactory.getSessionFactory());
     }
 }
