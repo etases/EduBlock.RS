@@ -24,9 +24,7 @@ public class UserHandler extends SimpleServerHandler {
     protected void setupServer(Javalin server) {
         server.get("/user/<id>", OpenApiBuilder.documented(
                 OpenApiBuilder.document()
-//                        .operation(operation -> {
-//                            operation.security(List.of(new SecurityRequirement().addList("bearerAuth")));
-//                        })
+//                        .operation(SwaggerHandler.addSecurity())
                         .result("404")
                         .result("200", User.class, builder -> {
                             builder.description("The user");

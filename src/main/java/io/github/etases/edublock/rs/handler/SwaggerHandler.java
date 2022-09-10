@@ -6,14 +6,21 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.javalin.core.JavalinConfig;
 import io.javalin.plugin.openapi.OpenApiOptions;
 import io.javalin.plugin.openapi.OpenApiPlugin;
+import io.javalin.plugin.openapi.dsl.OpenApiUpdater;
 import io.javalin.plugin.openapi.ui.SwaggerOptions;
 import io.javalin.plugin.openapi.utils.OpenApiVersionUtil;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
+import java.util.List;
+
 public class SwaggerHandler extends SimpleServerHandler {
+    private static final String AUTH_KEY = "bearerAuth";
+
     @Inject
     public SwaggerHandler(ServerBuilder serverBuilder) {
         super(serverBuilder);
@@ -31,7 +38,7 @@ public class SwaggerHandler extends SimpleServerHandler {
                 .version(getClass().getPackage().getImplementationVersion())
                 .description("EduBlock Request Server");
         Components components = new Components().addSecuritySchemes(
-                "bearerAuth",
+                AUTH_KEY,
                 new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")
         );
         SwaggerOptions swaggerOptions = new SwaggerOptions("/swagger")
@@ -43,5 +50,9 @@ public class SwaggerHandler extends SimpleServerHandler {
                 .activateAnnotationScanningFor(getClass().getPackage().getName());
 
         config.registerPlugin(new OpenApiPlugin(openApiOptions));
+    }
+
+    public static OpenApiUpdater<Operation> addSecurity() {
+        return operation -> operation.security(List.of(new SecurityRequirement().addList(AUTH_KEY)));
     }
 }
