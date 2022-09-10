@@ -4,6 +4,9 @@ import io.github.etases.edublock.rs.ServerBuilder;
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
 
+/**
+ * A simple server handler for {@link JavalinConfig} and {@link Javalin}
+ */
 public class SimpleServerHandler implements ServerHandler {
     private final ServerBuilder serverBuilder;
 
@@ -16,10 +19,20 @@ public class SimpleServerHandler implements ServerHandler {
         serverBuilder.addHandler(this::setupServer).addConfig(this::setupConfig);
     }
 
+    /**
+     * Set up the server configuration
+     *
+     * @param config the configuration
+     */
     protected void setupConfig(JavalinConfig config) {
         // EMPTY
     }
 
+    /**
+     * Set up the server instance
+     *
+     * @param server the server instance
+     */
     protected void setupServer(Javalin server) {
         // EMPTY
     }
