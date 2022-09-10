@@ -27,22 +27,21 @@ public class SwaggerHandler extends SimpleServerHandler {
 
     @Override
     protected void setupConfig(JavalinConfig config) {
-        config.registerPlugin(new OpenApiPlugin(
-                new OpenApiOptions(() -> {
-                    Info info = new Info()
-                            .version(getClass().getPackage().getImplementationVersion())
-                            .description("EduBlock Request Server");
-                    Components components = new Components().addSecuritySchemes(
-                            "bearerAuth",
-                            new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")
-                    );
-                    return new OpenAPI().info(info).components(components);
-                })
-                        .path("/swagger-docs")
-                        .swagger(
-                                new SwaggerOptions("/swagger")
-                                        .title("Edublock Request Server Documentation")
-                        )
-        ));
+        Info info = new Info()
+                .version(getClass().getPackage().getImplementationVersion())
+                .description("EduBlock Request Server");
+        Components components = new Components().addSecuritySchemes(
+                "bearerAuth",
+                new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")
+        );
+        SwaggerOptions swaggerOptions = new SwaggerOptions("/swagger")
+                .title("Edublock Request Server Documentation");
+
+        OpenApiOptions openApiOptions = new OpenApiOptions(() -> new OpenAPI().info(info).components(components))
+                .swagger(swaggerOptions)
+                .path("/swagger-docs")
+                .activateAnnotationScanningFor(getClass().getPackage().getName());
+
+        config.registerPlugin(new OpenApiPlugin(openApiOptions));
     }
 }
