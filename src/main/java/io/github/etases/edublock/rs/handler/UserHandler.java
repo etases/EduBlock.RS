@@ -6,7 +6,10 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.User;
 import io.javalin.Javalin;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
 import org.hibernate.SessionFactory;
+
+import java.util.List;
 
 public class UserHandler extends SimpleServerHandler {
     private final SessionFactory sessionFactory;
@@ -21,6 +24,9 @@ public class UserHandler extends SimpleServerHandler {
     protected void setupServer(Javalin server) {
         server.get("/user/<id>", OpenApiBuilder.documented(
                 OpenApiBuilder.document()
+//                        .operation(operation -> {
+//                            operation.security(List.of(new SecurityRequirement().addList("bearerAuth")));
+//                        })
                         .result("404")
                         .result("200", User.class, builder -> {
                             builder.description("The user");
