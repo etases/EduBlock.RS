@@ -6,6 +6,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import io.github.etases.edublock.rs.internal.property.JwtProperties;
 import io.javalin.core.security.AccessManager;
 import io.javalin.core.security.RouteRole;
 import io.javalin.http.Context;

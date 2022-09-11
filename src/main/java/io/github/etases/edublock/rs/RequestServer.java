@@ -42,6 +42,7 @@ public class RequestServer {
     }
 
     public static void main(String[] args) {
+        SysOutErrRedirect.init();
         new RequestServer().start();
     }
 
@@ -56,7 +57,7 @@ public class RequestServer {
         getHandlers().forEach(clazz -> dependencyManager.getInjector().getInstance(clazz).setup());
 
         server = serverBuilder.build();
-        server.start(7070);
+        server.start(mainConfig.getServerProperties().host(), mainConfig.getServerProperties().port());
         terminal.start();
     }
 

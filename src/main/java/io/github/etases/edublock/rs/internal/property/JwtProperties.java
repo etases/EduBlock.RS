@@ -1,4 +1,4 @@
-package io.github.etases.edublock.rs.internal.jwt;
+package io.github.etases.edublock.rs.internal.property;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 

@@ -26,6 +26,10 @@ public class SwaggerHandler extends SimpleServerHandler {
         super(serverBuilder);
     }
 
+    public static OpenApiUpdater<Operation> addSecurity() {
+        return operation -> operation.security(List.of(new SecurityRequirement().addList(AUTH_KEY)));
+    }
+
     @Override
     public void setup() {
         OpenApiVersionUtil.INSTANCE.setLogWarnings(false);
@@ -50,9 +54,5 @@ public class SwaggerHandler extends SimpleServerHandler {
                 .activateAnnotationScanningFor(getClass().getPackage().getName());
 
         config.registerPlugin(new OpenApiPlugin(openApiOptions));
-    }
-
-    public static OpenApiUpdater<Operation> addSecurity() {
-        return operation -> operation.security(List.of(new SecurityRequirement().addList(AUTH_KEY)));
     }
 }
