@@ -7,6 +7,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.github.etases.edublock.rs.internal.property.JwtProperties;
+import io.github.etases.edublock.rs.model.output.Response;
 import io.javalin.core.security.AccessManager;
 import io.javalin.core.security.RouteRole;
 import io.javalin.http.Context;
@@ -71,7 +72,7 @@ public class JwtProvider {
                 if (permittedRoles.isEmpty() || (matchProperties && permittedRoles.contains(role))) {
                     handler.handle(context);
                 } else {
-                    context.status(401).result("Unauthorized");
+                    context.status(401).json(new Response(-1990, "Unauthorized"));
                 }
             }
         };

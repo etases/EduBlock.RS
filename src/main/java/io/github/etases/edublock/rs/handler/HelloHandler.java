@@ -8,6 +8,7 @@ import io.javalin.http.Handler;
 import io.javalin.plugin.openapi.annotations.OpenApi;
 import io.javalin.plugin.openapi.annotations.OpenApiContent;
 import io.javalin.plugin.openapi.annotations.OpenApiResponse;
+import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 
 public class HelloHandler extends SimpleServerHandler {
     @OpenApi(
@@ -30,5 +31,13 @@ public class HelloHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.get("/", sayHello);
+
+        server.get("/hellouser", OpenApiBuilder.documented(
+                OpenApiBuilder.document()
+                        .operation(SwaggerHandler.addSecurity()),
+                ctx ->  {
+                    ctx.result("Hello User");
+                }
+        ), JwtHandler.Roles.USER);
     }
 }
