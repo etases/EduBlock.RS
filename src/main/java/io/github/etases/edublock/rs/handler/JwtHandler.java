@@ -139,7 +139,11 @@ public class JwtHandler extends SimpleServerHandler {
                                 }
                                 String salt = generateSalt();
                                 String hash = hashPassword(userInput.password(), salt);
-                                user = new User(0, userInput.username(), salt, hash, Roles.USER.name());
+                                user = new User();
+                                user.setUsername(userInput.username());
+                                user.setHashedPassword(hash);
+                                user.setSalt(salt);
+                                user.setRole(Roles.USER.name());
                                 try (var session = sessionFactory.openSession()) {
                                     Transaction transaction = session.beginTransaction();
                                     session.save(user);

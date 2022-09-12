@@ -79,8 +79,7 @@ public class RequestServer {
                 CommandHandler.class,
                 HelloHandler.class,
                 JwtHandler.class,
-                SwaggerHandler.class,
-                UserHandler.class
+                SwaggerHandler.class
         );
     }
 }
