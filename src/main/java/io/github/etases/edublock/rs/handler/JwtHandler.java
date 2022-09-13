@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
-import io.github.etases.edublock.rs.entity.User;
+import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.internal.jwt.JwtProvider;
 import io.github.etases.edublock.rs.model.input.UserInput;
 import io.github.etases.edublock.rs.model.output.LoginResponse;
@@ -92,22 +92,22 @@ public class JwtHandler extends SimpleServerHandler {
                     ctx.future(
                             CompletableFuture.supplyAsync(() -> {
                                 try (var session = sessionFactory.openSession()) {
-                                    return session.createNamedQuery("User.findByUsername", User.class)
+                                    return session.createNamedQuery("Account.findByUsername", Account.class)
                                             .setParameter("username", userInput.username())
                                             .uniqueResult();
                                 }
                             }),
                             result -> {
-                                User user = result == null ? null : (User) result;
-                                if (user == null || !verifyPassword(userInput.password(), user.getSalt(), user.getHashedPassword())) {
+                                Account account = result == null ? null : (Account) result;
+                                if (account == null || !verifyPassword(userInput.password(), account.getSalt(), account.getHashedPassword())) {
                                     ctx.status(401);
                                     ctx.json(new LoginResponse(1, "Invalid username or password", null));
                                     return;
                                 }
                                 JWTCreator.Builder builder = JWT.create()
-                                        .withClaim(USER_ROLE_CLAIM, user.getRole())
-                                        .withClaim("name", user.getUsername())
-                                        .withClaim("id", user.getId());
+                                        .withClaim(USER_ROLE_CLAIM, account.getRole())
+                                        .withClaim("name", account.getUsername())
+                                        .withClaim("id", account.getId());
                                 String token = provider.generateToken(builder);
                                 ctx.json(new LoginResponse(0, "Login Successful", token));
                             }
@@ -125,28 +125,28 @@ public class JwtHandler extends SimpleServerHandler {
                     ctx.future(
                             CompletableFuture.supplyAsync(() -> {
                                 try (var session = sessionFactory.openSession()) {
-                                    return session.createNamedQuery("User.findByUsername", User.class)
+                                    return session.createNamedQuery("Account.findByUsername", Account.class)
                                             .setParameter("username", userInput.username())
                                             .uniqueResult();
                                 }
                             }),
                             result -> {
-                                User user = result == null ? null : (User) result;
-                                if (user != null) {
+                                Account account = result == null ? null : (Account) result;
+                                if (account != null) {
                                     ctx.status(409);
                                     ctx.json(new Response(1, "Username already exists"));
                                     return;
                                 }
                                 String salt = generateSalt();
                                 String hash = hashPassword(userInput.password(), salt);
-                                user = new User();
-                                user.setUsername(userInput.username());
-                                user.setHashedPassword(hash);
-                                user.setSalt(salt);
-                                user.setRole(Roles.USER.name());
+                                account = new Account();
+                                account.setUsername(userInput.username());
+                                account.setHashedPassword(hash);
+                                account.setSalt(salt);
+                                account.setRole(Roles.USER.name());
                                 try (var session = sessionFactory.openSession()) {
                                     Transaction transaction = session.beginTransaction();
-                                    session.save(user);
+                                    session.save(account);
                                     transaction.commit();
                                 }
                                 ctx.json(new Response(0, "Register Successful"));

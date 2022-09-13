@@ -8,14 +8,14 @@ import lombok.Setter;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "users")
+@Table(name = "accounts")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-@NamedQuery(name = "User.findAll", query = "FROM User")
-@NamedQuery(name = "User.findByUsername", query = "FROM User WHERE username = :username")
-public class User {
+@NamedQuery(name = "Account.findAll", query = "FROM Account")
+@NamedQuery(name = "Account.findByUsername", query = "FROM Account WHERE username = :username")
+public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)

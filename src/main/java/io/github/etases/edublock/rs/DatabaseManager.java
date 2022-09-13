@@ -1,6 +1,6 @@
 package io.github.etases.edublock.rs;
 
-import io.github.etases.edublock.rs.entity.User;
+import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.internal.property.DatabaseProperties;
 import lombok.Getter;
 import me.hsgamer.hscore.database.Driver;
@@ -43,7 +43,7 @@ public class DatabaseManager {
 
     private List<Class<?>> getEntityClasses() {
         return List.of(
-                User.class
+                Account.class
         );
     }
 }
