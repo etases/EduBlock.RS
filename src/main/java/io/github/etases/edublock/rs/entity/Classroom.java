@@ -12,19 +12,13 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Getter
 @Setter
-@NamedQuery(name = "Account.findAll", query = "FROM Account")
-@NamedQuery(name = "Account.findByUsername", query = "FROM Account WHERE username = :username")
-public class Account {
+public class Classroom {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
     private long id;
-    @Column(nullable = false, unique = true)
-    private String username;
     @Column(nullable = false)
-    private String hashedPassword;
+    private String name;
     @Column(nullable = false)
-    private String salt;
-    @Column(nullable = false)
-    private String role;
+    private int grade;
 }
