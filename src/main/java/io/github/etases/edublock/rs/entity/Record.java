@@ -24,7 +24,7 @@ public class Record implements Serializable {
     private Classroom classroom;
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Account student;
+    private Student student;
     @OneToMany(mappedBy = "record")
     private Set<RecordEntry> recordEntry;
     @OneToMany(mappedBy = "record")

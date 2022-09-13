@@ -38,4 +38,6 @@ public class Student implements Serializable {
 
     @OneToMany(mappedBy = "student")
     private Set<ClassStudent> classrooms;
+    @OneToMany(mappedBy = "student")
+    private Set<Record> records;
 }
