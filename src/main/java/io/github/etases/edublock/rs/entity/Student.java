@@ -16,8 +16,12 @@ import java.util.Set;
 @Setter
 public class Student implements Serializable {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(nullable = false)
+    private long id;
     @OneToOne
-    @JoinColumn
+    @JoinColumn(name = "id")
+    @MapsId
     private Account account;
     @Column(nullable = false)
     private String ethnic;

@@ -32,6 +32,7 @@ public class RecordEntry implements Serializable {
     @JoinColumn(nullable = false)
     private Account teacher;
 
-    @OneToMany(mappedBy = "recordEntry")
-    private Set<Record> records;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Record record;
 }

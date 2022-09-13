@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
@@ -24,10 +25,8 @@ public class Record implements Serializable {
     @ManyToOne
     @JoinColumn(nullable = false)
     private Account student;
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private RecordEntry recordEntry;
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private PendingRecordEntry pendingRecordEntry;
+    @OneToMany(mappedBy = "record")
+    private Set<RecordEntry> recordEntry;
+    @OneToMany(mappedBy = "record")
+    private Set<PendingRecordEntry> pendingRecordEntry;
 }

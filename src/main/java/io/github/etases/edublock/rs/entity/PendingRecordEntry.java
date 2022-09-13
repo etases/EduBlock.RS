@@ -32,6 +32,7 @@ public class PendingRecordEntry implements Serializable {
     @JoinColumn(nullable = false)
     private Account teacher;
 
-    @OneToMany(mappedBy = "pendingRecordEntry")
-    private Set<Record> records;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Record record;
 }

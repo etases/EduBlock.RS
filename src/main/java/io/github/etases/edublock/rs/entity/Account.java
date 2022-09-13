@@ -30,9 +30,11 @@ public class Account implements Serializable {
     @Column(nullable = false)
     private String role;
 
-    @OneToOne
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
     private Student student;
-    @OneToOne
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
     private Profile teacher;
 
     @OneToMany(mappedBy = "teacher")
