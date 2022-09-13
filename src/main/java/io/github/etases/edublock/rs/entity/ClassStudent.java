@@ -6,19 +6,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ClassStudent {
+public class ClassStudent implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
     private long id;
-    @Column(nullable = false)
-    private long classroomId;
-    @Column(nullable = false)
-    private long studentId;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Classroom classroom;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Student student;
 }

@@ -6,25 +6,32 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class PendingRecordEntry {
+public class PendingRecordEntry implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
     private long id;
-    @Column(nullable = false)
-    private long subjectId;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Subject subject;
     @Column(nullable = false)
     private float firstHalfScore;
     @Column(nullable = false)
     private float secondHalfScore;
     @Column(nullable = false)
     private float finalScore;
-    @Column(nullable = false)
-    private long teacherId;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Account teacher;
+
+    @OneToMany(mappedBy = "pendingRecordEntry")
+    private Set<Record> records;
 }

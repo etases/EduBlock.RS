@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
@@ -14,7 +16,7 @@ import javax.persistence.*;
 @Setter
 @NamedQuery(name = "Account.findAll", query = "FROM Account")
 @NamedQuery(name = "Account.findByUsername", query = "FROM Account WHERE username = :username")
-public class Account {
+public class Account implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
@@ -27,4 +29,16 @@ public class Account {
     private String salt;
     @Column(nullable = false)
     private String role;
+
+    @OneToOne
+    private Student student;
+    @OneToOne
+    private Profile teacher;
+
+    @OneToMany(mappedBy = "teacher")
+    private Set<ClassTeacher> classrooms;
+    @OneToMany(mappedBy = "teacher")
+    private Set<RecordEntry> recordEntries;
+    @OneToMany(mappedBy = "student")
+    private Set<Record> records;
 }

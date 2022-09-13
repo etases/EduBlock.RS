@@ -6,16 +6,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class Student {
+public class Student implements Serializable {
     @Id
-    @GeneratedValue
-    private long id;
+    @OneToOne
+    @JoinColumn
+    private Account account;
     @Column(nullable = false)
     private String ethnic;
     @Column(nullable = false)
@@ -28,4 +31,7 @@ public class Student {
     private String motherJob;
     @Column(nullable = false)
     private String homeTown;
+
+    @OneToMany(mappedBy = "student")
+    private Set<ClassStudent> classrooms;
 }

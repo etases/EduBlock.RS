@@ -6,13 +6,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class Classroom {
+public class Classroom implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
@@ -21,4 +23,11 @@ public class Classroom {
     private String name;
     @Column(nullable = false)
     private int grade;
+
+    @OneToMany(mappedBy = "classroom")
+    private Set<ClassStudent> students;
+    @OneToMany(mappedBy = "classroom")
+    private Set<ClassTeacher> teachers;
+    @OneToMany(mappedBy = "classroom")
+    private Set<Record> records;
 }

@@ -6,21 +6,25 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class ClassTeacher {
+public class ClassTeacher implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
     private long id;
-    @Column(nullable = false)
-    private long classroomId;
-    @Column(nullable = false)
-    private long teacherId;
-    @Column(nullable = false)
-    private long subjectId;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Classroom classroom;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Account teacher;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Subject subject;
 }
