@@ -88,7 +88,10 @@ public class JwtHandler extends SimpleServerHandler {
                         .result("200", LoginResponse.class, builder -> builder.description("The token"))
                         .result("401", LoginResponse.class, builder -> builder.description("Invalid username or password")),
                 ctx -> {
-                    UserInput userInput = ctx.bodyAsClass(UserInput.class);
+                    UserInput userInput = ctx.bodyValidator(UserInput.class)
+                            .check(input -> input.getUsername() != null, "Username cannot be null")
+                            .check(input -> input.getPassword() != null, "Password cannot be null")
+                            .get();
                     ctx.future(
                             CompletableFuture.supplyAsync(() -> {
                                 try (var session = sessionFactory.openSession()) {
@@ -121,7 +124,10 @@ public class JwtHandler extends SimpleServerHandler {
                         .result("200", Response.class, builder -> builder.description("The token"))
                         .result("409", Response.class, builder -> builder.description("Username already exists")),
                 ctx -> {
-                    UserInput userInput = ctx.bodyAsClass(UserInput.class);
+                    UserInput userInput = ctx.bodyValidator(UserInput.class)
+                            .check(input -> input.getUsername() != null, "Username cannot be null")
+                            .check(input -> input.getPassword() != null, "Password cannot be null")
+                            .get();
                     ctx.future(
                             CompletableFuture.supplyAsync(() -> {
                                 try (var session = sessionFactory.openSession()) {
