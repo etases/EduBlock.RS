@@ -16,11 +16,8 @@ import java.util.Date;
 @Setter
 public class Profile implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(nullable = false)
     private long id;
-    @OneToOne
-    @JoinColumn(name = "id")
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @MapsId
     private Account account;
     @Column(nullable = false)

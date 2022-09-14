@@ -93,13 +93,13 @@ public class JwtHandler extends SimpleServerHandler {
                             CompletableFuture.supplyAsync(() -> {
                                 try (var session = sessionFactory.openSession()) {
                                     return session.createNamedQuery("Account.findByUsername", Account.class)
-                                            .setParameter("username", userInput.username())
+                                            .setParameter("username", userInput.getUsername())
                                             .uniqueResult();
                                 }
                             }),
                             result -> {
                                 Account account = result == null ? null : (Account) result;
-                                if (account == null || !verifyPassword(userInput.password(), account.getSalt(), account.getHashedPassword())) {
+                                if (account == null || !verifyPassword(userInput.getPassword(), account.getSalt(), account.getHashedPassword())) {
                                     ctx.status(401);
                                     ctx.json(new LoginResponse(1, "Invalid username or password", null));
                                     return;
@@ -126,7 +126,7 @@ public class JwtHandler extends SimpleServerHandler {
                             CompletableFuture.supplyAsync(() -> {
                                 try (var session = sessionFactory.openSession()) {
                                     return session.createNamedQuery("Account.findByUsername", Account.class)
-                                            .setParameter("username", userInput.username())
+                                            .setParameter("username", userInput.getUsername())
                                             .uniqueResult();
                                 }
                             }),
@@ -138,9 +138,9 @@ public class JwtHandler extends SimpleServerHandler {
                                     return;
                                 }
                                 String salt = generateSalt();
-                                String hash = hashPassword(userInput.password(), salt);
+                                String hash = hashPassword(userInput.getPassword(), salt);
                                 account = new Account();
-                                account.setUsername(userInput.username());
+                                account.setUsername(userInput.getUsername());
                                 account.setHashedPassword(hash);
                                 account.setSalt(salt);
                                 account.setRole(Roles.USER.name());

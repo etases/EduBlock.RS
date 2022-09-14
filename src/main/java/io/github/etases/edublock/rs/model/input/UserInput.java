@@ -1,7 +1,9 @@
 package io.github.etases.edublock.rs.model.input;
 
-public record UserInput(
-        String username,
-        String password
-) {
+import lombok.Data;
+
+@Data
+public class UserInput {
+    private String username;
+    private String password;
 }
