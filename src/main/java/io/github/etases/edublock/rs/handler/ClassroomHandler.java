@@ -27,7 +27,7 @@ public class ClassroomHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/classroom/list", new ClassroomListHandler().handler(), JwtHandler.Roles.ADMIN);
+        server.get("/classroom/list", new ClassroomListHandler().handler(), JwtHandler.Roles.STAFF);
     }
 
     private class ClassroomListHandler implements ContextHandler{
