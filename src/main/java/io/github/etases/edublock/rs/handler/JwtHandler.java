@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
+import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
@@ -14,7 +15,9 @@ import io.github.etases.edublock.rs.model.output.Response;
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
 import io.javalin.core.security.RouteRole;
+import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
+import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
 import me.hsgamer.hscore.collections.map.CaseInsensitiveStringHashMap;
 import org.apache.commons.text.RandomStringGenerator;
 import org.hibernate.SessionFactory;
@@ -82,84 +85,8 @@ public class JwtHandler extends SimpleServerHandler {
     protected void setupServer(Javalin server) {
         server.before(provider.createHeaderDecodeHandler());
 
-        server.post("/login", OpenApiBuilder.documented(
-                OpenApiBuilder.document()
-                        .body(UserInput.class)
-                        .result("200", LoginResponse.class, builder -> builder.description("The token"))
-                        .result("401", LoginResponse.class, builder -> builder.description("Invalid username or password")),
-                ctx -> {
-                    UserInput userInput = ctx.bodyValidator(UserInput.class)
-                            .check(input -> input.getUsername() != null, "Username cannot be null")
-                            .check(input -> input.getPassword() != null, "Password cannot be null")
-                            .get();
-                    ctx.future(
-                            CompletableFuture.supplyAsync(() -> {
-                                try (var session = sessionFactory.openSession()) {
-                                    return session.createNamedQuery("Account.findByUsername", Account.class)
-                                            .setParameter("username", userInput.getUsername())
-                                            .uniqueResult();
-                                }
-                            }),
-                            result -> {
-                                Account account = result == null ? null : (Account) result;
-                                if (account == null || !verifyPassword(userInput.getPassword(), account.getSalt(), account.getHashedPassword())) {
-                                    ctx.status(401);
-                                    ctx.json(new LoginResponse(1, "Invalid username or password", null));
-                                    return;
-                                }
-                                JWTCreator.Builder builder = JWT.create()
-                                        .withClaim(USER_ROLE_CLAIM, account.getRole())
-                                        .withClaim("name", account.getUsername())
-                                        .withClaim("id", account.getId());
-                                String token = provider.generateToken(builder);
-                                ctx.json(new LoginResponse(0, "Login Successful", token));
-                            }
-                    );
-                }
-        ));
-
-        server.post("/register", OpenApiBuilder.documented(
-                OpenApiBuilder.document()
-                        .body(UserInput.class)
-                        .result("200", Response.class, builder -> builder.description("The token"))
-                        .result("409", Response.class, builder -> builder.description("Username already exists")),
-                ctx -> {
-                    UserInput userInput = ctx.bodyValidator(UserInput.class)
-                            .check(input -> input.getUsername() != null, "Username cannot be null")
-                            .check(input -> input.getPassword() != null, "Password cannot be null")
-                            .get();
-                    ctx.future(
-                            CompletableFuture.supplyAsync(() -> {
-                                try (var session = sessionFactory.openSession()) {
-                                    return session.createNamedQuery("Account.findByUsername", Account.class)
-                                            .setParameter("username", userInput.getUsername())
-                                            .uniqueResult();
-                                }
-                            }),
-                            result -> {
-                                Account account = result == null ? null : (Account) result;
-                                if (account != null) {
-                                    ctx.status(409);
-                                    ctx.json(new Response(1, "Username already exists"));
-                                    return;
-                                }
-                                String salt = generateSalt();
-                                String hash = hashPassword(userInput.getPassword(), salt);
-                                account = new Account();
-                                account.setUsername(userInput.getUsername());
-                                account.setHashedPassword(hash);
-                                account.setSalt(salt);
-                                account.setRole(Roles.USER.name());
-                                try (var session = sessionFactory.openSession()) {
-                                    Transaction transaction = session.beginTransaction();
-                                    session.save(account);
-                                    transaction.commit();
-                                }
-                                ctx.json(new Response(0, "Register Successful"));
-                            }
-                    );
-                }
-        ));
+        server.post("/login", new LoginHandler().handler());
+        server.post("/register", new RegisterHandler().handler());
     }
 
     public enum Roles implements RouteRole {
@@ -177,6 +104,95 @@ public class JwtHandler extends SimpleServerHandler {
 
         public JWTCreator.Builder addRoleToToken(JWTCreator.Builder builder) {
             return builder.withClaim(USER_ROLE_CLAIM, name());
+        }
+    }
+
+    private class LoginHandler implements ContextHandler {
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .body(UserInput.class)
+                    .result("200", LoginResponse.class, builder -> builder.description("The token"))
+                    .result("401", LoginResponse.class, builder -> builder.description("Invalid username or password"));
+        }
+
+        @Override
+        public void handle(Context ctx) {
+            UserInput userInput = ctx.bodyValidator(UserInput.class)
+                    .check(input -> input.getUsername() != null, "Username cannot be null")
+                    .check(input -> input.getPassword() != null, "Password cannot be null")
+                    .get();
+            ctx.future(
+                    CompletableFuture.supplyAsync(() -> {
+                        try (var session = sessionFactory.openSession()) {
+                            return session.createNamedQuery("Account.findByUsername", Account.class)
+                                    .setParameter("username", userInput.getUsername())
+                                    .uniqueResult();
+                        }
+                    }),
+                    result -> {
+                        Account account = result == null ? null : (Account) result;
+                        if (account == null || !verifyPassword(userInput.getPassword(), account.getSalt(), account.getHashedPassword())) {
+                            ctx.status(401);
+                            ctx.json(new LoginResponse(1, "Invalid username or password", null));
+                            return;
+                        }
+                        JWTCreator.Builder builder = JWT.create()
+                                .withClaim(USER_ROLE_CLAIM, account.getRole())
+                                .withClaim("name", account.getUsername())
+                                .withClaim("id", account.getId());
+                        String token = provider.generateToken(builder);
+                        ctx.json(new LoginResponse(0, "Login Successful", token));
+                    }
+            );
+        }
+    }
+
+    private class RegisterHandler implements ContextHandler {
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .body(UserInput.class)
+                    .result("200", Response.class, builder -> builder.description("The token"))
+                    .result("409", Response.class, builder -> builder.description("Username already exists"));
+        }
+
+        @Override
+        public void handle(Context ctx) {
+            UserInput userInput = ctx.bodyValidator(UserInput.class)
+                    .check(input -> input.getUsername() != null, "Username cannot be null")
+                    .check(input -> input.getPassword() != null, "Password cannot be null")
+                    .get();
+            ctx.future(
+                    CompletableFuture.supplyAsync(() -> {
+                        try (var session = sessionFactory.openSession()) {
+                            return session.createNamedQuery("Account.findByUsername", Account.class)
+                                    .setParameter("username", userInput.getUsername())
+                                    .uniqueResult();
+                        }
+                    }),
+                    result -> {
+                        Account account = result == null ? null : (Account) result;
+                        if (account != null) {
+                            ctx.status(409);
+                            ctx.json(new Response(1, "Username already exists"));
+                            return;
+                        }
+                        String salt = generateSalt();
+                        String hash = hashPassword(userInput.getPassword(), salt);
+                        account = new Account();
+                        account.setUsername(userInput.getUsername());
+                        account.setHashedPassword(hash);
+                        account.setSalt(salt);
+                        account.setRole(Roles.USER.name());
+                        try (var session = sessionFactory.openSession()) {
+                            Transaction transaction = session.beginTransaction();
+                            session.save(account);
+                            transaction.commit();
+                        }
+                        ctx.json(new Response(0, "Register Successful"));
+                    }
+            );
         }
     }
 }
