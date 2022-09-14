@@ -32,6 +32,8 @@ public class DatabaseManager {
         Driver driver = databaseProperties.isMemory() ? new H2MemoryDriver() : new H2LocalDriver();
         Setting setting = Setting.create(driver)
                 .setDatabaseName(databaseProperties.name())
+                .setUsername(databaseProperties.username())
+                .setPassword(databaseProperties.password())
                 .setClientProperty(AvailableSettings.DIALECT, H2Dialect.class.getName())
                 .setClientProperty(AvailableSettings.SHOW_SQL, databaseProperties.showSql())
                 .setClientProperty(AvailableSettings.FORMAT_SQL, databaseProperties.formatSql())
