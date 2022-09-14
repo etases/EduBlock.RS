@@ -80,7 +80,8 @@ public class RequestServer {
                 ValidationErrorHandler.class,
                 HelloHandler.class,
                 JwtHandler.class,
-                SwaggerHandler.class
+                SwaggerHandler.class,
+                AccountHandler.class
         );
     }
 }

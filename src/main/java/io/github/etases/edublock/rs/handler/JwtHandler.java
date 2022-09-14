@@ -9,8 +9,8 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.internal.jwt.JwtProvider;
-import io.github.etases.edublock.rs.model.input.UserInput;
-import io.github.etases.edublock.rs.model.output.LoginResponse;
+import io.github.etases.edublock.rs.model.input.AccountInput;
+import io.github.etases.edublock.rs.model.output.StringResponse;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
@@ -90,9 +90,7 @@ public class JwtHandler extends SimpleServerHandler {
     }
 
     public enum Roles implements RouteRole {
-        ANYONE,
-        USER,
-        ADMIN;
+        ANYONE, STUDENT, STAFF, TEACHER, ADMIN;
 
         public static Map<String, RouteRole> getRoleMapping() {
             Map<String, RouteRole> roleMap = new CaseInsensitiveStringHashMap<>();
@@ -111,30 +109,30 @@ public class JwtHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
-                    .body(UserInput.class)
-                    .result("200", LoginResponse.class, builder -> builder.description("The token"))
-                    .result("401", LoginResponse.class, builder -> builder.description("Invalid username or password"));
+                    .body(AccountInput.class)
+                    .result("200", StringResponse.class, builder -> builder.description("The token"))
+                    .result("401", StringResponse.class, builder -> builder.description("Invalid username or password"));
         }
 
         @Override
         public void handle(Context ctx) {
-            UserInput userInput = ctx.bodyValidator(UserInput.class)
-                    .check(input -> input.getUsername() != null, "Username cannot be null")
-                    .check(input -> input.getPassword() != null, "Password cannot be null")
+            AccountInput accountInput = ctx.bodyValidator(AccountInput.class)
+                    .check(input -> input.username() != null, "Username cannot be null")
+                    .check(input -> input.password() != null, "Password cannot be null")
                     .get();
             ctx.future(
                     CompletableFuture.supplyAsync(() -> {
                         try (var session = sessionFactory.openSession()) {
                             return session.createNamedQuery("Account.findByUsername", Account.class)
-                                    .setParameter("username", userInput.getUsername())
+                                    .setParameter("username", accountInput.username())
                                     .uniqueResult();
                         }
                     }),
                     result -> {
                         Account account = result == null ? null : (Account) result;
-                        if (account == null || !verifyPassword(userInput.getPassword(), account.getSalt(), account.getHashedPassword())) {
+                        if (account == null || !verifyPassword(accountInput.password(), account.getSalt(), account.getHashedPassword())) {
                             ctx.status(401);
-                            ctx.json(new LoginResponse(1, "Invalid username or password", null));
+                            ctx.json(new StringResponse(1, "Invalid username or password", null));
                             return;
                         }
                         JWTCreator.Builder builder = JWT.create()
@@ -142,7 +140,7 @@ public class JwtHandler extends SimpleServerHandler {
                                 .withClaim("name", account.getUsername())
                                 .withClaim("id", account.getId());
                         String token = provider.generateToken(builder);
-                        ctx.json(new LoginResponse(0, "Login Successful", token));
+                        ctx.json(new StringResponse(0, "Login Successful", token));
                     }
             );
         }
@@ -152,22 +150,22 @@ public class JwtHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
-                    .body(UserInput.class)
+                    .body(AccountInput.class)
                     .result("200", Response.class, builder -> builder.description("The token"))
                     .result("409", Response.class, builder -> builder.description("Username already exists"));
         }
 
         @Override
         public void handle(Context ctx) {
-            UserInput userInput = ctx.bodyValidator(UserInput.class)
-                    .check(input -> input.getUsername() != null, "Username cannot be null")
-                    .check(input -> input.getPassword() != null, "Password cannot be null")
+            AccountInput accountInput = ctx.bodyValidator(AccountInput.class)
+                    .check(input -> input.username() != null, "Username cannot be null")
+                    .check(input -> input.password() != null, "Password cannot be null")
                     .get();
             ctx.future(
                     CompletableFuture.supplyAsync(() -> {
                         try (var session = sessionFactory.openSession()) {
                             return session.createNamedQuery("Account.findByUsername", Account.class)
-                                    .setParameter("username", userInput.getUsername())
+                                    .setParameter("username", accountInput.username())
                                     .uniqueResult();
                         }
                     }),
@@ -179,12 +177,12 @@ public class JwtHandler extends SimpleServerHandler {
                             return;
                         }
                         String salt = generateSalt();
-                        String hash = hashPassword(userInput.getPassword(), salt);
+                        String hash = hashPassword(accountInput.password(), salt);
                         account = new Account();
-                        account.setUsername(userInput.getUsername());
+                        account.setUsername(accountInput.username());
                         account.setHashedPassword(hash);
                         account.setSalt(salt);
-                        account.setRole(Roles.USER.name());
+                        account.setRole(Roles.ADMIN.name());
                         try (var session = sessionFactory.openSession()) {
                             Transaction transaction = session.beginTransaction();
                             session.save(account);

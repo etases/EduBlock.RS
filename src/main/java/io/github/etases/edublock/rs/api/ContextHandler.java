@@ -6,11 +6,11 @@ import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
 
 public interface ContextHandler {
+    void handle(Context ctx);
+
     default OpenApiDocumentation document() {
         return null;
     }
-
-    void handle(Context ctx);
 
     default Handler handler() {
         OpenApiDocumentation documentation = document();

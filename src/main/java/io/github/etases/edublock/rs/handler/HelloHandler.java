@@ -17,12 +17,12 @@ public class HelloHandler extends SimpleServerHandler {
     protected void setupServer(Javalin server) {
         server.get("/", ctx -> ctx.result("Hello World!"));
 
-        server.get("/hellouser", OpenApiBuilder.documented(
+        server.get("/helloadmin", OpenApiBuilder.documented(
                 OpenApiBuilder.document()
                         .operation(SwaggerHandler.addSecurity()),
                 ctx -> {
-                    ctx.result("Hello User");
+                    ctx.result("Hello Admin");
                 }
-        ), JwtHandler.Roles.USER);
+        ), JwtHandler.Roles.ADMIN);
     }
 }
