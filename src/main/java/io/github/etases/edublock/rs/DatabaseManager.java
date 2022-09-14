@@ -1,7 +1,7 @@
 package io.github.etases.edublock.rs;
 
-import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.entity.Record;
+import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.property.DatabaseProperties;
 import lombok.Getter;
 import me.hsgamer.hscore.database.Driver;
