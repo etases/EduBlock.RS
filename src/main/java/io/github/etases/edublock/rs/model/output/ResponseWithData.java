@@ -1,12 +1,19 @@
 package io.github.etases.edublock.rs.model.output;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import javax.annotation.Nullable;
 
-@Data
-public class ResponseWithData<T> {
-    private final int status;
-    private final String message;
-    private final @Nullable T data;
+@Getter
+@Setter
+@RequiredArgsConstructor
+public class ResponseWithData<T> extends Response {
+    private @Nullable T data;
+
+    public ResponseWithData(int status, String message, @Nullable T data) {
+        super(status, message);
+        this.data = data;
+    }
 }

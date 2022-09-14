@@ -1,6 +1,7 @@
 package io.github.etases.edublock.rs;
 
-import io.github.etases.edublock.rs.entity.User;
+import io.github.etases.edublock.rs.entity.Record;
+import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.property.DatabaseProperties;
 import lombok.Getter;
 import me.hsgamer.hscore.database.Driver;
@@ -31,6 +32,8 @@ public class DatabaseManager {
         Driver driver = databaseProperties.isMemory() ? new H2MemoryDriver() : new H2LocalDriver();
         Setting setting = Setting.create(driver)
                 .setDatabaseName(databaseProperties.name())
+                .setUsername(databaseProperties.username())
+                .setPassword(databaseProperties.password())
                 .setClientProperty(AvailableSettings.DIALECT, H2Dialect.class.getName())
                 .setClientProperty(AvailableSettings.SHOW_SQL, databaseProperties.showSql())
                 .setClientProperty(AvailableSettings.FORMAT_SQL, databaseProperties.formatSql())
@@ -43,7 +46,16 @@ public class DatabaseManager {
 
     private List<Class<?>> getEntityClasses() {
         return List.of(
-                User.class
+                Account.class,
+                Classroom.class,
+                ClassStudent.class,
+                ClassTeacher.class,
+                PendingRecordEntry.class,
+                Profile.class,
+                Record.class,
+                RecordEntry.class,
+                Student.class,
+                Subject.class
         );
     }
 }

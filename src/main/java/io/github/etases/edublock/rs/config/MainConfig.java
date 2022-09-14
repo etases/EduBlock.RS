@@ -16,7 +16,7 @@ public interface MainConfig {
 
     @ConfigPath(value = "database", converter = DatabasePropertiesConverter.class)
     default DatabaseProperties getDatabaseProperties() {
-        return new DatabaseProperties("edublock", true, true, true, "update");
+        return new DatabaseProperties("edublock", "root", "", true, true, true, "update");
     }
 
     @ConfigPath(value = "server", converter = ServerPropertiesConverter.class)

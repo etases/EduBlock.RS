@@ -3,6 +3,7 @@ package io.github.etases.edublock.rs;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import io.github.etases.edublock.rs.internal.dependency.MapperModule;
 import io.github.etases.edublock.rs.internal.dependency.ServerInstanceModule;
 import lombok.Getter;
 
@@ -26,7 +27,8 @@ public class DependencyManager {
 
     private List<Module> getModules() {
         return List.of(
-                new ServerInstanceModule(requestServer)
+                new ServerInstanceModule(requestServer),
+                new MapperModule()
         );
     }
 }
