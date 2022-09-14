@@ -81,7 +81,8 @@ public class RequestServer {
                 HelloHandler.class,
                 JwtHandler.class,
                 SwaggerHandler.class,
-                AccountHandler.class
+                AccountHandler.class,
+                RecordEntryHandler.class
         );
     }
 }
