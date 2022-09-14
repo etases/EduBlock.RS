@@ -79,7 +79,13 @@ public class RequestServer {
                 CommandHandler.class,
                 HelloHandler.class,
                 JwtHandler.class,
+<<<<<<< Updated upstream
                 SwaggerHandler.class
+=======
+                SwaggerHandler.class,
+                AccountHandler.class,
+                ClassroomHandler.class
+>>>>>>> Stashed changes
         );
     }
 }
