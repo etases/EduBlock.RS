@@ -77,6 +77,7 @@ public class RequestServer {
     private List<Class<? extends ServerHandler>> getHandlers() {
         return List.of(
                 CommandHandler.class,
+                ValidationErrorHandler.class,
                 HelloHandler.class,
                 JwtHandler.class,
 <<<<<<< Updated upstream
@@ -86,6 +87,7 @@ public class RequestServer {
                 AccountHandler.class,
                 ClassroomHandler.class
 >>>>>>> Stashed changes
+                SwaggerHandler.class,
         );
     }
 }
