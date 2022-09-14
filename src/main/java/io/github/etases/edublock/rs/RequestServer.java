@@ -80,14 +80,9 @@ public class RequestServer {
                 ValidationErrorHandler.class,
                 HelloHandler.class,
                 JwtHandler.class,
-<<<<<<< Updated upstream
-                SwaggerHandler.class
-=======
                 SwaggerHandler.class,
                 AccountHandler.class,
                 ClassroomHandler.class
->>>>>>> Stashed changes
-                SwaggerHandler.class,
         );
     }
 }
