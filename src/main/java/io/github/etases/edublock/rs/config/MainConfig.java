@@ -23,4 +23,9 @@ public interface MainConfig {
     default ServerProperties getServerProperties() {
         return new ServerProperties("localhost", 7070);
     }
+
+    @ConfigPath(value = "account.default-password")
+    default String getDefaultPassword() {
+        return "password";
+    }
 }
