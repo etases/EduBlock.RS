@@ -1,19 +1,26 @@
 package io.github.etases.edublock.rs;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
+import org.simpleyaml.configuration.file.YamlFile;
+import org.tinylog.Logger;
+
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
-import io.github.etases.edublock.rs.handler.*;
+import io.github.etases.edublock.rs.handler.AccountHandler;
+import io.github.etases.edublock.rs.handler.CommandHandler;
+import io.github.etases.edublock.rs.handler.HelloHandler;
+import io.github.etases.edublock.rs.handler.JwtHandler;
+import io.github.etases.edublock.rs.handler.StaffHandler;
+import io.github.etases.edublock.rs.handler.SwaggerHandler;
+import io.github.etases.edublock.rs.handler.ValidationErrorHandler;
 import io.github.etases.edublock.rs.internal.terminal.ServerTerminal;
 import io.javalin.Javalin;
 import lombok.Getter;
 import me.hsgamer.hscore.config.proxy.ConfigGenerator;
 import me.hsgamer.hscore.config.simpleconfiguration.SimpleConfig;
-import org.simpleyaml.configuration.file.YamlFile;
-import org.tinylog.Logger;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 
 @Getter
 public class RequestServer {
@@ -26,14 +33,15 @@ public class RequestServer {
     private Javalin server;
 
     RequestServer() {
-        mainConfig = ConfigGenerator.newInstance(MainConfig.class, new SimpleConfig<>(new File(".", "config.yml"), new YamlFile(), (file, yamlFile) -> {
-            yamlFile.setConfigurationFile(file);
-            try {
-                yamlFile.loadWithComments();
-            } catch (IOException e) {
-                Logger.warn(e);
-            }
-        }));
+        mainConfig = ConfigGenerator.newInstance(MainConfig.class,
+                new SimpleConfig<>(new File(".", "config.yml"), new YamlFile(), (file, yamlFile) -> {
+                    yamlFile.setConfigurationFile(file);
+                    try {
+                        yamlFile.loadWithComments();
+                    } catch (IOException e) {
+                        Logger.warn(e);
+                    }
+                }));
         commandManager = new CommandManager();
         serverBuilder = new ServerBuilder();
         databaseManager = new DatabaseManager(this);
@@ -81,7 +89,7 @@ public class RequestServer {
                 HelloHandler.class,
                 JwtHandler.class,
                 SwaggerHandler.class,
-                AccountHandler.class
-        );
+                AccountHandler.class,
+                StaffHandler.class);
     }
 }
