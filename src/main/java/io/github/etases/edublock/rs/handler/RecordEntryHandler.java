@@ -1,10 +1,13 @@
 package io.github.etases.edublock.rs.handler;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.RecordEntry;
+import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
+import io.github.etases.edublock.rs.model.input.AccountInput;
 import io.github.etases.edublock.rs.model.output.RecordEntryListResponse;
 import io.github.etases.edublock.rs.model.output.RecordEntryOutput;
 import io.javalin.Javalin;
@@ -27,7 +30,7 @@ public class RecordEntryHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/recordentry/list", new RecordEntryListHandler().handler(), JwtHandler.Roles.STUDENT);
+        server.get("/recordentry", new RecordEntryListHandler().handler(), JwtHandler.Roles.ADMIN);
     }
 
     private class RecordEntryListHandler implements ContextHandler {
@@ -35,18 +38,12 @@ public class RecordEntryHandler extends SimpleServerHandler {
         @Override
         public void handle(Context ctx) {
             try(var session = sessionFactory.openSession()){
-                var query = session.createNamedQuery("RecordEntry.findAll", RecordEntry.class);
-                var recordEntries = query.getResultList();
-                List<RecordEntryOutput> list = new ArrayList<>();
-                for(var recordEntry : recordEntries){
-                    list.add(new RecordEntryOutput(
-                            recordEntry.getId(),
-                            recordEntry.getFirstHalfScore(),
-                            recordEntry.getSecondHalfScore(),
-                            recordEntry.getFinalScore()
-                    ));
-                }
-                ctx.json(new RecordEntryListResponse(0, "Get recordEntry", list));
+                DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+                long userId = jwt.getClaim("id").asLong();
+                var query = session.createNamedQuery("RecordEntry.findPersonalEntry", RecordEntry.class).setParameter("id", userId);
+                var recordEntries = query.uniqueResult();
+                RecordEntryOutput outPut = new RecordEntryOutput(recordEntries.getId(), recordEntries.getFirstHalfScore(), recordEntries.getSecondHalfScore(), recordEntries.getFinalScore());
+                ctx.json(new RecordEntryListResponse(0, "Get personal recordEntry", outPut));
             }
         }
 
@@ -54,7 +51,7 @@ public class RecordEntryHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", RecordEntryListResponse.class, builder -> builder.description("The list of record entry"));
+                    .result("200", RecordEntryListResponse.class, builder -> builder.description("The personal record entry"));
         }
     }
 }
