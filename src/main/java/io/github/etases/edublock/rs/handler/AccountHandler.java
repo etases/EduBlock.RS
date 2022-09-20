@@ -1,6 +1,15 @@
 package io.github.etases.edublock.rs.handler;
 
+import java.sql.Date;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+
 import com.google.inject.Inject;
+
 import io.github.etases.edublock.rs.PasswordUtils;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
@@ -12,18 +21,15 @@ import io.github.etases.edublock.rs.model.input.AccountCreate;
 import io.github.etases.edublock.rs.model.input.AccountCreateListInput;
 import io.github.etases.edublock.rs.model.input.AccountLogin;
 import io.github.etases.edublock.rs.model.input.AccountLoginListInput;
-import io.github.etases.edublock.rs.model.output.*;
+import io.github.etases.edublock.rs.model.output.AccountCreateErrorListResponse;
+import io.github.etases.edublock.rs.model.output.AccountListResponse;
+import io.github.etases.edublock.rs.model.output.AccountLoginErrorListResponse;
+import io.github.etases.edublock.rs.model.output.AccountOutput;
+import io.github.etases.edublock.rs.model.output.ResponseWithData;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-
-import java.sql.Date;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AccountHandler extends SimpleServerHandler {
     private final SessionFactory sessionFactory;
@@ -72,8 +78,7 @@ public class AccountHandler extends SimpleServerHandler {
                             profile.getAddress(),
                             profile.getPhone(),
                             profile.getEmail(),
-                            account.getRole()
-                    ));
+                            account.getRole()));
                 }
                 ctx.json(new AccountListResponse(0, "Get account list", list));
             }
@@ -85,9 +90,12 @@ public class AccountHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(SwaggerHandler.addSecurity())
-                    .body(AccountCreateListInput.class, builder -> builder.description("The list of accounts to create"))
-                    .result("200", AccountCreateErrorListResponse.class, builder -> builder.description("The errors of the accounts. Should be empty"))
-                    .result("400", AccountCreateErrorListResponse.class, builder -> builder.description("The errors of the accounts."));
+                    .body(AccountCreateListInput.class,
+                            builder -> builder.description("The list of accounts to create"))
+                    .result("200", AccountCreateErrorListResponse.class,
+                            builder -> builder.description("The errors of the accounts. Should be empty"))
+                    .result("400", AccountCreateErrorListResponse.class,
+                            builder -> builder.description("The errors of the accounts."));
         }
 
         @Override
@@ -115,7 +123,7 @@ public class AccountHandler extends SimpleServerHandler {
                     account.setUsername(username + (count == 0 ? "" : count));
                     account.setSalt(salt);
                     account.setHashedPassword(hashedPassword);
-                    account.setRole(accountCreate.role());
+                    account.setRole(accountCreate.role().toUpperCase());
                     session.save(account);
                     var profile = new Profile();
                     profile.setId(account.getId());
@@ -147,8 +155,10 @@ public class AccountHandler extends SimpleServerHandler {
             return OpenApiBuilder.document()
                     .operation(SwaggerHandler.addSecurity())
                     .body(AccountLoginListInput.class, builder -> builder.description("The list of accounts to update"))
-                    .result("200", AccountLoginErrorListResponse.class, builder -> builder.description("The errors of the accounts. Should be empty"))
-                    .result("400", AccountLoginErrorListResponse.class, builder -> builder.description("The errors of the accounts."));
+                    .result("200", AccountLoginErrorListResponse.class,
+                            builder -> builder.description("The errors of the accounts. Should be empty"))
+                    .result("400", AccountLoginErrorListResponse.class,
+                            builder -> builder.description("The errors of the accounts."));
         }
 
         @Override
