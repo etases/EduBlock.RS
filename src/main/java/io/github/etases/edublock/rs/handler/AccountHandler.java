@@ -1,15 +1,6 @@
 package io.github.etases.edublock.rs.handler;
 
-import java.sql.Date;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-
 import com.google.inject.Inject;
-
 import io.github.etases.edublock.rs.PasswordUtils;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
@@ -21,15 +12,18 @@ import io.github.etases.edublock.rs.model.input.AccountCreate;
 import io.github.etases.edublock.rs.model.input.AccountCreateListInput;
 import io.github.etases.edublock.rs.model.input.AccountLogin;
 import io.github.etases.edublock.rs.model.input.AccountLoginListInput;
-import io.github.etases.edublock.rs.model.output.AccountCreateErrorListResponse;
-import io.github.etases.edublock.rs.model.output.AccountListResponse;
-import io.github.etases.edublock.rs.model.output.AccountLoginErrorListResponse;
-import io.github.etases.edublock.rs.model.output.AccountOutput;
-import io.github.etases.edublock.rs.model.output.ResponseWithData;
+import io.github.etases.edublock.rs.model.output.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+
+import java.sql.Date;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AccountHandler extends SimpleServerHandler {
     private final SessionFactory sessionFactory;

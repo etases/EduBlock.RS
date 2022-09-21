@@ -1,12 +1,6 @@
 package io.github.etases.edublock.rs.handler;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.hibernate.SessionFactory;
-
 import com.google.inject.Inject;
-
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
@@ -22,6 +16,10 @@ import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
+import org.hibernate.SessionFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StaffHandler extends SimpleServerHandler {
     private final SessionFactory sessionFactory;
@@ -94,13 +92,17 @@ public class StaffHandler extends SimpleServerHandler {
                 long accountId = Long.parseLong(ctx.pathParam("id"));
                 Account account = session.get(Account.class, accountId);
 
-                if (account == null)
+                if (account == null) {
                     ctx.json(new Response(404, "Account not found"));
+                    return;
+                }
 
                 Profile profile = session.get(Profile.class, account.getId());
 
-                if (profile == null)
+                if (profile == null) {
                     ctx.json(new Response(404, "Profile not found"));
+                    return;
+                }
 
                 profile.setFirstName(input.firstName());
                 profile.setLastName(input.lastName());
@@ -133,8 +135,10 @@ public class StaffHandler extends SimpleServerHandler {
                 long classId = Long.parseLong(ctx.pathParam("id"));
                 Classroom classroom = session.get(Classroom.class, classId);
 
-                if (classroom == null)
+                if (classroom == null) {
                     ctx.json(new Response(404, "Class not found"));
+                    return;
+                }
 
                 classroom.setName(input.name());
                 classroom.setGrade(input.grade());
