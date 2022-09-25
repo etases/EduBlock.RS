@@ -1,14 +1,6 @@
 package io.github.etases.edublock.rs.handler;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import io.github.etases.edublock.rs.model.input.ClassCreate;
-import io.github.etases.edublock.rs.model.output.*;
-import org.hibernate.SessionFactory;
-
 import com.google.inject.Inject;
-
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
@@ -17,11 +9,17 @@ import io.github.etases.edublock.rs.entity.Classroom;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.input.ProfileUpdate;
+import io.github.etases.edublock.rs.model.output.AccountListResponse;
+import io.github.etases.edublock.rs.model.output.AccountOutput;
+import io.github.etases.edublock.rs.model.output.Response;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
-import org.hibernate.Transaction;
+import org.hibernate.SessionFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StaffHandler extends SimpleServerHandler {
     private final SessionFactory sessionFactory;
@@ -94,13 +92,17 @@ public class StaffHandler extends SimpleServerHandler {
                 long accountId = Long.parseLong(ctx.pathParam("id"));
                 Account account = session.get(Account.class, accountId);
 
-                if (account == null)
+                if (account == null) {
                     ctx.json(new Response(404, "Account not found"));
+                    return;
+                }
 
                 Profile profile = session.get(Profile.class, account.getId());
 
-                if (profile == null)
+                if (profile == null) {
                     ctx.json(new Response(404, "Profile not found"));
+                    return;
+                }
 
                 profile.setFirstName(input.firstName());
                 profile.setLastName(input.lastName());
@@ -133,8 +135,10 @@ public class StaffHandler extends SimpleServerHandler {
                 long classId = Long.parseLong(ctx.pathParam("id"));
                 Classroom classroom = session.get(Classroom.class, classId);
 
-                if (classroom == null)
+                if (classroom == null) {
                     ctx.json(new Response(404, "Class not found"));
+                    return;
+                }
 
                 classroom.setName(input.name());
                 classroom.setGrade(input.grade());
@@ -144,47 +148,6 @@ public class StaffHandler extends SimpleServerHandler {
                 session.getTransaction().commit();
 
                 ctx.json(new Response(201, "Class updated"));
-            }
-        }
-    }
-
-    private class CreateClassHandler implements ContextHandler {
-        @Override
-        public OpenApiDocumentation document() {
-            return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity())
-                    .body(ClassCreate.class, builder -> builder.description("The class to create"))
-                    .result("201", ClassCreateErrorResponse.class,
-                            builder -> builder.description("The class has been created"))
-                    .result("400", ClassCreateErrorResponse.class,
-                            builder -> builder.description("The class already exists"));
-        }
-
-        @Override
-        public void handle(Context ctx) {
-            ClassCreate input = ctx.bodyValidator(ClassCreate.class)
-                    .check(ClassCreate::validate, "Invalid data")
-                    .get();
-            try (var session = sessionFactory.openSession()) {
-                ResponseWithData<ClassCreate> response = new ResponseWithData<>();
-                if (session.get(Classroom.class, input.name()) != null) {
-                    response.setStatus(400);
-                    response.setMessage("Class already exists");
-                    response.setData(input);
-                    ctx.json(response);
-                    return;
-                }
-                Transaction transaction = session.beginTransaction();
-                String name = input.name();
-                int grade = input.grade();
-                var classroom = new Classroom();
-                classroom.setName(name);
-                classroom.setGrade(grade);
-                session.save(classroom);
-                if (transaction.isActive()) {
-                    transaction.commit();
-                } else {
-                    transaction.rollback();
-                }
             }
         }
     }
