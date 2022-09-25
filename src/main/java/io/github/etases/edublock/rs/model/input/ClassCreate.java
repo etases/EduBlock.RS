@@ -10,9 +10,4 @@ public record ClassCreate(
         return name != null && !name.isBlank()
                 && grade > 0 && grade < 13;
     }
-
-    @JsonIgnore
-    public String getClassName() {
-        return name;
-    }
 }
