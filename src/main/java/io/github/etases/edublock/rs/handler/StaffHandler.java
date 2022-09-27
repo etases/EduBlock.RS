@@ -175,8 +175,7 @@ public class StaffHandler extends SimpleServerHandler {
                         .uniqueResult();
                 if (checkClass != null) {
                     ctx.status(400);
-                    response.setStatus(1);
-                    ctx.json(response);
+                    ctx.json(new ClassCreateErrorResponse(1, "Class already exists", null));
                     return;
                 }
                 Transaction transaction = session.beginTransaction();
@@ -186,12 +185,13 @@ public class StaffHandler extends SimpleServerHandler {
                 myClass.setName(name);
                 myClass.setGrade(grade);
                 session.save(myClass);
-                if (transaction.isActive()) {
+                if (response.getStatus() == 0) {
                     transaction.commit();
-                    ctx.json(new Response(201, "Class Created"));
+                    ctx.json(new ClassCreateErrorResponse(0, "Class created", response.getData()));
                 } else {
                     transaction.rollback();
-                    ctx.json(new Response(400, "Class Existed"));
+                    ctx.status(400);
+                    ctx.json(new ClassCreateErrorResponse(1, "Class already exists", response.getData()));
                 }
 
             }
