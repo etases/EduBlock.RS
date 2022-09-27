@@ -37,6 +37,7 @@ public class StaffHandler extends SimpleServerHandler {
         server.post("/staff/user-profile/update/<id>", new ProfileUpdateHandler().handler(), JwtHandler.Roles.STAFF);
 
         server.post("/staff/class/update/<id>", new ClassUpdateHandler().handler(), JwtHandler.Roles.STAFF);
+        server.post("/staff/class/create", new CreateClassHandler().handler(), JwtHandler.Roles.STAFF);
     }
 
     private class AccountListHandler implements ContextHandler {
