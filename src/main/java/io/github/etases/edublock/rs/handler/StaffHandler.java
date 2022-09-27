@@ -170,7 +170,9 @@ public class StaffHandler extends SimpleServerHandler {
                     .get();
             try (var session = sessionFactory.openSession()) {
                 ResponseWithData<ClassCreate> response = new ResponseWithData<>();
-                if (session.get(Classroom.class, input.name()) != null) {
+                long classId = Long.parseLong(ctx.pathParam("id"));
+                Classroom classroom = session.get(Classroom.class, classId);
+                if (classroom != null) {
                     response.setStatus(400);
                     response.setMessage("Class already exists");
                     response.setData(input);
@@ -180,10 +182,10 @@ public class StaffHandler extends SimpleServerHandler {
                 Transaction transaction = session.beginTransaction();
                 String name = input.name();
                 int grade = input.grade();
-                var classroom = new Classroom();
-                classroom.setName(name);
-                classroom.setGrade(grade);
-                session.save(classroom);
+                var myClass = new Classroom();
+                myClass.setName(name);
+                myClass.setGrade(grade);
+                session.save(myClass);
                 if (transaction.isActive()) {
                     transaction.commit();
                 } else {
