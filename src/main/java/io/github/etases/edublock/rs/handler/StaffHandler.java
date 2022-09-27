@@ -170,12 +170,12 @@ public class StaffHandler extends SimpleServerHandler {
                     .get();
             try (var session = sessionFactory.openSession()) {
                 ResponseWithData<ClassCreate> response = new ResponseWithData<>();
-                long classId = Long.parseLong(ctx.pathParam("id"));
-                Classroom classroom = session.get(Classroom.class, classId);
-                if (classroom != null) {
-                    response.setStatus(400);
-                    response.setMessage("Class already exists");
-                    response.setData(input);
+                var checkClass = session.createNamedQuery("Classroom.findByName", Classroom.class)
+                        .setParameter("name", input.name())
+                        .uniqueResult();
+                if (checkClass != null) {
+                    ctx.status(400);
+                    response.setStatus(1);
                     ctx.json(response);
                     return;
                 }
@@ -188,9 +188,12 @@ public class StaffHandler extends SimpleServerHandler {
                 session.save(myClass);
                 if (transaction.isActive()) {
                     transaction.commit();
+                    ctx.json(new Response(201, "Class Created"));
                 } else {
                     transaction.rollback();
+                    ctx.json(new Response(400, "Class Existed"));
                 }
+
             }
         }
     }
