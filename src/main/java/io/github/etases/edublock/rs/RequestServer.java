@@ -26,14 +26,15 @@ public class RequestServer {
     private Javalin server;
 
     RequestServer() {
-        mainConfig = ConfigGenerator.newInstance(MainConfig.class, new SimpleConfig<>(new File(".", "config.yml"), new YamlFile(), (file, yamlFile) -> {
-            yamlFile.setConfigurationFile(file);
-            try {
-                yamlFile.loadWithComments();
-            } catch (IOException e) {
-                Logger.warn(e);
-            }
-        }));
+        mainConfig = ConfigGenerator.newInstance(MainConfig.class,
+                new SimpleConfig<>(new File(".", "config.yml"), new YamlFile(), (file, yamlFile) -> {
+                    yamlFile.setConfigurationFile(file);
+                    try {
+                        yamlFile.loadWithComments();
+                    } catch (IOException e) {
+                        Logger.warn(e);
+                    }
+                }));
         commandManager = new CommandManager();
         serverBuilder = new ServerBuilder();
         databaseManager = new DatabaseManager(this);
@@ -82,7 +83,8 @@ public class RequestServer {
                 JwtHandler.class,
                 SwaggerHandler.class,
                 AccountHandler.class,
-                ClassroomHandler.class
+                ClassroomHandler.class,
+                StaffHandler.class
         );
     }
 }
