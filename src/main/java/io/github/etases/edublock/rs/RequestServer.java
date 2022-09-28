@@ -82,9 +82,10 @@ public class RequestServer {
                 HelloHandler.class,
                 JwtHandler.class,
                 SwaggerHandler.class,
-                AccountHandler.class,
-                StaffHandler.class,
+                AccountHandler.class
                 TeacherHandler.class
+                ClassroomHandler.class,
+                StaffHandler.class
         );
     }
 }
