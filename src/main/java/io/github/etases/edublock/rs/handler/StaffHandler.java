@@ -94,14 +94,16 @@ public class StaffHandler extends SimpleServerHandler {
                 Account account = session.get(Account.class, accountId);
 
                 if (account == null) {
-                    ctx.json(new Response(404, "Account not found"));
+                    ctx.status(404);
+                    ctx.json(new Response(1, "Account not found"));
                     return;
                 }
 
                 Profile profile = session.get(Profile.class, account.getId());
 
                 if (profile == null) {
-                    ctx.json(new Response(404, "Profile not found"));
+                    ctx.status(404);
+                    ctx.json(new Response(2, "Profile not found"));
                     return;
                 }
 
@@ -117,7 +119,7 @@ public class StaffHandler extends SimpleServerHandler {
                 session.update(profile);
                 session.getTransaction().commit();
 
-                ctx.json(new Response(201, "Profile updated"));
+                ctx.json(new Response(0, "Profile updated"));
             }
         }
     }
@@ -137,7 +139,8 @@ public class StaffHandler extends SimpleServerHandler {
                 Classroom classroom = session.get(Classroom.class, classId);
 
                 if (classroom == null) {
-                    ctx.json(new Response(404, "Class not found"));
+                    ctx.status(404);
+                    ctx.json(new Response(1, "Class not found"));
                     return;
                 }
 
@@ -148,7 +151,7 @@ public class StaffHandler extends SimpleServerHandler {
                 session.update(classroom);
                 session.getTransaction().commit();
 
-                ctx.json(new Response(201, "Class updated"));
+                ctx.json(new Response(0, "Class updated"));
             }
         }
     }
@@ -158,10 +161,8 @@ public class StaffHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity())
                     .body(ClassCreate.class, builder -> builder.description("The class to create"))
-                    .result("201", ClassCreateErrorResponse.class,
-                            builder -> builder.description("The class has been created"))
-                    .result("400", ClassCreateErrorResponse.class,
-                            builder -> builder.description("The class already exists"));
+                    .result("200", Response.class, builder -> builder.description("The class has been created"))
+                    .result("400", Response.class, builder -> builder.description("The class already exists"));
         }
 
         @Override
@@ -170,13 +171,12 @@ public class StaffHandler extends SimpleServerHandler {
                     .check(ClassCreate::validate, "Invalid data")
                     .get();
             try (var session = sessionFactory.openSession()) {
-                ResponseWithData<ClassCreate> response = new ResponseWithData<>();
                 var checkClass = session.createNamedQuery("Classroom.findByName", Classroom.class)
                         .setParameter("name", input.name())
                         .uniqueResult();
                 if (checkClass != null) {
                     ctx.status(400);
-                    ctx.json(new ClassCreateErrorResponse(1, "Class already exists", null));
+                    ctx.json(new Response(1, "Class already exists"));
                     return;
                 }
                 Transaction transaction = session.beginTransaction();
@@ -186,15 +186,8 @@ public class StaffHandler extends SimpleServerHandler {
                 myClass.setName(name);
                 myClass.setGrade(grade);
                 session.save(myClass);
-                if (response.getStatus() == 0) {
-                    transaction.commit();
-                    ctx.json(new ClassCreateErrorResponse(0, "Class created", response.getData()));
-                } else {
-                    transaction.rollback();
-                    ctx.status(400);
-                    ctx.json(new ClassCreateErrorResponse(1, "Class already exists", response.getData()));
-                }
-
+                transaction.commit();
+                ctx.json(new Response(0, "Class created"));
             }
         }
     }
