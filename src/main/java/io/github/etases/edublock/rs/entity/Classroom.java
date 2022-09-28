@@ -15,6 +15,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NamedQuery(name = "Classroom.findAll", query = "FROM Classroom")
+@NamedQuery(name = "Classroom.findByName", query = "FROM Classroom WHERE name = :name")
 public class Classroom implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

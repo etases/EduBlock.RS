@@ -7,16 +7,16 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Classroom;
 import io.github.etases.edublock.rs.entity.Profile;
+import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.input.ProfileUpdate;
-import io.github.etases.edublock.rs.model.output.AccountListResponse;
-import io.github.etases.edublock.rs.model.output.AccountOutput;
-import io.github.etases.edublock.rs.model.output.Response;
+import io.github.etases.edublock.rs.model.output.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +37,7 @@ public class StaffHandler extends SimpleServerHandler {
         server.post("/staff/user-profile/update/<id>", new ProfileUpdateHandler().handler(), JwtHandler.Roles.STAFF);
 
         server.post("/staff/class/update/<id>", new ClassUpdateHandler().handler(), JwtHandler.Roles.STAFF);
+        server.post("/staff/class/create", new CreateClassHandler().handler(), JwtHandler.Roles.STAFF);
     }
 
     private class AccountListHandler implements ContextHandler {
@@ -148,6 +149,52 @@ public class StaffHandler extends SimpleServerHandler {
                 session.getTransaction().commit();
 
                 ctx.json(new Response(201, "Class updated"));
+            }
+        }
+    }
+
+    private class CreateClassHandler implements ContextHandler {
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity())
+                    .body(ClassCreate.class, builder -> builder.description("The class to create"))
+                    .result("201", ClassCreateErrorResponse.class,
+                            builder -> builder.description("The class has been created"))
+                    .result("400", ClassCreateErrorResponse.class,
+                            builder -> builder.description("The class already exists"));
+        }
+
+        @Override
+        public void handle(Context ctx) {
+            ClassCreate input = ctx.bodyValidator(ClassCreate.class)
+                    .check(ClassCreate::validate, "Invalid data")
+                    .get();
+            try (var session = sessionFactory.openSession()) {
+                ResponseWithData<ClassCreate> response = new ResponseWithData<>();
+                var checkClass = session.createNamedQuery("Classroom.findByName", Classroom.class)
+                        .setParameter("name", input.name())
+                        .uniqueResult();
+                if (checkClass != null) {
+                    ctx.status(400);
+                    ctx.json(new ClassCreateErrorResponse(1, "Class already exists", null));
+                    return;
+                }
+                Transaction transaction = session.beginTransaction();
+                String name = input.name();
+                int grade = input.grade();
+                var myClass = new Classroom();
+                myClass.setName(name);
+                myClass.setGrade(grade);
+                session.save(myClass);
+                if (response.getStatus() == 0) {
+                    transaction.commit();
+                    ctx.json(new ClassCreateErrorResponse(0, "Class created", response.getData()));
+                } else {
+                    transaction.rollback();
+                    ctx.status(400);
+                    ctx.json(new ClassCreateErrorResponse(1, "Class already exists", response.getData()));
+                }
+
             }
         }
     }
