@@ -14,6 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
+@NamedQuery(name = "Classroom.findAll", query = "FROM Classroom")
 @NamedQuery(name = "Classroom.findByName", query = "FROM Classroom WHERE name = :name")
 public class Classroom implements Serializable {
     @Id
