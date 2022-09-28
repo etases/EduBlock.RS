@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class ClassroomListResponse extends ResponseWithData<List<ClassroomOutput>>{
+public class ClassroomListResponse extends ResponseWithData<List<ClassroomOutput>> {
     public ClassroomListResponse(int status, String message, @Nullable List<ClassroomOutput> data) {
         super(status, message, data);
     }
