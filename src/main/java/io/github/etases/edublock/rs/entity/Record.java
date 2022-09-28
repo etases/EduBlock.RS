@@ -14,6 +14,8 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
+
+
 public class Record implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

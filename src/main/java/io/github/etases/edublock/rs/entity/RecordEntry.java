@@ -13,6 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Getter
 @Setter
+
 public class RecordEntry implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

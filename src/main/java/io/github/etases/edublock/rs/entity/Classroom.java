@@ -14,6 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
+@NamedQuery(name = "Classroom.findAll", query = "FROM Classroom")
 public class Classroom implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
