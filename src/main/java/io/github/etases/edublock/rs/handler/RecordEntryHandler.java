@@ -30,10 +30,10 @@ public class RecordEntryHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/recordentry", new RecordEntryListHandler().handler(), JwtHandler.Roles.ADMIN);
+        server.get("/recordentry", new PersonalRecordEntryListHandler().handler(), JwtHandler.Roles.ADMIN);
     }
 
-    private class RecordEntryListHandler implements ContextHandler {
+    private class PersonalRecordEntryListHandler implements ContextHandler {
 
         @Override
         public void handle(Context ctx) {
