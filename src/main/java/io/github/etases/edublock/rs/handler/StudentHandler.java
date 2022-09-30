@@ -4,19 +4,19 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
+import io.github.etases.edublock.rs.entity.PendingRecordEntry;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
-import io.github.etases.edublock.rs.model.input.PendingRecordEntry;
+import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
 import io.github.etases.edublock.rs.model.output.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
 
 public class StudentHandler extends SimpleServerHandler {
 
@@ -44,24 +44,30 @@ public class StudentHandler extends SimpleServerHandler {
 
         @Override
         public void handle(Context ctx) {
-            PendingRecordEntry input = ctx.bodyValidator(PendingRecordEntry.class).check(PendingRecordEntry::validate, "Invalid data").get();
+            PendingRecordEntryInput input = ctx.bodyValidator(PendingRecordEntryInput.class).check(PendingRecordEntryInput::validate, "Invalid data").get();
             DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-            long userId = jwt.getClaim("id").asLong();
+            long id = jwt.getClaim("pendingRecordEntries").asLong();
             try(var session = sessionFactory.openSession()){
-                var query = session.createNamedQuery("Record.request", RecordEntry.class).setParameter("student", userId + "%");
+                var query = session.createNamedQuery("PendingRecordEntry.request", RecordEntry.class).setParameter("id", id + "%");
                 var RecordEntries = query.getResultList();
-                List<PendingRecordEntryOutPut> list = new ArrayList<>();
-
-                for (var recordEntry : RecordEntries){
-                    list.add(new PendingRecordEntryOutPut(
-                            recordEntry.getFirstHalfScore(),
-                            recordEntry.getSecondHalfScore(),
-                            recordEntry.getFinalScore(),
-                            recordEntry.getTeacher(),
-                            recordEntry.getRecord()
-                    ));
+                if ( RecordEntries != null){
+                    ctx.status(400);
+                    ctx.json(new Response(1, "PendingRecordEntry already exists"));
+                    return;
                 }
-                ctx.json(new PendingRecordEntryListResponse(0, "Request record validation", null));
+                Transaction transaction = session.beginTransaction();
+
+                var pending = new PendingRecordEntry();
+
+                pending.setSubject(input.subject());
+                pending.setFirstHalfScore(input.firstHalfScore());
+                pending.setSecondHalfScore(input.secondHalfScore());
+                pending.setFinalScore(input.finalScore());
+
+                session.save(input);
+                transaction.commit();
+                
+                ctx.json(new PendingRecordEntryListResponse(0, "Record validation requested"));
         }
     }
 }

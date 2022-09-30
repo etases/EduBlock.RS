@@ -14,7 +14,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-@NamedQuery(name = "Record.request", query = "FROM Record WHERE student = :student")
 public class Record implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
