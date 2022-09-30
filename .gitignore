@@ -7,6 +7,15 @@
 
 config.yml
 
+.settings
+.vscode
+.classpath
+.factorypath
+.project
+
+# Database file
+*.db
+
 # IntelliJ
 out/
 

@@ -2,6 +2,7 @@ package io.github.etases.edublock.rs;
 
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
+import io.github.etases.edublock.rs.config.SystemMainConfig;
 import io.github.etases.edublock.rs.handler.*;
 import io.github.etases.edublock.rs.internal.terminal.ServerTerminal;
 import io.javalin.Javalin;
@@ -25,15 +26,20 @@ public class RequestServer {
     private final ServerTerminal terminal;
     private Javalin server;
 
-    RequestServer() {
-        mainConfig = ConfigGenerator.newInstance(MainConfig.class, new SimpleConfig<>(new File(".", "config.yml"), new YamlFile(), (file, yamlFile) -> {
-            yamlFile.setConfigurationFile(file);
-            try {
-                yamlFile.loadWithComments();
-            } catch (IOException e) {
-                Logger.warn(e);
-            }
-        }));
+    RequestServer(String[] args) {
+        if (System.getProperty("useSystem", "false").equalsIgnoreCase("true")) {
+            mainConfig = new SystemMainConfig();
+        } else {
+            mainConfig = ConfigGenerator.newInstance(MainConfig.class,
+                    new SimpleConfig<>(new File(".", "config.yml"), new YamlFile(), (file, yamlFile) -> {
+                        yamlFile.setConfigurationFile(file);
+                        try {
+                            yamlFile.loadWithComments();
+                        } catch (IOException e) {
+                            Logger.warn(e);
+                        }
+                    }));
+        }
         commandManager = new CommandManager();
         serverBuilder = new ServerBuilder();
         databaseManager = new DatabaseManager(this);
@@ -43,7 +49,7 @@ public class RequestServer {
 
     public static void main(String[] args) {
         SysOutErrRedirect.init();
-        new RequestServer().start();
+        new RequestServer(args).start();
     }
 
     public void start() {
@@ -82,7 +88,9 @@ public class RequestServer {
                 JwtHandler.class,
                 SwaggerHandler.class,
                 AccountHandler.class,
-                RecordEntryHandler.class
+                RecordEntryHandler.class,
+                ClassroomHandler.class,
+                StaffHandler.class
         );
     }
 }

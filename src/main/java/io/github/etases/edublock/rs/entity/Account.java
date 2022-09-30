@@ -16,6 +16,8 @@ import java.util.Set;
 @Setter
 @NamedQuery(name = "Account.findAll", query = "FROM Account")
 @NamedQuery(name = "Account.findByUsername", query = "FROM Account WHERE username = :username")
+@NamedQuery(name = "Account.countByUsernameRegex", query = "select count(a) FROM Account a WHERE username LIKE :username")
+@NamedQuery(name = "Account.findByRole", query = "FROM Account WHERE role = :role")
 public class Account implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
