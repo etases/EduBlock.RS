@@ -13,7 +13,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Getter
 @Setter
-@NamedQuery(name = "RecordEntry.findPersonalEntry", query = "FROM RecordEntry WHERE id = :id")
 public class RecordEntry implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

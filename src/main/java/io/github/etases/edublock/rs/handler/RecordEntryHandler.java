@@ -40,10 +40,19 @@ public class RecordEntryHandler extends SimpleServerHandler {
             try(var session = sessionFactory.openSession()){
                 DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
                 long userId = jwt.getClaim("id").asLong();
-                var query = session.createNamedQuery("RecordEntry.findPersonalEntry", RecordEntry.class).setParameter("id", userId);
-                var recordEntries = query.uniqueResult();
-                RecordEntryOutput outPut = new RecordEntryOutput(recordEntries.getId(), recordEntries.getFirstHalfScore(), recordEntries.getSecondHalfScore(), recordEntries.getFinalScore());
-                ctx.json(new RecordEntryListResponse(0, "Get personal recordEntry", outPut));
+                var query = session.createNamedQuery("Record.findPersonalRecordEntry", RecordEntry.class).setParameter("student", userId);
+                var recordEntries = query.getResultList();
+                List<RecordEntryOutput> list = new ArrayList<>();
+                for ( var record : recordEntries){
+                    list.add(new RecordEntryOutput(
+                            record.getRecord().getClassroom().getName(),
+                            record.getSubject().getName(),
+                            record.getFirstHalfScore(),
+                            record.getSecondHalfScore(),
+                            record.getFinalScore()
+                    ));
+                }
+                ctx.json(new RecordEntryListResponse(0, "Get personal recordEntry", list));
             }
         }
 
