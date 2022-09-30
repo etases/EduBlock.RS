@@ -56,8 +56,7 @@ public class StudentHandler extends SimpleServerHandler {
                             recordEntry.getFinalScore()
                     ));
                 }
-
-                ctx.json(new PendingRecordEntryListResponse(0, "Get classroom list", list));
+                ctx.json(new PendingRecordEntryListResponse(0, "Get classroom list", null));
         }
     }
 }
