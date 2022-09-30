@@ -48,7 +48,7 @@ public class StudentHandler extends SimpleServerHandler {
             DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
             long userId = jwt.getClaim("id").asLong();
             try(var session = sessionFactory.openSession()){
-                var query = session.createNamedQuery("PendingRecordEntry.request", RecordEntry.class).setParameter("teacher", userId + "%");
+                var query = session.createNamedQuery("Record.request", RecordEntry.class).setParameter("student", userId + "%");
                 var RecordEntries = query.getResultList();
                 List<PendingRecordEntryOutPut> list = new ArrayList<>();
 
