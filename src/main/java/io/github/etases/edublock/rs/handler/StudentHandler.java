@@ -1,9 +1,11 @@
 package io.github.etases.edublock.rs.handler;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.RecordEntry;
+import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntry;
 import io.github.etases.edublock.rs.model.output.*;
 import io.javalin.Javalin;
@@ -43,9 +45,10 @@ public class StudentHandler extends SimpleServerHandler {
         @Override
         public void handle(Context ctx) {
             PendingRecordEntry input = ctx.bodyValidator(PendingRecordEntry.class).check(PendingRecordEntry::validate, "Invalid data").get();
-
+            DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+            long userId = jwt.getClaim("id").asLong();
             try(var session = sessionFactory.openSession()){
-                var query = session.createNamedQuery("PendingRecordEntry.request", RecordEntry.class);
+                var query = session.createNamedQuery("PendingRecordEntry.request", RecordEntry.class).setParameter("teacher", userId + "%");
                 var RecordEntries = query.getResultList();
                 List<PendingRecordEntryOutPut> list = new ArrayList<>();
 
@@ -53,10 +56,12 @@ public class StudentHandler extends SimpleServerHandler {
                     list.add(new PendingRecordEntryOutPut(
                             recordEntry.getFirstHalfScore(),
                             recordEntry.getSecondHalfScore(),
-                            recordEntry.getFinalScore()
+                            recordEntry.getFinalScore(),
+                            recordEntry.getTeacher(),
+                            recordEntry.getRecord()
                     ));
                 }
-                ctx.json(new PendingRecordEntryListResponse(0, "Get classroom list", null));
+                ctx.json(new PendingRecordEntryListResponse(0, "Request record validation", null));
         }
     }
 }
