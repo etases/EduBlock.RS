@@ -35,7 +35,7 @@ public class RecordHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.get("/record/<classroomId>", new GetRecordHandler().handler(), JwtHandler.Roles.STUDENT);
-        server.post("/record/request", new RequestRecordHandler().handler(), JwtHandler.Roles.STUDENT, JwtHandler.Roles.TEACHER);
+        server.post("/record/request", new RequestRecordUpdateHandler().handler(), JwtHandler.Roles.STUDENT, JwtHandler.Roles.TEACHER);
     }
 
     private class GetRecordHandler implements ContextHandler {
@@ -68,16 +68,26 @@ public class RecordHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get personal record");
+                        operation.description("Get personal record");
+                        operation.addTagsItem("Record");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", RecordOutput.class, builder -> builder.description("The record"));
         }
     }
 
-    private class RequestRecordHandler implements ContextHandler {
+    private class RequestRecordUpdateHandler implements ContextHandler {
 
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Request record update");
+                        operation.description("Request record update");
+                        operation.addTagsItem("Record");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", StudentRequestValidationResponse.class, builder -> builder.description("Student request record validation"));
         }

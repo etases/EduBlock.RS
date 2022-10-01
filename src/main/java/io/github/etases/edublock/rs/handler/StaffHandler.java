@@ -1,5 +1,6 @@
 package io.github.etases.edublock.rs.handler;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
@@ -7,6 +8,7 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Classroom;
 import io.github.etases.edublock.rs.entity.Profile;
+import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.input.ProfileUpdate;
@@ -38,7 +40,7 @@ public class StaffHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.get("/staff/role/list/<role>", new AccountListHandler().handler(), JwtHandler.Roles.STAFF);
-        server.post("/staff/user-profile/update/<id>", new ProfileUpdateHandler().handler(), JwtHandler.Roles.STAFF);
+        server.post("/staff/profile/update/<id>", new ProfileUpdateHandler().handler(), JwtHandler.Roles.STAFF);
 
         server.get("/staff/class/list", new ClassListHandler().handler(), JwtHandler.Roles.STAFF);
         server.post("/staff/class/update/<id>", new ClassUpdateHandler().handler(), JwtHandler.Roles.STAFF);
@@ -49,6 +51,11 @@ public class StaffHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("List accounts by role");
+                        operation.description("List accounts with a specific role");
+                        operation.addTagsItem("Staff");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", AccountListResponse.class, builder -> builder.description("The list of accounts"));
         }
@@ -87,6 +94,11 @@ public class StaffHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Update user profile");
+                        operation.description("Update user profile");
+                        operation.addTagsItem("Staff");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .body(ProfileUpdate.class)
                     .result("200", Response.class, builder -> builder.description("The result of the operation"))
@@ -109,11 +121,26 @@ public class StaffHandler extends SimpleServerHandler {
                     return;
                 }
 
+                JwtHandler.Roles role = JwtHandler.Roles.getRole(account.getRole());
+                if (role == JwtHandler.Roles.ADMIN) {
+                    ctx.status(403);
+                    ctx.json(new Response(2, "You cannot update an admin account"));
+                    return;
+                } else if (role == JwtHandler.Roles.STAFF) {
+                    DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+                    long userId = jwt.getClaim("id").asLong();
+                    if (userId != accountId) {
+                        ctx.status(403);
+                        ctx.json(new Response(3, "You cannot update another staff account"));
+                        return;
+                    }
+                }
+
                 Profile profile = session.get(Profile.class, account.getId());
 
                 if (profile == null) {
                     ctx.status(404);
-                    ctx.json(new Response(2, "Profile not found"));
+                    ctx.json(new Response(3, "Profile not found"));
                     return;
                 }
 
@@ -136,6 +163,11 @@ public class StaffHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Update class");
+                        operation.description("Update class");
+                        operation.addTagsItem("Staff");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .body(ClassUpdate.class)
                     .result("200", Response.class, builder -> builder.description("The result of the operation"))
@@ -172,7 +204,13 @@ public class StaffHandler extends SimpleServerHandler {
     private class CreateClassHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
-            return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity())
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Create class");
+                        operation.description("Create class");
+                        operation.addTagsItem("Staff");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
                     .body(ClassCreate.class, builder -> builder.description("The class to create"))
                     .result("200", ClassroomResponse.class, builder -> builder.description("The class has been created"))
                     .result("400", ClassroomResponse.class, builder -> builder.description("The class already exists"));
@@ -228,7 +266,13 @@ public class StaffHandler extends SimpleServerHandler {
 
         @Override
         public OpenApiDocumentation document() {
-            return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity())
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get class list");
+                        operation.description("Get class list");
+                        operation.addTagsItem("Staff");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
                     .result("200", ClassroomListResponse.class, builder -> builder.description("The list of classroom"));
         }
     }

@@ -48,6 +48,11 @@ public class AccountHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("List all accounts");
+                        operation.description("List all accounts");
+                        operation.addTagsItem("Account");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", AccountListResponse.class, builder -> builder.description("The list of accounts"));
         }
@@ -85,6 +90,11 @@ public class AccountHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(SwaggerHandler.addSecurity())
+                    .operation(operation -> {
+                        operation.summary("Create multiple accounts");
+                        operation.description("Create multiple accounts");
+                        operation.addTagsItem("Account");
+                    })
                     .body(AccountCreateListInput.class,
                             builder -> builder.description("The list of accounts to create"))
                     .result("200", AccountCreateErrorListResponse.class,
@@ -148,6 +158,11 @@ public class AccountHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Update multiple accounts password");
+                        operation.description("Update multiple accounts password");
+                        operation.addTagsItem("Account");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .body(AccountLoginListInput.class, builder -> builder.description("The list of accounts to update"))
                     .result("200", AccountLoginErrorListResponse.class,

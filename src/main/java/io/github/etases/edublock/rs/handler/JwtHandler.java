@@ -64,6 +64,14 @@ public class JwtHandler extends SimpleServerHandler {
             }
         }
 
+        public static Roles getRole(String role) {
+            try {
+                return Roles.valueOf(role.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ANYONE;
+            }
+        }
+
         public static Map<String, RouteRole> getRoleMapping() {
             Map<String, RouteRole> roleMap = new CaseInsensitiveStringHashMap<>();
             for (Roles role : Roles.values()) {

@@ -4,16 +4,15 @@ import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
-import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Classroom;
 import io.github.etases.edublock.rs.entity.PendingRecordEntry;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
+import io.github.etases.edublock.rs.model.output.ResponseWithData;
 import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
 import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
 import io.github.etases.edublock.rs.model.output.element.ProfileOutput;
-import io.github.etases.edublock.rs.model.output.ResponseWithData;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -27,30 +26,30 @@ import java.util.List;
 public class TeacherHandler extends SimpleServerHandler {
 
     private final SessionFactory sessionFactory;
-    private final MainConfig mainConfig;
 
     @Inject
-    public TeacherHandler(ServerBuilder serverBuilder, SessionFactory sessionFactory, MainConfig mainConfig) {
+    public TeacherHandler(ServerBuilder serverBuilder, SessionFactory sessionFactory) {
         super(serverBuilder);
         this.sessionFactory = sessionFactory;
-        this.mainConfig = mainConfig;
     }
 
     @Override
     protected void setupServer(Javalin server) {
         server.get("/teacher/class/list", new ClassListHandler().handler(), JwtHandler.Roles.TEACHER);
-
         server.get("/teacher/student/list", new StudentListHandler().handler(), JwtHandler.Roles.TEACHER);
-
         server.get("/teacher/record/pending/list", new PendingRecordEntryListHandler().handler(), JwtHandler.Roles.TEACHER);
-
-        server.put("/teacher/record/pending/verify", new RecordEntryVerifyHandler().handler(), JwtHandler.Roles.TEACHER);
+        server.post("/teacher/record/pending/verify", new RecordEntryVerifyHandler().handler(), JwtHandler.Roles.TEACHER);
     }
 
     private class ClassListHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get list of classes");
+                        operation.description("Get list of classes");
+                        operation.addTagsItem("Teacher");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", ResponseWithData.class, builder -> builder.description("The list of classrooms"));
         }
@@ -78,6 +77,11 @@ public class TeacherHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get list of students");
+                        operation.description("Get list of students");
+                        operation.addTagsItem("Teacher");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", ResponseWithData.class, builder -> builder.description("The list of students"));
         }
@@ -110,6 +114,11 @@ public class TeacherHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get list of pending record entries");
+                        operation.description("Get list of pending record entries");
+                        operation.addTagsItem("Teacher");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", ResponseWithData.class, builder -> builder.description("The list of records"));
         }
@@ -140,6 +149,11 @@ public class TeacherHandler extends SimpleServerHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Verify a record entry");
+                        operation.description("Verify a record entry");
+                        operation.addTagsItem("Teacher");
+                    })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", ResponseWithData.class, builder -> builder.description("Record verified"));
         }
