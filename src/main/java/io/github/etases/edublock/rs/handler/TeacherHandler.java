@@ -35,13 +35,13 @@ public class TeacherHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/teacher/class/list", new ClassListHandler().handler()/*, JwtHandler.Roles.TEACHER*/);
+        server.get("/teacher/class/list", new ClassListHandler().handler(), JwtHandler.Roles.TEACHER);
 
-        server.get("/teacher/student/list", new StudentListHandler().handler()/*, JwtHandler.Roles.ANYONE*/);
+        server.get("/teacher/student/list", new StudentListHandler().handler(), JwtHandler.Roles.TEACHER);
 
-        server.get("/teacher/record/pending/list", new PendingRecordEntryListHandler().handler()/*, JwtHandler.Roles.ANYONE*/);
+        server.get("/teacher/record/pending/list", new PendingRecordEntryListHandler().handler(), JwtHandler.Roles.TEACHER);
 
-        server.put("/teacher/record/pending/verify/<id>", new RecordEntryVerifyHandler().handler()/*, JwtHandler.Roles.ANYONE*/);
+        server.put("/teacher/record/pending/verify/<id>", new RecordEntryVerifyHandler().handler(), JwtHandler.Roles.TEACHER);
     }
 
     private class ClassListHandler implements ContextHandler {
