@@ -80,7 +80,7 @@ public class TeacherHandler extends SimpleServerHandler {
         }
     }
 
-    // TODO: Filter by homeroom teacher
+    // TODO: Filter by homeroom teacher & classroom
     private class StudentListHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
@@ -154,6 +154,8 @@ public class TeacherHandler extends SimpleServerHandler {
         }
     }
 
+
+    // TODO: Filter by homeroom teacher
     private class RecordEntryVerifyHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
