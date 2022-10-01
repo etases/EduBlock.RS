@@ -1,7 +1,5 @@
 package io.github.etases.edublock.rs.model.input;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 public record ClassCreate(
         String name,
         int grade

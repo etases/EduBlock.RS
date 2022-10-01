@@ -5,7 +5,10 @@ import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
-import io.github.etases.edublock.rs.entity.*;
+import io.github.etases.edublock.rs.entity.Classroom;
+import io.github.etases.edublock.rs.entity.PendingRecordEntry;
+import io.github.etases.edublock.rs.entity.Profile;
+import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.*;
 import io.javalin.Javalin;
@@ -84,14 +87,14 @@ public class TeacherHandler extends SimpleServerHandler {
                 List<ProfileOutput> list = new ArrayList<>();
                 for (var student : students) {
                     list.add(new ProfileOutput(
-                            student.getId(),
-                            student.getFirstName(),
-                            student.getLastName(),
-                            student.getPhone(),
-                            student.getBirthDate(),
-                            student.getAddress(),
-                            student.getEmail(),
-                            student.getAvatar()
+                                    student.getId(),
+                                    student.getFirstName(),
+                                    student.getLastName(),
+                                    student.getPhone(),
+                                    student.getBirthDate(),
+                                    student.getAddress(),
+                                    student.getEmail(),
+                                    student.getAvatar()
                             )
                     );
                 }
@@ -116,12 +119,12 @@ public class TeacherHandler extends SimpleServerHandler {
                 List<RecordEntryOutput> list = new ArrayList<>();
                 for (var record : records) {
                     list.add(new RecordEntryOutput(
-                            record.getId(),
-                            record.getSubject(),
-                            record.getFirstHalfScore(),
-                            record.getSecondHalfScore(),
-                            record.getFinalScore(),
-                            record.getTeacher()
+                                    record.getId(),
+                                    record.getSubject(),
+                                    record.getFirstHalfScore(),
+                                    record.getSecondHalfScore(),
+                                    record.getFinalScore(),
+                                    record.getTeacher()
                             )
                     );
                 }
@@ -147,23 +150,29 @@ public class TeacherHandler extends SimpleServerHandler {
 
             try (var session = sessionFactory.openSession()) {
                 List<ResponseWithData<PendingRecordEntryVerify>> errors = new ArrayList<>();
+                long recordId = Long.parseLong(ctx.pathParam("id"));
                 Transaction transaction = session.beginTransaction();
-                var record = session.createNamedQuery("PendingRecordEntry.findById", PendingRecordEntry.class)
-                        .setParameter("id", input.id())
-                        .uniqueResult();
+                var record = session.get(PendingRecordEntry.class, recordId);
+
+                if (record == null) {
+                    ctx.status(404);
+                    ctx.json(new Response(1, "Record not found"));
+                    return;
+                }
+
                 if (record == null) {
                     errors.add(new ResponseWithData<>(1, "Record does not exist", input));
-                }else{
-                var newrecord= new RecordEntry();
-                newrecord.setSubject(record.getSubject());
-                newrecord.setFirstHalfScore(record.getFirstHalfScore());
-                newrecord.setSecondHalfScore(record.getSecondHalfScore());
-                newrecord.setFinalScore(record.getFinalScore());
-                newrecord.setTeacher(record.getTeacher());
-                newrecord.setRecord(record.getRecord());
+                } else {
+                    var newrecord = new RecordEntry();
+                    newrecord.setSubject(record.getSubject());
+                    newrecord.setFirstHalfScore(record.getFirstHalfScore());
+                    newrecord.setSecondHalfScore(record.getSecondHalfScore());
+                    newrecord.setFinalScore(record.getFinalScore());
+                    newrecord.setTeacher(record.getTeacher());
+                    newrecord.setRecord(record.getRecord());
 
-                session.save(newrecord);
-                session.delete(record);
+                    session.save(newrecord);
+                    session.delete(record);
 
                 }
                 if (errors.isEmpty()) {
