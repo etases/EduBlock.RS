@@ -7,7 +7,6 @@ import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
-import io.github.etases.edublock.rs.model.input.AccountInput;
 import io.github.etases.edublock.rs.model.output.RecordEntryListResponse;
 import io.github.etases.edublock.rs.model.output.RecordEntryOutput;
 import io.javalin.Javalin;
@@ -30,7 +29,7 @@ public class RecordEntryHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/recordentry", new PersonalRecordEntryListHandler().handler(), JwtHandler.Roles.ADMIN);
+        server.get("/recordentry/<classroomId>", new PersonalRecordEntryListHandler().handler(), JwtHandler.Roles.ADMIN);
     }
 
     private class PersonalRecordEntryListHandler implements ContextHandler {
@@ -39,8 +38,9 @@ public class RecordEntryHandler extends SimpleServerHandler {
         public void handle(Context ctx) {
             try(var session = sessionFactory.openSession()){
                 DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+                long classroomId = Long.parseLong(ctx.pathParam("classId"));
                 long userId = jwt.getClaim("id").asLong();
-                var query = session.createNamedQuery("Record.findPersonalRecordEntry", RecordEntry.class).setParameter("student", userId);
+                var query = session.createNamedQuery("Record.findPersonalRecordEntry", RecordEntry.class).setParameter("student", userId).setParameter("classroomId", classroomId);
                 var recordEntries = query.getResultList();
                 List<RecordEntryOutput> list = new ArrayList<>();
                 for ( var record : recordEntries){
