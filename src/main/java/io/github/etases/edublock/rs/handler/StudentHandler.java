@@ -30,7 +30,7 @@ public class StudentHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.post("/student/requestValidation", new StudentRequestRecordValidation().handler(), JwtHandler.Roles.STUDENT);
+        server.post("/record/request", new StudentRequestRecordValidation().handler(), JwtHandler.Roles.STUDENT);
     }
 
     private class StudentRequestRecordValidation implements ContextHandler {
@@ -67,7 +67,7 @@ public class StudentHandler extends SimpleServerHandler {
                 session.save(input);
                 transaction.commit();
                 
-                ctx.json(new PendingRecordEntryListResponse(0, "Record validation requested"));
+                ctx.json(new Response(0, "Record validation requested"));
         }
     }
 }
