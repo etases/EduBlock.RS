@@ -13,6 +13,7 @@ import io.github.etases.edublock.rs.model.input.AccountCreateListInput;
 import io.github.etases.edublock.rs.model.input.AccountLogin;
 import io.github.etases.edublock.rs.model.input.AccountLoginListInput;
 import io.github.etases.edublock.rs.model.output.*;
+import io.github.etases.edublock.rs.model.output.element.AccountOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;

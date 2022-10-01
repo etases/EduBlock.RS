@@ -11,7 +11,7 @@ import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.input.ProfileUpdate;
 import io.github.etases.edublock.rs.model.output.AccountListResponse;
-import io.github.etases.edublock.rs.model.output.AccountOutput;
+import io.github.etases.edublock.rs.model.output.element.AccountOutput;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.javalin.Javalin;
 import io.javalin.http.Context;

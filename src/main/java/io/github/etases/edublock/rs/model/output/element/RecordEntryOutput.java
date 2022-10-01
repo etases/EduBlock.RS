@@ -1,7 +1,7 @@
-package io.github.etases.edublock.rs.model.output;
+package io.github.etases.edublock.rs.model.output.element;
 
 public record RecordEntryOutput(
-        String classroomName,
+        long subjectId,
         String subject,
         float firstHalfScore,
         float secondHalfScore,

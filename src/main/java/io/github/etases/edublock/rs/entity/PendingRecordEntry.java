@@ -13,9 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Getter
 @Setter
-@NamedQuery(name = "PendingRecordEntry.request", query = "FROM PendingRecordEntry WHERE id = :id")
 @NamedQuery(name = "PendingRecordEntry.findAll", query = "FROM PendingRecordEntry")
-@NamedQuery(name = "PendingRecordEntry.findById", query = "FROM PendingRecordEntry WHERE id = :id")
 public class PendingRecordEntry implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -33,6 +31,9 @@ public class PendingRecordEntry implements Serializable {
     @ManyToOne
     @JoinColumn(nullable = false)
     private Account teacher;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Account requester;
 
     @ManyToOne
     @JoinColumn(nullable = false)

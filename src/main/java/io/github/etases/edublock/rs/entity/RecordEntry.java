@@ -31,6 +31,9 @@ public class RecordEntry implements Serializable {
     @ManyToOne
     @JoinColumn(nullable = false)
     private Account teacher;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Account requester;
 
     @ManyToOne
     @JoinColumn(nullable = false)

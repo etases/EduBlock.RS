@@ -19,5 +19,9 @@ public class ValidationErrorHandler extends SimpleServerHandler {
             ctx.status(400);
             ctx.json(new ResponseWithData<>(-1991, "Validation error", exception.getErrors()));
         });
+        server.exception(NumberFormatException.class, (exception, ctx) -> {
+            ctx.status(400);
+            ctx.json(new ResponseWithData<>(-1992, "Invalid number format", exception.getMessage()));
+        });
     }
 }

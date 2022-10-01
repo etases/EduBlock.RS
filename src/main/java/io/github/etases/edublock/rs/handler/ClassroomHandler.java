@@ -6,7 +6,7 @@ import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Classroom;
 import io.github.etases.edublock.rs.model.output.ClassroomListResponse;
-import io.github.etases.edublock.rs.model.output.ClassroomOutput;
+import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
