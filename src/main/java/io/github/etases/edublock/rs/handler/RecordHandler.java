@@ -35,7 +35,7 @@ public class RecordHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.get("/record/<classroomId>", new GetRecordHandler().handler(), JwtHandler.Roles.STUDENT);
-        server.post("/record/request", new RequestRecordHandler().handler(), JwtHandler.Roles.STUDENT);
+        server.post("/record/request", new RequestRecordHandler().handler(), JwtHandler.Roles.STUDENT, JwtHandler.Roles.TEACHER);
     }
 
     private class GetRecordHandler implements ContextHandler {

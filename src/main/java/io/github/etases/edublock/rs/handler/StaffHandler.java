@@ -11,8 +11,11 @@ import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.input.ProfileUpdate;
 import io.github.etases.edublock.rs.model.output.AccountListResponse;
+import io.github.etases.edublock.rs.model.output.ClassroomListResponse;
+import io.github.etases.edublock.rs.model.output.ClassroomResponse;
 import io.github.etases.edublock.rs.model.output.element.AccountOutput;
 import io.github.etases.edublock.rs.model.output.Response;
+import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -34,10 +37,10 @@ public class StaffHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/staff/<role>/list", new AccountListHandler().handler(), JwtHandler.Roles.STAFF);
-
+        server.get("/staff/role/list/<role>", new AccountListHandler().handler(), JwtHandler.Roles.STAFF);
         server.post("/staff/user-profile/update/<id>", new ProfileUpdateHandler().handler(), JwtHandler.Roles.STAFF);
 
+        server.get("/staff/class/list", new ClassListHandler().handler(), JwtHandler.Roles.STAFF);
         server.post("/staff/class/update/<id>", new ClassUpdateHandler().handler(), JwtHandler.Roles.STAFF);
         server.post("/staff/class/create", new CreateClassHandler().handler(), JwtHandler.Roles.STAFF);
     }
@@ -83,18 +86,22 @@ public class StaffHandler extends SimpleServerHandler {
     private class ProfileUpdateHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
-            return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity()).body(ProfileUpdate.class);
+            return OpenApiBuilder.document()
+                    .operation(SwaggerHandler.addSecurity())
+                    .body(ProfileUpdate.class)
+                    .result("200", Response.class, builder -> builder.description("The result of the operation"))
+                    .result("404", Response.class, builder -> builder.description("The account does not exist"));
         }
 
         @Override
         public void handle(Context ctx) {
-            ProfileUpdate input = ctx.bodyValidator(ProfileUpdate.class).check(ProfileUpdate::validate, "Invalid data")
+            ProfileUpdate input = ctx.bodyValidator(ProfileUpdate.class)
+                    .check(ProfileUpdate::validate, "Invalid data")
                     .get();
 
             try (var session = sessionFactory.openSession()) {
                 long accountId = Long.parseLong(ctx.pathParam("id"));
                 Account account = session.get(Account.class, accountId);
-
 
                 if (account == null) {
                     ctx.status(404);
@@ -110,6 +117,7 @@ public class StaffHandler extends SimpleServerHandler {
                     return;
                 }
 
+                Transaction transaction = session.beginTransaction();
                 profile.setFirstName(input.firstName());
                 profile.setLastName(input.lastName());
                 profile.setAvatar(input.avatar());
@@ -117,11 +125,8 @@ public class StaffHandler extends SimpleServerHandler {
                 profile.setAddress(input.address());
                 profile.setPhone(input.phone());
                 profile.setEmail(input.email());
-
-                session.beginTransaction();
                 session.update(profile);
-                session.getTransaction().commit();
-
+                transaction.commit();
                 ctx.json(new Response(0, "Profile updated"));
             }
         }
@@ -130,12 +135,18 @@ public class StaffHandler extends SimpleServerHandler {
     private class ClassUpdateHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
-            return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity()).body(ClassUpdate.class);
+            return OpenApiBuilder.document()
+                    .operation(SwaggerHandler.addSecurity())
+                    .body(ClassUpdate.class)
+                    .result("200", Response.class, builder -> builder.description("The result of the operation"))
+                    .result("404", Response.class, builder -> builder.description("The class does not exist"));
         }
 
         @Override
         public void handle(Context ctx) {
-            ClassUpdate input = ctx.bodyValidator(ClassUpdate.class).check(ClassUpdate::validate, "Invalid data").get();
+            ClassUpdate input = ctx.bodyValidator(ClassUpdate.class)
+                    .check(ClassUpdate::validate, "Invalid data")
+                    .get();
 
             try (var session = sessionFactory.openSession()) {
                 long classId = Long.parseLong(ctx.pathParam("id"));
@@ -147,12 +158,11 @@ public class StaffHandler extends SimpleServerHandler {
                     return;
                 }
 
+                Transaction transaction = session.beginTransaction();
                 classroom.setName(input.name());
                 classroom.setGrade(input.grade());
-
-                session.beginTransaction();
                 session.update(classroom);
-                session.getTransaction().commit();
+                transaction.commit();
 
                 ctx.json(new Response(0, "Class updated"));
             }
@@ -164,8 +174,8 @@ public class StaffHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity())
                     .body(ClassCreate.class, builder -> builder.description("The class to create"))
-                    .result("200", Response.class, builder -> builder.description("The class has been created"))
-                    .result("400", Response.class, builder -> builder.description("The class already exists"));
+                    .result("200", ClassroomResponse.class, builder -> builder.description("The class has been created"))
+                    .result("400", ClassroomResponse.class, builder -> builder.description("The class already exists"));
         }
 
         @Override
@@ -179,19 +189,47 @@ public class StaffHandler extends SimpleServerHandler {
                         .uniqueResult();
                 if (checkClass != null) {
                     ctx.status(400);
-                    ctx.json(new Response(1, "Class already exists"));
+                    ctx.json(new ClassroomResponse(1, "Class already exists", null));
                     return;
                 }
                 Transaction transaction = session.beginTransaction();
-                String name = input.name();
-                int grade = input.grade();
-                var myClass = new Classroom();
-                myClass.setName(name);
-                myClass.setGrade(grade);
-                session.save(myClass);
+                var classroom = new Classroom();
+                classroom.setName(input.name());
+                classroom.setGrade(input.grade());
+                session.save(classroom);
                 transaction.commit();
-                ctx.json(new Response(0, "Class created"));
+                var output = new ClassroomOutput(
+                        classroom.getId(),
+                        classroom.getName(),
+                        classroom.getGrade()
+                );
+                ctx.json(new ClassroomResponse(0, "Class created", output));
             }
+        }
+    }
+
+    private class ClassListHandler implements ContextHandler {
+        @Override
+        public void handle(Context ctx) {
+            try (var session = sessionFactory.openSession()) {
+                var query = session.createNamedQuery("Classroom.findAll", Classroom.class);
+                var classrooms = query.getResultList();
+                List<ClassroomOutput> list = new ArrayList<>();
+                for (var classroom : classrooms) {
+                    list.add(new ClassroomOutput(
+                            classroom.getId(),
+                            classroom.getName(),
+                            classroom.getGrade()
+                    ));
+                }
+                ctx.json(new ClassroomListResponse(0, "Get classroom list", list));
+            }
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document().operation(SwaggerHandler.addSecurity())
+                    .result("200", ClassroomListResponse.class, builder -> builder.description("The list of classroom"));
         }
     }
 }
