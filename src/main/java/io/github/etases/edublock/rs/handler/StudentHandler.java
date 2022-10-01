@@ -1,12 +1,9 @@
 package io.github.etases.edublock.rs.handler;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
-import io.github.etases.edublock.rs.entity.PendingRecordEntry;
-import io.github.etases.edublock.rs.entity.RecordEntry;
-import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
+import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
 import io.github.etases.edublock.rs.model.output.*;
 import io.javalin.Javalin;
@@ -39,30 +36,47 @@ public class StudentHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", StudentRequestValidationResponse.class, builder -> builder.description("Student request validation"));
+                    .result("200", StudentRequestValidationResponse.class, builder -> builder.description("Student request record validation"));
         }
 
         @Override
         public void handle(Context ctx) {
             PendingRecordEntryInput input = ctx.bodyValidator(PendingRecordEntryInput.class).check(PendingRecordEntryInput::validate, "Invalid data").get();
-            DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-            long id = jwt.getClaim("pendingRecordEntries").asLong();
+
             try(var session = sessionFactory.openSession()){
-                var query = session.createNamedQuery("PendingRecordEntry.request", RecordEntry.class).setParameter("id", id + "%");
-                var RecordEntries = query.getResultList();
-                if ( RecordEntries != null){
-                    ctx.status(400);
-                    ctx.json(new Response(1, "PendingRecordEntry already exists"));
+
+                Subject subject = session.get(Subject.class, input.subjectId());
+                Student student = session.get(Student.class, input.studentId());
+                Classroom classroom = session.get(Classroom.class, input.classroomId());
+
+                if ( subject == null){
+                    ctx.status(404);
+                    ctx.json(new Response(1, "Subject not found"));
                     return;
                 }
-                Transaction transaction = session.beginTransaction();
+                if ( student == null){
+                    ctx.status(404);
+                    ctx.json(new Response(1, "Student not found"));
+                    return;
+                }
+                if ( classroom == null){
+                    ctx.status(404);
+                    ctx.json(new Response(1, "Classroom not found"));
+                    return;
+                }
 
+                Transaction transaction = session.beginTransaction();
                 var pending = new PendingRecordEntry();
 
-                pending.setSubject(input.subject());
+                pending.setSubject(subject);
                 pending.setFirstHalfScore(input.firstHalfScore());
                 pending.setSecondHalfScore(input.secondHalfScore());
                 pending.setFinalScore(input.finalScore());
+
+                // TEMP
+                // Future change
+                pending.setRecord(null);
+                pending.setTeacher(null);
 
                 session.save(input);
                 transaction.commit();

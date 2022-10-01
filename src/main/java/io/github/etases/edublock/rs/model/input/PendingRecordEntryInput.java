@@ -1,16 +1,15 @@
 package io.github.etases.edublock.rs.model.input;
 
-import io.github.etases.edublock.rs.entity.Account;
-import io.github.etases.edublock.rs.entity.Subject;
-
-public record PendingRecordEntryInput(float firstHalfScore, float secondHalfScore, float finalScore, Subject subject) {
+public record PendingRecordEntryInput(long studentId, long classroomId, float firstHalfScore, float secondHalfScore, float finalScore, long subjectId) {
 
     public boolean validate(){
+        boolean isStudentIdValid = studentId >= 0;
+        boolean isClassroomIdValid = classroomId >= 0;
         boolean isFirstHalfScoreValid = 10 >= firstHalfScore && firstHalfScore >= 0;
         boolean isSecondHalfScore = 10 >= secondHalfScore && secondHalfScore >= 0;
         boolean isFinalScoreValid = 10 >= finalScore && finalScore >= 0;
-        boolean isSubjectValid = !subject.equals(null);
+        boolean isSubjectIdValid = subjectId >= 0;
 
-        return isFirstHalfScoreValid && isSecondHalfScore && isFinalScoreValid && isSubjectValid;
+        return isStudentIdValid && isClassroomIdValid && isFirstHalfScoreValid && isSecondHalfScore && isFinalScoreValid && isSubjectIdValid;
     }
 }
