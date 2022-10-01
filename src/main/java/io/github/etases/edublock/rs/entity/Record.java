@@ -14,8 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-
-
+@NamedQuery(name = "Record.findPersonalRecordEntry", query = "Select r.recordEntry FROM Record r WHERE student.id = :student and classroom.id = :classroomId")
 public class Record implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
