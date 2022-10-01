@@ -14,6 +14,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Getter
 @Setter
+@NamedQuery(name = "Profile.findAll", query = "FROM Profile")
 public class Profile implements Serializable {
     @Id
     private long id;

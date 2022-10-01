@@ -90,7 +90,8 @@ public class RequestServer {
                 AccountHandler.class,
                 RecordEntryHandler.class,
                 ClassroomHandler.class,
-                StaffHandler.class
+                StaffHandler.class,
+                TeacherHandler.class
         );
     }
 }
