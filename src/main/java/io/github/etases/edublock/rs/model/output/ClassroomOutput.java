@@ -6,5 +6,5 @@ public record ClassroomOutput(
         String name,
         int grade
 
-){
+) {
 }

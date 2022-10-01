@@ -1,8 +1,9 @@
 package io.github.etases.edublock.rs.model.input;
 
-public record PendingRecordEntryInput(long studentId, long classroomId, float firstHalfScore, float secondHalfScore, float finalScore, long subjectId) {
+public record PendingRecordEntryInput(long studentId, long classroomId, float firstHalfScore, float secondHalfScore,
+                                      float finalScore, long subjectId) {
 
-    public boolean validate(){
+    public boolean validate() {
         boolean isStudentIdValid = studentId >= 0;
         boolean isClassroomIdValid = classroomId >= 0;
         boolean isFirstHalfScoreValid = 10 >= firstHalfScore && firstHalfScore >= 0;

@@ -36,14 +36,14 @@ public class RecordEntryHandler extends SimpleServerHandler {
 
         @Override
         public void handle(Context ctx) {
-            try(var session = sessionFactory.openSession()){
+            try (var session = sessionFactory.openSession()) {
                 DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
                 long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
                 long userId = jwt.getClaim("id").asLong();
                 var query = session.createNamedQuery("Record.findPersonalRecordEntry", RecordEntry.class).setParameter("student", userId).setParameter("classroomId", classroomId);
                 var recordEntries = query.getResultList();
                 List<RecordEntryOutput> list = new ArrayList<>();
-                for ( var record : recordEntries){
+                for (var record : recordEntries) {
                     list.add(new RecordEntryOutput(
                             record.getRecord().getClassroom().getName(),
                             record.getSubject().getName(),
