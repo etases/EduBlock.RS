@@ -8,6 +8,8 @@ import io.github.etases.edublock.rs.internal.property.JwtProperties;
 import io.github.etases.edublock.rs.internal.property.ServerProperties;
 import me.hsgamer.hscore.config.annotation.ConfigPath;
 
+import java.util.List;
+
 public interface MainConfig {
     @ConfigPath(value = "jwt", converter = JwtPropertiesConverter.class)
     default JwtProperties getJwtProperties() {
@@ -21,7 +23,7 @@ public interface MainConfig {
 
     @ConfigPath(value = "server", converter = ServerPropertiesConverter.class)
     default ServerProperties getServerProperties() {
-        return new ServerProperties("localhost", 7070);
+        return new ServerProperties("localhost", 7070, true, true, List.of("*"));
     }
 
     @ConfigPath(value = "account.default-password")

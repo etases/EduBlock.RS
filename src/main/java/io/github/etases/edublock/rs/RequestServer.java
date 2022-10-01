@@ -84,6 +84,7 @@ public class RequestServer {
         return List.of(
                 CommandHandler.class,
                 ValidationErrorHandler.class,
+                CorsHandler.class,
                 HelloHandler.class,
                 JwtHandler.class,
                 SwaggerHandler.class,
