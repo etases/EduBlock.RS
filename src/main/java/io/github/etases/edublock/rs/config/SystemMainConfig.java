@@ -4,6 +4,7 @@ import io.github.etases.edublock.rs.internal.property.DatabaseProperties;
 import io.github.etases.edublock.rs.internal.property.JwtProperties;
 import io.github.etases.edublock.rs.internal.property.ServerProperties;
 
+import java.util.List;
 import java.util.Optional;
 
 public class SystemMainConfig implements MainConfig {
@@ -30,7 +31,10 @@ public class SystemMainConfig implements MainConfig {
         );
         this.serverProperties = new ServerProperties(
                 Optional.ofNullable(System.getenv("RS_SERVER_HOST")).orElse("localhost"),
-                Integer.parseInt(Optional.ofNullable(System.getenv("RS_SERVER_PORT")).orElse("7070"))
+                Integer.parseInt(Optional.ofNullable(System.getenv("RS_SERVER_PORT")).orElse("7070")),
+                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_DEV_LOGGING")).orElse("true")),
+                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_BYPASS_CORS")).orElse("true")),
+                List.of(Optional.ofNullable(System.getenv("RS_SERVER_ALLOWED_ORIGINS")).orElse("*").split(","))
         );
         this.accountDefaultPassword = Optional.ofNullable(System.getenv("RS_ACCOUNT_DEFAULT_PASSWORD")).orElse("password");
     }
