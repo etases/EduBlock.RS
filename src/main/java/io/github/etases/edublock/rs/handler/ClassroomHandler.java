@@ -30,15 +30,15 @@ public class ClassroomHandler extends SimpleServerHandler {
         server.get("/classroom/list", new ClassroomListHandler().handler(), JwtHandler.Roles.STAFF);
     }
 
-    private class ClassroomListHandler implements ContextHandler{
+    private class ClassroomListHandler implements ContextHandler {
 
         @Override
         public void handle(Context ctx) {
-            try(var session = sessionFactory.openSession()){
+            try (var session = sessionFactory.openSession()) {
                 var query = session.createNamedQuery("Classroom.findAll", Classroom.class);
                 var classrooms = query.getResultList();
                 List<ClassroomOutput> list = new ArrayList<>();
-                for (var classroom : classrooms){
+                for (var classroom : classrooms) {
                     list.add(new ClassroomOutput(
                             classroom.getId(),
                             classroom.getName(),

@@ -10,7 +10,9 @@ import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.input.ProfileUpdate;
-import io.github.etases.edublock.rs.model.output.*;
+import io.github.etases.edublock.rs.model.output.AccountListResponse;
+import io.github.etases.edublock.rs.model.output.AccountOutput;
+import io.github.etases.edublock.rs.model.output.Response;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -92,6 +94,7 @@ public class StaffHandler extends SimpleServerHandler {
             try (var session = sessionFactory.openSession()) {
                 long accountId = Long.parseLong(ctx.pathParam("id"));
                 Account account = session.get(Account.class, accountId);
+
 
                 if (account == null) {
                     ctx.status(404);

@@ -88,8 +88,10 @@ public class RequestServer {
                 JwtHandler.class,
                 SwaggerHandler.class,
                 AccountHandler.class,
+                RecordEntryHandler.class,
                 ClassroomHandler.class,
-                StaffHandler.class
+                StaffHandler.class,
+                TeacherHandler.class
         );
     }
 }
