@@ -84,7 +84,9 @@ public class RequestServer {
                 SwaggerHandler.class,
                 AccountHandler.class,
                 StaffHandler.class,
-                TeacherHandler.class
+                TeacherHandler.class,
+                ClassroomHandler.class
+
         );
     }
 }
