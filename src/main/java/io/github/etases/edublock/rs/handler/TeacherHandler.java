@@ -116,9 +116,9 @@ public class TeacherHandler extends SimpleServerHandler {
             try (var session = sessionFactory.openSession()) {
                 var query = session.createNamedQuery("PendingRecordEntry.findAll", PendingRecordEntry.class);
                 var records = query.getResultList();
-                List<RecordEntryOutput> list = new ArrayList<>();
+                List<PendingRecordEntryOutput> list = new ArrayList<>();
                 for (var record : records) {
-                    list.add(new RecordEntryOutput(
+                    list.add(new PendingRecordEntryOutput(
                                     record.getId(),
                                     record.getSubject(),
                                     record.getFirstHalfScore(),
@@ -150,9 +150,9 @@ public class TeacherHandler extends SimpleServerHandler {
 
             try (var session = sessionFactory.openSession()) {
                 List<ResponseWithData<PendingRecordEntryVerify>> errors = new ArrayList<>();
-                long recordId = Long.parseLong(ctx.pathParam("id"));
+
                 Transaction transaction = session.beginTransaction();
-                var record = session.get(PendingRecordEntry.class, recordId);
+                var record = session.get(PendingRecordEntry.class, input.id());
 
                 if (record == null) {
                     ctx.status(404);
@@ -163,21 +163,22 @@ public class TeacherHandler extends SimpleServerHandler {
                 if (record == null) {
                     errors.add(new ResponseWithData<>(1, "Record does not exist", input));
                 } else {
-                    var newrecord = new RecordEntry();
-                    newrecord.setSubject(record.getSubject());
-                    newrecord.setFirstHalfScore(record.getFirstHalfScore());
-                    newrecord.setSecondHalfScore(record.getSecondHalfScore());
-                    newrecord.setFinalScore(record.getFinalScore());
-                    newrecord.setTeacher(record.getTeacher());
-                    newrecord.setRecord(record.getRecord());
-
-                    session.save(newrecord);
+                    if(input.verifyValue()==true){
+                        var newrecord = new RecordEntry();
+                        newrecord.setSubject(record.getSubject());
+                        newrecord.setFirstHalfScore(record.getFirstHalfScore());
+                        newrecord.setSecondHalfScore(record.getSecondHalfScore());
+                        newrecord.setFinalScore(record.getFinalScore());
+                        newrecord.setTeacher(record.getTeacher());
+                        newrecord.setRecord(record.getRecord());
+                        session.save(newrecord);
+                    }
                     session.delete(record);
 
                 }
                 if (errors.isEmpty()) {
                     transaction.commit();
-                    ctx.json(new ResponseWithData(0, "Record verified successfully", errors));
+                    ctx.json(new ResponseWithData(0, "Record verified successfully", input));
                 } else {
                     transaction.rollback();
                     ctx.status(400);
