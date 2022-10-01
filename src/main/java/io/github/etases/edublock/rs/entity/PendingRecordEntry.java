@@ -13,6 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Getter
 @Setter
+@NamedQuery(name = "PendingRecordEntry.request", query = "FROM PendingRecordEntry WHERE id = :id")
 @NamedQuery(name = "PendingRecordEntry.findAll", query = "FROM PendingRecordEntry")
 @NamedQuery(name = "PendingRecordEntry.findById", query = "FROM PendingRecordEntry WHERE id = :id")
 public class PendingRecordEntry implements Serializable {
