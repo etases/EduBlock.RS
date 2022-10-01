@@ -42,4 +42,6 @@ public class Account implements Serializable {
     private Set<PendingRecordEntry> pendingRecordEntries;
     @OneToMany(mappedBy = "requester")
     private Set<PendingRecordEntry> requestedPendingRecordEntries;
+    @OneToMany(mappedBy = "homeroomTeacher")
+    private Set<Classroom> homeClassrooms;
 }

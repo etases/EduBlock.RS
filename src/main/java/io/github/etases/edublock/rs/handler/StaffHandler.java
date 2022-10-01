@@ -43,7 +43,7 @@ public class StaffHandler extends SimpleServerHandler {
         server.post("/staff/profile/update/<id>", new ProfileUpdateHandler().handler(), JwtHandler.Roles.STAFF);
 
         server.get("/staff/class/list", new ClassListHandler().handler(), JwtHandler.Roles.STAFF);
-        server.post("/staff/class/update/<id>", new ClassUpdateHandler().handler(), JwtHandler.Roles.STAFF);
+        server.post("/staff/class/update/<id>", new UpdateClassHandler().handler(), JwtHandler.Roles.STAFF);
         server.post("/staff/class/create", new CreateClassHandler().handler(), JwtHandler.Roles.STAFF);
     }
 
@@ -159,7 +159,7 @@ public class StaffHandler extends SimpleServerHandler {
         }
     }
 
-    private class ClassUpdateHandler implements ContextHandler {
+    private class UpdateClassHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
@@ -170,8 +170,9 @@ public class StaffHandler extends SimpleServerHandler {
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(ClassUpdate.class)
-                    .result("200", Response.class, builder -> builder.description("The result of the operation"))
-                    .result("404", Response.class, builder -> builder.description("The class does not exist"));
+                    .result("200", Response.class, builder -> builder.description("The class has been updated"))
+                    .result("404", ClassroomResponse.class, builder -> builder.description("The homeroom teacher does not exist"))
+                    .result("403", ClassroomResponse.class, builder -> builder.description("The homeroom teacher is not a teacher"));
         }
 
         @Override
@@ -190,9 +191,22 @@ public class StaffHandler extends SimpleServerHandler {
                     return;
                 }
 
+                Account homeroomTeacher = session.get(Account.class, input.homeroomTeacherId());
+                if (homeroomTeacher == null) {
+                    ctx.status(404);
+                    ctx.json(new ClassroomResponse(2, "Homeroom teacher not found", null));
+                    return;
+                }
+                if (JwtHandler.Roles.getRole(homeroomTeacher.getRole()) != JwtHandler.Roles.TEACHER) {
+                    ctx.status(403);
+                    ctx.json(new ClassroomResponse(3, "Homeroom teacher is not a teacher", null));
+                    return;
+                }
+
                 Transaction transaction = session.beginTransaction();
                 classroom.setName(input.name());
                 classroom.setGrade(input.grade());
+                classroom.setHomeroomTeacher(homeroomTeacher);
                 session.update(classroom);
                 transaction.commit();
 
@@ -213,7 +227,8 @@ public class StaffHandler extends SimpleServerHandler {
                     .operation(SwaggerHandler.addSecurity())
                     .body(ClassCreate.class, builder -> builder.description("The class to create"))
                     .result("200", ClassroomResponse.class, builder -> builder.description("The class has been created"))
-                    .result("400", ClassroomResponse.class, builder -> builder.description("The class already exists"));
+                    .result("404", ClassroomResponse.class, builder -> builder.description("The homeroom teacher does not exist"))
+                    .result("403", ClassroomResponse.class, builder -> builder.description("The homeroom teacher is not a teacher"));
         }
 
         @Override
@@ -222,18 +237,23 @@ public class StaffHandler extends SimpleServerHandler {
                     .check(ClassCreate::validate, "Invalid data")
                     .get();
             try (var session = sessionFactory.openSession()) {
-                var checkClass = session.createNamedQuery("Classroom.findByName", Classroom.class)
-                        .setParameter("name", input.name())
-                        .uniqueResult();
-                if (checkClass != null) {
-                    ctx.status(400);
-                    ctx.json(new ClassroomResponse(1, "Class already exists", null));
+                Account homeroomTeacher = session.get(Account.class, input.homeroomTeacherId());
+                if (homeroomTeacher == null) {
+                    ctx.status(404);
+                    ctx.json(new ClassroomResponse(2, "Homeroom teacher not found", null));
                     return;
                 }
+                if (JwtHandler.Roles.getRole(homeroomTeacher.getRole()) != JwtHandler.Roles.TEACHER) {
+                    ctx.status(403);
+                    ctx.json(new ClassroomResponse(3, "Homeroom teacher is not a teacher", null));
+                    return;
+                }
+
                 Transaction transaction = session.beginTransaction();
                 var classroom = new Classroom();
                 classroom.setName(input.name());
                 classroom.setGrade(input.grade());
+                classroom.setHomeroomTeacher(homeroomTeacher);
                 session.save(classroom);
                 transaction.commit();
                 var output = new ClassroomOutput(

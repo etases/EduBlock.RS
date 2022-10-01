@@ -25,6 +25,9 @@ public class Classroom implements Serializable {
     private String name;
     @Column(nullable = false)
     private int grade;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Account homeroomTeacher;
 
     @OneToMany(mappedBy = "classroom")
     private Set<ClassStudent> students;
