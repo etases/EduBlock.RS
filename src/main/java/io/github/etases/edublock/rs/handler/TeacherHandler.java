@@ -10,7 +10,10 @@ import io.github.etases.edublock.rs.entity.PendingRecordEntry;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
-import io.github.etases.edublock.rs.model.output.*;
+import io.github.etases.edublock.rs.model.output.ClassroomOutput;
+import io.github.etases.edublock.rs.model.output.PendingRecordEntryOutput;
+import io.github.etases.edublock.rs.model.output.ProfileOutput;
+import io.github.etases.edublock.rs.model.output.ResponseWithData;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -41,7 +44,7 @@ public class TeacherHandler extends SimpleServerHandler {
 
         server.get("/teacher/record/pending/list", new PendingRecordEntryListHandler().handler(), JwtHandler.Roles.TEACHER);
 
-        server.put("/teacher/record/pending/verify/<id>", new RecordEntryVerifyHandler().handler(), JwtHandler.Roles.TEACHER);
+        server.put("/teacher/record/pending/verify", new RecordEntryVerifyHandler().handler(), JwtHandler.Roles.TEACHER);
     }
 
     private class ClassListHandler implements ContextHandler {
@@ -154,16 +157,11 @@ public class TeacherHandler extends SimpleServerHandler {
                 Transaction transaction = session.beginTransaction();
                 var record = session.get(PendingRecordEntry.class, input.id());
 
-                if (record == null) {
-                    ctx.status(404);
-                    ctx.json(new Response(1, "Record not found"));
-                    return;
-                }
 
                 if (record == null) {
                     errors.add(new ResponseWithData<>(1, "Record does not exist", input));
                 } else {
-                    if(input.verifyValue()==true){
+                    if (input.verifyValue()) {
                         var newrecord = new RecordEntry();
                         newrecord.setSubject(record.getSubject());
                         newrecord.setFirstHalfScore(record.getFirstHalfScore());
