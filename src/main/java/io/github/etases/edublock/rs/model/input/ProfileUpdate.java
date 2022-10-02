@@ -2,7 +2,7 @@ package io.github.etases.edublock.rs.model.input;
 
 import java.util.Date;
 
-public record ProfileUpdate(String firstName, String lastName, String avatar, Date birthDate, String address,
+public record ProfileUpdate(String firstName, String lastName, boolean male, String avatar, Date birthDate, String address,
                             String phone, String email) {
     public boolean validate() {
         boolean isValidName = firstName != null && !firstName.isBlank() && lastName != null && !lastName.isBlank();

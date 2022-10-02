@@ -14,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 @Setter
-
+@NamedQuery(name = "Student.findAll", query = "FROM Student")
 public class Student implements Serializable {
     @Id
     private long id;
@@ -31,6 +31,10 @@ public class Student implements Serializable {
     private String motherName;
     @Column(nullable = false)
     private String motherJob;
+    @Column(nullable = false)
+    private String guardianName;
+    @Column(nullable = false)
+    private String guardianJob;
     @Column(nullable = false)
     private String homeTown;
 

@@ -8,6 +8,7 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Profile;
+import io.github.etases.edublock.rs.entity.Student;
 import io.github.etases.edublock.rs.model.input.AccountCreate;
 import io.github.etases.edublock.rs.model.input.AccountCreateListInput;
 import io.github.etases.edublock.rs.model.input.AccountLogin;
@@ -44,9 +45,9 @@ public class AccountHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/account/list", new AccountListHandler().handler(), JwtHandler.Roles.ADMIN);
-        server.post("/account/list", new BulkCreateAccountHandler().handler(), JwtHandler.Roles.ADMIN);
-        server.put("/account/list/password", new BulkUpdateAccountPasswordHandler().handler(), JwtHandler.Roles.ADMIN);
+        server.get("/account/list", new AccountListHandler().handler(), JwtHandler.Role.ADMIN);
+        server.post("/account/list", new BulkCreateAccountHandler().handler(), JwtHandler.Role.ADMIN);
+        server.put("/account/list/password", new BulkUpdateAccountPasswordHandler().handler(), JwtHandler.Role.ADMIN);
     }
 
     private class AccountListHandler implements ContextHandler {
@@ -111,10 +112,12 @@ public class AccountHandler extends SimpleServerHandler {
                 List<ResponseWithData<AccountCreate>> errors = new ArrayList<>();
                 Transaction transaction = session.beginTransaction();
                 for (var accountCreate : input.accounts()) {
-                    if (!JwtHandler.Roles.isValid(accountCreate.role())) {
+                    var optionalRole = JwtHandler.Role.getRoleOptional(accountCreate.role());
+                    if (optionalRole.isEmpty()) {
                         errors.add(new ResponseWithData<>(1, "Invalid role", accountCreate));
                         continue;
                     }
+                    var role = optionalRole.get();
                     String username = accountCreate.getUsername();
                     String password = mainConfig.getDefaultPassword();
                     long count = session.createNamedQuery("Account.countByUsernameRegex", Long.class)
@@ -126,19 +129,32 @@ public class AccountHandler extends SimpleServerHandler {
                     account.setUsername(username + (count == 0 ? "" : count));
                     account.setSalt(salt);
                     account.setHashedPassword(hashedPassword);
-                    account.setRole(accountCreate.role().toUpperCase());
+                    account.setRole(role.name().toUpperCase());
                     session.save(account);
                     var profile = new Profile();
                     profile.setId(account.getId());
                     profile.setAccount(account);
                     profile.setFirstName(accountCreate.firstName());
                     profile.setLastName(accountCreate.lastName());
+                    profile.setMale(true);
                     profile.setAvatar("");
                     profile.setBirthDate(Date.from(Instant.EPOCH));
                     profile.setAddress("");
                     profile.setPhone("");
                     profile.setEmail("");
                     session.save(profile);
+                    if (role == JwtHandler.Role.STUDENT) {
+                        var student = new Student();
+                        student.setId(account.getId());
+                        student.setAccount(account);
+                        student.setEthnic("");
+                        student.setFatherName("");
+                        student.setMotherName("");
+                        student.setFatherJob("");
+                        student.setMotherJob("");
+                        student.setHomeTown("");
+                        session.save(student);
+                    }
                 }
                 if (errors.isEmpty()) {
                     transaction.commit();

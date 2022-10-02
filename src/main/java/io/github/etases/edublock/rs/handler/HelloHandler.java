@@ -23,6 +23,6 @@ public class HelloHandler extends SimpleServerHandler {
                 ctx -> {
                     ctx.result("Hello Admin");
                 }
-        ), JwtHandler.Roles.ADMIN);
+        ), JwtHandler.Role.ADMIN);
     }
 }

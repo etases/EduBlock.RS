@@ -8,18 +8,16 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Classroom;
 import io.github.etases.edublock.rs.entity.Profile;
+import io.github.etases.edublock.rs.entity.Student;
 import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.input.ProfileUpdate;
-import io.github.etases.edublock.rs.model.output.AccountWithProfileListResponse;
-import io.github.etases.edublock.rs.model.output.ClassroomListResponse;
-import io.github.etases.edublock.rs.model.output.ClassroomResponse;
-import io.github.etases.edublock.rs.model.output.Response;
-import io.github.etases.edublock.rs.model.output.element.AccountOutput;
+import io.github.etases.edublock.rs.model.input.StudentUpdate;
+import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithProfileOutput;
+import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
-import io.github.etases.edublock.rs.model.output.element.ProfileOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -42,12 +40,13 @@ public class StaffHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/staff/role/list/<role>", new AccountListHandler().handler(), JwtHandler.Roles.STAFF);
-        server.post("/staff/profile/update/<id>", new ProfileUpdateHandler().handler(), JwtHandler.Roles.STAFF);
+        server.get("/staff/role/list/<role>", new AccountListHandler().handler(), JwtHandler.Role.STAFF);
+        server.put("/staff/profile/update/<id>", new ProfileUpdateHandler().handler(), JwtHandler.Role.STAFF);
+        server.put("/staff/student/update/<id>", new StudentUpdateHandler().handler(), JwtHandler.Role.STAFF);
 
-        server.get("/staff/class/list", new ClassListHandler().handler(), JwtHandler.Roles.STAFF);
-        server.post("/staff/class/update/<id>", new UpdateClassHandler().handler(), JwtHandler.Roles.STAFF);
-        server.post("/staff/class/create", new CreateClassHandler().handler(), JwtHandler.Roles.STAFF);
+        server.get("/staff/class/list", new ClassListHandler().handler(), JwtHandler.Role.STAFF);
+        server.put("/staff/class/update/<id>", new ClassUpdateHandler().handler(), JwtHandler.Role.STAFF);
+        server.post("/staff/class/create", new ClassCreateHandler().handler(), JwtHandler.Role.STAFF);
     }
 
     private class AccountListHandler implements ContextHandler {
@@ -60,25 +59,38 @@ public class StaffHandler extends SimpleServerHandler {
                         operation.addTagsItem("Staff");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", AccountWithProfileListResponse.class, builder -> builder.description("The list of accounts"));
+                    .result("200", AccountWithProfileListResponse.class, builder -> builder.description("The list of accounts"))
+                    .result("200", AccountWithStudentProfileListResponse.class, builder -> builder.description("The list of student accounts"))
+                    .result("400", AccountWithProfileListResponse.class, builder -> builder.description("Invalid role"));
         }
 
         @Override
         public void handle(Context ctx) {
+            var optionalRole = JwtHandler.Role.getRoleOptional(ctx.pathParam("role"));
+            if (optionalRole.isEmpty()) {
+                ctx.status(400);
+                ctx.json(new AccountWithProfileListResponse(1, "Invalid role", null));
+                return;
+            }
+            var role = optionalRole.get();
             try (var session = sessionFactory.openSession()) {
-                String role = ctx.pathParam("role").toUpperCase();
-                var query = session.createNamedQuery("Account.findByRole", Account.class).setParameter("role", role);
-
-                var accounts = query.getResultList();
-                List<AccountWithProfileOutput> list = new ArrayList<>();
-                for (var account : accounts) {
-                    var profile = Optional.ofNullable(session.get(Profile.class, account.getId())).orElseGet(Profile::new);
-                    list.add(new AccountWithProfileOutput(
-                            AccountOutput.fromEntity(account),
-                            ProfileOutput.fromEntity(profile)
-                    ));
+                if (role == JwtHandler.Role.STUDENT) {
+                    var query = session.createNamedQuery("Student.findAll", Student.class);
+                    var accounts = query.getResultList();
+                    List<AccountWithStudentProfileOutput> list = new ArrayList<>();
+                    for (var account : accounts) {
+                        list.add(AccountWithStudentProfileOutput.fromEntity(account, id -> Optional.ofNullable(session.get(Profile.class, account.getId())).orElseGet(Profile::new)));
+                    }
+                    ctx.json(new AccountWithStudentProfileListResponse(0, "Get account list", list));
+                } else {
+                    var query = session.createNamedQuery("Account.findByRole", Account.class).setParameter("role", role.name());
+                    var accounts = query.getResultList();
+                    List<AccountWithProfileOutput> list = new ArrayList<>();
+                    for (var account : accounts) {
+                        list.add(AccountWithProfileOutput.fromEntity(account, id -> Optional.ofNullable(session.get(Profile.class, account.getId())).orElseGet(Profile::new)));
+                    }
+                    ctx.json(new AccountWithProfileListResponse(0, "Get account list", list));
                 }
-                ctx.json(new AccountWithProfileListResponse(0, "Get account list", list));
             }
         }
     }
@@ -114,12 +126,12 @@ public class StaffHandler extends SimpleServerHandler {
                     return;
                 }
 
-                JwtHandler.Roles role = JwtHandler.Roles.getRole(account.getRole());
-                if (role == JwtHandler.Roles.ADMIN) {
+                JwtHandler.Role role = JwtHandler.Role.getRole(account.getRole());
+                if (role == JwtHandler.Role.ADMIN) {
                     ctx.status(403);
                     ctx.json(new Response(2, "You cannot update an admin account"));
                     return;
-                } else if (role == JwtHandler.Roles.STAFF) {
+                } else if (role == JwtHandler.Role.STAFF) {
                     DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
                     long userId = jwt.getClaim("id").asLong();
                     if (userId != accountId) {
@@ -140,6 +152,7 @@ public class StaffHandler extends SimpleServerHandler {
                 Transaction transaction = session.beginTransaction();
                 profile.setFirstName(input.firstName());
                 profile.setLastName(input.lastName());
+                profile.setMale(input.male());
                 profile.setAvatar(input.avatar());
                 profile.setBirthDate(input.birthDate());
                 profile.setAddress(input.address());
@@ -152,7 +165,54 @@ public class StaffHandler extends SimpleServerHandler {
         }
     }
 
-    private class UpdateClassHandler implements ContextHandler {
+    private class StudentUpdateHandler implements ContextHandler {
+        @Override
+        public void handle(Context ctx) {
+            StudentUpdate input = ctx.bodyValidator(StudentUpdate.class)
+                    .check(StudentUpdate::validate, "Invalid data")
+                    .get();
+
+            try (var session = sessionFactory.openSession()) {
+                long studentId = Long.parseLong(ctx.pathParam("id"));
+                Student student = session.get(Student.class, studentId);
+
+                if (student == null) {
+                    ctx.status(404);
+                    ctx.json(new Response(1, "Student not found"));
+                    return;
+                }
+
+                Transaction transaction = session.beginTransaction();
+                student.setEthnic(input.ethnic());
+                student.setFatherName(input.fatherName());
+                student.setFatherJob(input.fatherJob());
+                student.setMotherName(input.motherName());
+                student.setMotherJob(input.motherJob());
+                student.setGuardianName(input.guardianName());
+                student.setGuardianJob(input.guardianJob());
+                student.setHomeTown(input.homeTown());
+                session.update(student);
+                transaction.commit();
+                ctx.json(new Response(0, "Student updated"));
+            }
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Update student information");
+                        operation.description("Update student information");
+                        operation.addTagsItem("Staff");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .body(StudentUpdate.class)
+                    .result("200", Response.class, builder -> builder.description("The result of the operation"))
+                    .result("404", Response.class, builder -> builder.description("The student does not exist"));
+        }
+    }
+
+    private class ClassUpdateHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
@@ -190,7 +250,7 @@ public class StaffHandler extends SimpleServerHandler {
                     ctx.json(new ClassroomResponse(2, "Homeroom teacher not found", null));
                     return;
                 }
-                if (JwtHandler.Roles.getRole(homeroomTeacher.getRole()) != JwtHandler.Roles.TEACHER) {
+                if (JwtHandler.Role.getRole(homeroomTeacher.getRole()) != JwtHandler.Role.TEACHER) {
                     ctx.status(403);
                     ctx.json(new ClassroomResponse(3, "Homeroom teacher is not a teacher", null));
                     return;
@@ -208,7 +268,7 @@ public class StaffHandler extends SimpleServerHandler {
         }
     }
 
-    private class CreateClassHandler implements ContextHandler {
+    private class ClassCreateHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
@@ -236,7 +296,7 @@ public class StaffHandler extends SimpleServerHandler {
                     ctx.json(new ClassroomResponse(2, "Homeroom teacher not found", null));
                     return;
                 }
-                if (JwtHandler.Roles.getRole(homeroomTeacher.getRole()) != JwtHandler.Roles.TEACHER) {
+                if (JwtHandler.Role.getRole(homeroomTeacher.getRole()) != JwtHandler.Role.TEACHER) {
                     ctx.status(403);
                     ctx.json(new ClassroomResponse(3, "Homeroom teacher is not a teacher", null));
                     return;

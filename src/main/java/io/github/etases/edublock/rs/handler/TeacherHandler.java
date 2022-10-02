@@ -11,7 +11,7 @@ import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.ClassroomListResponse;
 import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
 import io.github.etases.edublock.rs.model.output.Response;
-import io.github.etases.edublock.rs.model.output.StudentWithProfileListResponse;
+import io.github.etases.edublock.rs.model.output.AccountWithStudentProfileListResponse;
 import io.github.etases.edublock.rs.model.output.element.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -38,11 +38,11 @@ public class TeacherHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/teacher/class/list", new ClassListHandler().handler(), JwtHandler.Roles.TEACHER);
-        server.get("/teacher/class/<classroomId>/student", new StudentListHandler().handler(), JwtHandler.Roles.TEACHER);
-        server.get("/teacher/record/pending/list", new PendingRecordEntryListHandler(false).handler(), JwtHandler.Roles.TEACHER);
-        server.get("/teacher/record/pending/list/<studentId>", new PendingRecordEntryListHandler(true).handler(), JwtHandler.Roles.TEACHER);
-        server.post("/teacher/record/pending/verify", new RecordEntryVerifyHandler().handler(), JwtHandler.Roles.TEACHER);
+        server.get("/teacher/class/list", new ClassListHandler().handler(), JwtHandler.Role.TEACHER);
+        server.get("/teacher/class/<classroomId>/student", new StudentListHandler().handler(), JwtHandler.Role.TEACHER);
+        server.get("/teacher/record/pending/list", new PendingRecordEntryListHandler(false).handler(), JwtHandler.Role.TEACHER);
+        server.get("/teacher/record/pending/list/<studentId>", new PendingRecordEntryListHandler(true).handler(), JwtHandler.Role.TEACHER);
+        server.post("/teacher/record/pending/verify", new RecordEntryVerifyHandler().handler(), JwtHandler.Role.TEACHER);
     }
 
     private class ClassListHandler implements ContextHandler {
@@ -86,8 +86,8 @@ public class TeacherHandler extends SimpleServerHandler {
                         operation.addTagsItem("Teacher");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", StudentWithProfileListResponse.class, builder -> builder.description("The list of students"))
-                    .result("404", StudentWithProfileListResponse.class, builder -> builder.description("Classroom not found"));
+                    .result("200", AccountWithStudentProfileListResponse.class, builder -> builder.description("The list of students"))
+                    .result("404", AccountWithStudentProfileListResponse.class, builder -> builder.description("Classroom not found"));
         }
 
         @Override
@@ -97,23 +97,16 @@ public class TeacherHandler extends SimpleServerHandler {
                 var classroom = session.get(Classroom.class, classroomId);
                 if (classroom == null) {
                     ctx.status(404);
-                    ctx.json(new StudentWithProfileListResponse(1, "Classroom not found", null));
+                    ctx.json(new AccountWithStudentProfileListResponse(1, "Classroom not found", null));
                     return;
                 }
                 var classStudents = classroom.getStudents();
-                List<StudentWithProfileOutput> list = new ArrayList<>();
+                List<AccountWithStudentProfileOutput> list = new ArrayList<>();
                 for (var classStudent : classStudents) {
                     Student student = classStudent.getStudent();
-                    Profile profile = session.get(Profile.class, student.getId());
-                    if (profile == null) {
-                        profile = new Profile();
-                    }
-                    list.add(new StudentWithProfileOutput(
-                            StudentOutput.fromEntity(student),
-                            ProfileOutput.fromEntity(profile)
-                    ));
+                    list.add(AccountWithStudentProfileOutput.fromEntity(student, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
                 }
-                ctx.json(new StudentWithProfileListResponse(0, "Get student list", list));
+                ctx.json(new AccountWithStudentProfileListResponse(0, "Get student list", list));
             }
         }
     }

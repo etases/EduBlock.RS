@@ -9,6 +9,8 @@ public record StudentOutput(
         String fatherJob,
         String motherName,
         String motherJob,
+        String guardianName,
+        String guardianJob,
         String homeTown
 ) {
     public static StudentOutput fromEntity(Student student) {
@@ -19,6 +21,8 @@ public record StudentOutput(
                 student.getFatherJob(),
                 student.getMotherName(),
                 student.getMotherJob(),
+                student.getGuardianName(),
+                student.getGuardianJob(),
                 student.getHomeTown()
         );
     }

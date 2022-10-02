@@ -24,6 +24,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class JwtHandler extends SimpleServerHandler {
@@ -41,7 +42,7 @@ public class JwtHandler extends SimpleServerHandler {
 
     @Override
     protected void setupConfig(JavalinConfig config) {
-        config.accessManager(provider.createAccessManager(Roles.getRoleMapping(), Roles.ANYONE));
+        config.accessManager(provider.createAccessManager(Role.getRoleMapping(), Role.ANYONE));
     }
 
     @Override
@@ -52,29 +53,28 @@ public class JwtHandler extends SimpleServerHandler {
         server.post("/register", new RegisterHandler().handler());
     }
 
-    public enum Roles implements RouteRole {
+    public enum Role implements RouteRole {
         ANYONE, STUDENT, STAFF, TEACHER, ADMIN;
 
-        public static boolean isValid(String role) {
+        public static Role getRole(String role) {
             try {
-                Roles.valueOf(role.toUpperCase());
-                return true;
-            } catch (IllegalArgumentException e) {
-                return false;
-            }
-        }
-
-        public static Roles getRole(String role) {
-            try {
-                return Roles.valueOf(role.toUpperCase());
+                return Role.valueOf(role.toUpperCase());
             } catch (IllegalArgumentException e) {
                 return ANYONE;
             }
         }
 
+        public static Optional<Role> getRoleOptional(String role) {
+            try {
+                return Optional.of(Role.valueOf(role.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                return Optional.empty();
+            }
+        }
+
         public static Map<String, RouteRole> getRoleMapping() {
             Map<String, RouteRole> roleMap = new CaseInsensitiveStringHashMap<>();
-            for (Roles role : Roles.values()) {
+            for (Role role : Role.values()) {
                 roleMap.put(role.name(), role);
             }
             return roleMap;
@@ -162,7 +162,7 @@ public class JwtHandler extends SimpleServerHandler {
                         account.setUsername(accountLogin.username());
                         account.setHashedPassword(hash);
                         account.setSalt(salt);
-                        account.setRole(Roles.ADMIN.name());
+                        account.setRole(Role.ADMIN.name());
                         try (var session = sessionFactory.openSession()) {
                             Transaction transaction = session.beginTransaction();
                             session.save(account);
