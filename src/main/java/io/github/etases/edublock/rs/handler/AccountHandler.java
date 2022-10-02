@@ -1,6 +1,5 @@
 package io.github.etases.edublock.rs.handler;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.PasswordUtils;
 import io.github.etases.edublock.rs.ServerBuilder;
@@ -10,13 +9,10 @@ import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.Student;
-import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.*;
 import io.github.etases.edublock.rs.model.output.*;
-import io.github.etases.edublock.rs.model.output.element.AccountOutput;
 import io.github.etases.edublock.rs.model.output.element.AccountWithProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
-import io.github.etases.edublock.rs.model.output.element.ProfileOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -28,7 +24,6 @@ import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class AccountHandler extends SimpleServerHandler {
     private final SessionFactory sessionFactory;
@@ -43,13 +38,57 @@ public class AccountHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
+        server.get("/account", new GetHandler(true).handler(), JwtHandler.Role.authenticated());
         server.get("/account/list", new ListHandler().handler(), JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
-        server.get("/account/role/<role>/list", new ListByRoleHandler().handler(), JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
         server.post("/account/list", new BulkCreateAccountHandler().handler(), JwtHandler.Role.ADMIN);
         server.put("/account/list/password", new BulkUpdateAccountPasswordHandler().handler(), JwtHandler.Role.ADMIN);
-        // TODO: GET /account/<id>
+        server.get("/account/role/<role>/list", new ListByRoleHandler().handler(), JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
+        server.get("/account/<id>", new GetHandler(false).handler(), JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.put("/account/<id>/profile", new UpdateProfileHandler().handler(), JwtHandler.Role.STAFF);
         server.put("/account/<id>/student", new UpdateStudentHandler().handler(), JwtHandler.Role.STAFF);
+    }
+
+    private class GetHandler implements ContextHandler {
+        private final boolean isOwnOnly;
+
+        private GetHandler(boolean isOwnOnly) {
+            this.isOwnOnly = isOwnOnly;
+        }
+
+        @Override
+        public void handle(Context ctx) {
+            long userId = isOwnOnly ? JwtHandler.getUserId(ctx) : Long.parseLong(ctx.pathParam("id"));
+            try (var session = sessionFactory.openSession()) {
+                var account = session.get(Account.class, userId);
+                if (account == null) {
+                    ctx.status(404);
+                    ctx.json(new AccountWithProfileResponse(1, "Account not found", null));
+                    return;
+                }
+                if (JwtHandler.Role.getRole(account.getRole()) == JwtHandler.Role.STUDENT) {
+                    var student = session.get(Student.class, userId);
+                    var output = AccountWithStudentProfileOutput.fromEntity(student, id -> Profile.getOrDefault(session, id));
+                    ctx.json(new AccountWithStudentProfileResponse(0, "Get account", output));
+                } else {
+                    var output = AccountWithProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id));
+                    ctx.json(new AccountWithProfileResponse(0, "Get account", output));
+                }
+            }
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get account");
+                        operation.description("Get account");
+                        operation.addTagsItem("Account");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .result("200", AccountWithProfileResponse.class, builder -> builder.description("The account"))
+                    .result("200", AccountWithStudentProfileResponse.class, builder -> builder.description("The student account"))
+                    .result("404", AccountWithProfileResponse.class, builder -> builder.description("Account not found"));
+        }
     }
 
     private class ListHandler implements ContextHandler {
@@ -72,14 +111,7 @@ public class AccountHandler extends SimpleServerHandler {
                 var accounts = query.getResultList();
                 List<AccountWithProfileOutput> list = new ArrayList<>();
                 for (var account : accounts) {
-                    var profile = session.get(Profile.class, account.getId());
-                    if (profile == null) {
-                        profile = new Profile();
-                    }
-                    list.add(new AccountWithProfileOutput(
-                            AccountOutput.fromEntity(account),
-                            ProfileOutput.fromEntity(profile)
-                    ));
+                    list.add(AccountWithProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
                 }
                 ctx.json(new AccountWithProfileListResponse(0, "Get account list", list));
             }
@@ -252,7 +284,7 @@ public class AccountHandler extends SimpleServerHandler {
                     var accounts = query.getResultList();
                     List<AccountWithStudentProfileOutput> list = new ArrayList<>();
                     for (var account : accounts) {
-                        list.add(AccountWithStudentProfileOutput.fromEntity(account, id -> Optional.ofNullable(session.get(Profile.class, account.getId())).orElseGet(Profile::new)));
+                        list.add(AccountWithStudentProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
                     }
                     ctx.json(new AccountWithStudentProfileListResponse(0, "Get account list", list));
                 } else {
@@ -260,7 +292,7 @@ public class AccountHandler extends SimpleServerHandler {
                     var accounts = query.getResultList();
                     List<AccountWithProfileOutput> list = new ArrayList<>();
                     for (var account : accounts) {
-                        list.add(AccountWithProfileOutput.fromEntity(account, id -> Optional.ofNullable(session.get(Profile.class, account.getId())).orElseGet(Profile::new)));
+                        list.add(AccountWithProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
                     }
                     ctx.json(new AccountWithProfileListResponse(0, "Get account list", list));
                 }
@@ -305,8 +337,7 @@ public class AccountHandler extends SimpleServerHandler {
                     ctx.json(new Response(2, "You cannot update an admin account"));
                     return;
                 } else if (role == JwtHandler.Role.STAFF) {
-                    DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-                    long userId = jwt.getClaim("id").asLong();
+                    long userId = JwtHandler.getUserId(ctx);
                     if (userId != accountId) {
                         ctx.status(403);
                         ctx.json(new Response(3, "You cannot update another staff account"));

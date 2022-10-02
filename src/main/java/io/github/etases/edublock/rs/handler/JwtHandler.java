@@ -2,6 +2,7 @@ package io.github.etases.edublock.rs.handler;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.PasswordUtils;
 import io.github.etases.edublock.rs.ServerBuilder;
@@ -10,6 +11,7 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.internal.jwt.JwtProvider;
+import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.AccountLogin;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.github.etases.edublock.rs.model.output.StringResponse;
@@ -40,6 +42,11 @@ public class JwtHandler extends SimpleServerHandler {
         this.sessionFactory = sessionFactory;
     }
 
+    public static long getUserId(Context ctx) {
+        DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+        return jwt.getClaim("id").asLong();
+    }
+
     @Override
     protected void setupConfig(JavalinConfig config) {
         config.accessManager(provider.createAccessManager(Role.getRoleMapping(), Role.ANYONE));
@@ -55,6 +62,10 @@ public class JwtHandler extends SimpleServerHandler {
 
     public enum Role implements RouteRole {
         ANYONE, STUDENT, STAFF, TEACHER, ADMIN;
+
+        public static Role[] authenticated() {
+            return new Role[]{STUDENT, STAFF, TEACHER, ADMIN};
+        }
 
         public static Role getRole(String role) {
             try {

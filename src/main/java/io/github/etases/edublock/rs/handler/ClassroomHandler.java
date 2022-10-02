@@ -1,12 +1,10 @@
 package io.github.etases.edublock.rs.handler;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.*;
-import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.output.AccountWithStudentProfileListResponse;
@@ -24,7 +22,6 @@ import org.hibernate.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class ClassroomHandler extends SimpleServerHandler {
     private final SessionFactory sessionFactory;
@@ -37,11 +34,11 @@ public class ClassroomHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/classroom/list", new ListHandler().handler(), JwtHandler.Role.STAFF);
-        server.put("/classroom/<id>", new UpdateHandler().handler(), JwtHandler.Role.STAFF);
         server.post("/classroom", new CreateHandler().handler(), JwtHandler.Role.STAFF);
+        server.get("/classroom/list", new ListHandler().handler(), JwtHandler.Role.STAFF);
         server.get("/classroom/homeroom", new HomeroomListHandler().handler(), JwtHandler.Role.TEACHER);
         // TODO: GET /classroom/<id>
+        server.put("/classroom/<id>", new UpdateHandler().handler(), JwtHandler.Role.STAFF);
         server.get("/classroom/<id>/student", new StudentListHandler().handler(), JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF);
     }
 
@@ -53,7 +50,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                 var classrooms = query.getResultList();
                 List<ClassroomOutput> list = new ArrayList<>();
                 for (var classroom : classrooms) {
-                    list.add(ClassroomOutput.fromEntity(classroom, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
+                    list.add(ClassroomOutput.fromEntity(classroom, id -> Profile.getOrDefault(session, id)));
                 }
                 ctx.json(new ClassroomListResponse(0, "Get classroom list", list));
             }
@@ -169,7 +166,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                 classroom.setHomeroomTeacher(homeroomTeacher);
                 session.save(classroom);
                 transaction.commit();
-                var output = ClassroomOutput.fromEntity(classroom, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new));
+                var output = ClassroomOutput.fromEntity(classroom, id -> Profile.getOrDefault(session, id));
                 ctx.json(new ClassroomResponse(0, "Class created", output));
             }
         }
@@ -191,15 +188,14 @@ public class ClassroomHandler extends SimpleServerHandler {
         @Override
         public void handle(Context ctx) {
             try (var session = sessionFactory.openSession()) {
-                DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-                long userId = jwt.getClaim("id").asLong();
+                long userId = JwtHandler.getUserId(ctx);
                 var query = session.createNamedQuery("ClassTeacher.findByTeacher", ClassTeacher.class)
                         .setParameter("teacherId", userId);
                 var classTeachers = query.getResultList();
                 List<ClassroomOutput> list = new ArrayList<>();
                 for (var classTeacher : classTeachers) {
                     var classroom = classTeacher.getClassroom();
-                    list.add(ClassroomOutput.fromEntity(classroom, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
+                    list.add(ClassroomOutput.fromEntity(classroom, id -> Profile.getOrDefault(session, id)));
                 }
                 ctx.json(new ClassroomListResponse(0, "Get classroom list", list));
             }
@@ -235,7 +231,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                 List<AccountWithStudentProfileOutput> list = new ArrayList<>();
                 for (var classStudent : classStudents) {
                     Student student = classStudent.getStudent();
-                    list.add(AccountWithStudentProfileOutput.fromEntity(student, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
+                    list.add(AccountWithStudentProfileOutput.fromEntity(student, id -> Profile.getOrDefault(session, id)));
                 }
                 ctx.json(new AccountWithStudentProfileListResponse(0, "Get student list", list));
             }

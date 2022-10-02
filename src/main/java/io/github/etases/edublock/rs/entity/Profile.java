@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.Session;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -36,4 +37,21 @@ public class Profile implements Serializable {
     private String phone;
     @Column(nullable = false)
     private String email;
+
+    public static Profile getOrDefault(Session session, long id) {
+        Profile profile = session.get(Profile.class, id);
+        if (profile == null) {
+            profile = new Profile();
+            profile.setId(id);
+            profile.setFirstName("");
+            profile.setLastName("");
+            profile.setMale(true);
+            profile.setAvatar("");
+            profile.setBirthDate(new Date());
+            profile.setAddress("");
+            profile.setPhone("");
+            profile.setEmail("");
+        }
+        return profile;
+    }
 }

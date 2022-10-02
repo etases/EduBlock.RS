@@ -1,12 +1,10 @@
 package io.github.etases.edublock.rs.handler;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Record;
 import io.github.etases.edublock.rs.entity.*;
-import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
@@ -27,7 +25,6 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 public class RecordHandler extends SimpleServerHandler {
 
@@ -41,12 +38,12 @@ public class RecordHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/record/<classroomId>", new GetHandler(true).handler(), JwtHandler.Role.STUDENT);
-        server.get("/record/<classroomId>/<studentId>", new GetHandler(false).handler(), JwtHandler.Role.TEACHER);
         server.post("/record/request", new RequestHandler().handler(), JwtHandler.Role.STUDENT, JwtHandler.Role.TEACHER);
         server.get("/record/pending/list", new ListPendingHandler(false).handler(), JwtHandler.Role.TEACHER);
         server.get("/record/pending/list/<studentId>", new ListPendingHandler(true).handler(), JwtHandler.Role.TEACHER);
         server.post("/record/pending/verify", new VerifyHandler().handler(), JwtHandler.Role.TEACHER);
+        server.get("/record/<classroomId>", new GetHandler(true).handler(), JwtHandler.Role.STUDENT);
+        server.get("/record/<classroomId>/<studentId>", new GetHandler(false).handler(), JwtHandler.Role.TEACHER);
     }
 
     private class GetHandler implements ContextHandler {
@@ -59,13 +56,7 @@ public class RecordHandler extends SimpleServerHandler {
         @Override
         public void handle(Context ctx) {
             try (var session = sessionFactory.openSession()) {
-                long studentId;
-                if (isOwnRecordOnly) {
-                    DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-                    studentId = jwt.getClaim("id").asLong();
-                } else {
-                    studentId = Long.parseLong(ctx.pathParam("studentId"));
-                }
+                long studentId = isOwnRecordOnly ? JwtHandler.getUserId(ctx) : Long.parseLong(ctx.pathParam("studentId"));
 
                 long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
                 var query = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
@@ -77,7 +68,7 @@ public class RecordHandler extends SimpleServerHandler {
                     ctx.json(new RecordResponse(1, "Record not found", null));
                     return;
                 }
-                var recordOutput = RecordOutput.fromEntity(record, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new));
+                var recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id));
                 ctx.json(new RecordResponse(0, "Get personal record", recordOutput));
             }
         }
@@ -113,10 +104,9 @@ public class RecordHandler extends SimpleServerHandler {
         @Override
         public void handle(Context ctx) {
             PendingRecordEntryInput input = ctx.bodyValidator(PendingRecordEntryInput.class).check(PendingRecordEntryInput::validate, "Invalid data").get();
+            long userId = JwtHandler.getUserId(ctx);
 
             try (var session = sessionFactory.openSession()) {
-                DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-                long userId = jwt.getClaim("id").asLong();
                 var requester = session.get(Account.class, userId);
 
                 Subject subject = session.get(Subject.class, input.subjectId());
@@ -203,8 +193,7 @@ public class RecordHandler extends SimpleServerHandler {
 
         @Override
         public void handle(Context ctx) {
-            DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-            long userId = jwt.getClaim("id").asLong();
+            long userId = JwtHandler.getUserId(ctx);
 
             try (var session = sessionFactory.openSession()) {
                 Query<PendingRecordEntry> query;
@@ -220,7 +209,7 @@ public class RecordHandler extends SimpleServerHandler {
                 var records = query.getResultList();
                 List<PendingRecordEntryOutput> list = new ArrayList<>();
                 for (var record : records) {
-                    list.add(PendingRecordEntryOutput.fromEntity(record, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
+                    list.add(PendingRecordEntryOutput.fromEntity(record, id -> Profile.getOrDefault(session, id)));
                 }
                 ctx.json(new PendingRecordEntryListResponse(0, "Get pending record entry list", list));
             }
@@ -248,8 +237,7 @@ public class RecordHandler extends SimpleServerHandler {
                     .check(PendingRecordEntryVerify::validate, "Invalid Record Entry id")
                     .get();
 
-            DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-            long userId = jwt.getClaim("id").asLong();
+            long userId = JwtHandler.getUserId(ctx);
 
             try (var session = sessionFactory.openSession()) {
                 Transaction transaction = session.beginTransaction();
