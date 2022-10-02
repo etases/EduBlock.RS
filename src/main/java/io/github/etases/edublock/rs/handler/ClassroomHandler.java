@@ -33,9 +33,10 @@ public class ClassroomHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.post("/classroom", new CreateHandler().handler(), JwtHandler.Role.STAFF);
-        server.get("/classroom", new ListHandler(false, false).handler(), JwtHandler.Role.STAFF);
-        server.get("/classroom/teacher", new ListHandler(true, false).handler(), JwtHandler.Role.TEACHER);
-        server.get("/classroom/student", new ListHandler(false, true).handler(), JwtHandler.Role.STUDENT);
+        server.get("/classroom", new ListHandler(false, false, false).handler(), JwtHandler.Role.STAFF);
+        server.get("/classroom/teacher", new ListHandler(true, false, false).handler(), JwtHandler.Role.TEACHER);
+        server.get("/classroom/student", new ListHandler(false, true, false).handler(), JwtHandler.Role.STUDENT);
+        server.get("/classroom/homeroom", new ListHandler(false, false, true).handler(), JwtHandler.Role.TEACHER);
         server.get("/classroom/<id>", new GetHandler().handler(), JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.put("/classroom/<id>", new UpdateHandler().handler(), JwtHandler.Role.STAFF);
         server.get("/classroom/<id>/teacher", new TeacherListHandler().handler(), JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
@@ -45,10 +46,12 @@ public class ClassroomHandler extends SimpleServerHandler {
     private class ListHandler implements ContextHandler {
         private final boolean isTeacher;
         private final boolean isStudent;
+        private final boolean isHomeroom;
 
-        private ListHandler(boolean isTeacher, boolean isStudent) {
+        private ListHandler(boolean isTeacher, boolean isStudent, boolean isHomeroom) {
             this.isTeacher = isTeacher;
             this.isStudent = isStudent;
+            this.isHomeroom = isHomeroom;
         }
 
         @Override
@@ -67,6 +70,11 @@ public class ClassroomHandler extends SimpleServerHandler {
                             .setParameter("studentId", userId);
                     var classStudents = query.getResultList();
                     classrooms = classStudents.stream().map(ClassStudent::getClassroom).toList();
+                } else if (isHomeroom) {
+                    long userId = JwtHandler.getUserId(ctx);
+                    var query = session.createNamedQuery("Classroom.findByHomeroomTeacher", Classroom.class)
+                            .setParameter("teacherId", userId);
+                    classrooms = query.getResultList();
                 } else {
                     var query = session.createNamedQuery("Classroom.findAll", Classroom.class);
                     classrooms = query.getResultList();
@@ -83,9 +91,9 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get class list");
-                        operation.description("Get class list");
-                        if (isTeacher) {
+                        operation.summary("Get class list" + (isHomeroom ? " (homeroom)" : ""));
+                        operation.description("Get class list" + (isHomeroom ? " (homeroom)" : ""));
+                        if (isTeacher || isHomeroom) {
                             operation.addTagsItem("Teacher");
                         } else if (isStudent) {
                             operation.addTagsItem("Student");
