@@ -9,7 +9,7 @@ import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.ClassroomListResponse;
-import io.github.etases.edublock.rs.model.output.RecordEntryListResponse;
+import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.github.etases.edublock.rs.model.output.StudentWithProfileListResponse;
 import io.github.etases.edublock.rs.model.output.element.*;
@@ -22,6 +22,7 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -133,7 +134,7 @@ public class TeacherHandler extends SimpleServerHandler {
                         operation.addTagsItem("Teacher");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", RecordEntryListResponse.class, builder -> builder.description("The list of records"));
+                    .result("200", PendingRecordEntryListResponse.class, builder -> builder.description("The list of records"));
         }
 
         @Override
@@ -153,11 +154,11 @@ public class TeacherHandler extends SimpleServerHandler {
                             .setParameter("teacherId", userId);
                 }
                 var records = query.getResultList();
-                List<RecordEntryOutput> list = new ArrayList<>();
+                List<PendingRecordEntryOutput> list = new ArrayList<>();
                 for (var record : records) {
-                    list.add(RecordEntryOutput.fromEntity(record, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
+                    list.add(PendingRecordEntryOutput.fromEntity(record, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
                 }
-                ctx.json(new RecordEntryListResponse(0, "Get pending record entry list", list));
+                ctx.json(new PendingRecordEntryListResponse(0, "Get pending record entry list", list));
             }
         }
     }
@@ -189,6 +190,7 @@ public class TeacherHandler extends SimpleServerHandler {
 
             try (var session = sessionFactory.openSession()) {
                 Transaction transaction = session.beginTransaction();
+                var account = session.get(Account.class, userId);
                 var pendingRecordEntry = session.get(PendingRecordEntry.class, input.id());
                 if (pendingRecordEntry == null) {
                     ctx.status(404);
@@ -210,6 +212,9 @@ public class TeacherHandler extends SimpleServerHandler {
                     recordEntry.setTeacher(pendingRecordEntry.getTeacher());
                     recordEntry.setRequester(pendingRecordEntry.getRequester());
                     recordEntry.setRecord(pendingRecordEntry.getRecord());
+                    recordEntry.setRequestDate(pendingRecordEntry.getRequestDate());
+                    recordEntry.setApprovalDate(new Date());
+                    recordEntry.setApprover(account);
                     session.save(recordEntry);
                 }
                 session.delete(pendingRecordEntry);

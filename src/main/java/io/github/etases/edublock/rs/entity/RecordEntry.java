@@ -7,13 +7,13 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-
 public class RecordEntry implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -28,12 +28,19 @@ public class RecordEntry implements Serializable {
     private float secondHalfScore;
     @Column(nullable = false)
     private float finalScore;
+    @Column(nullable = false)
+    private Date requestDate;
+    @Column(nullable = false)
+    private Date approvalDate;
     @ManyToOne
     @JoinColumn(nullable = false)
     private Account teacher;
     @ManyToOne
     @JoinColumn(nullable = false)
     private Account requester;
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Account approver;
 
     @ManyToOne
     @JoinColumn(nullable = false)

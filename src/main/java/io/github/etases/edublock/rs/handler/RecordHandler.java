@@ -20,6 +20,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import javax.inject.Inject;
+import java.util.Date;
 import java.util.Optional;
 
 public class RecordHandler extends SimpleServerHandler {
@@ -161,6 +162,7 @@ public class RecordHandler extends SimpleServerHandler {
                 pending.setFinalScore(input.finalScore());
                 pending.setTeacher(teacher);
                 pending.setRequester(requester);
+                pending.setRequestDate(new Date());
                 pending.setRecord(record);
 
                 session.save(input);

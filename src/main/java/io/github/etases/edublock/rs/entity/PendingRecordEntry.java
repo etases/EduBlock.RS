@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @NoArgsConstructor
@@ -30,6 +31,8 @@ public class PendingRecordEntry implements Serializable {
     private float secondHalfScore;
     @Column(nullable = false)
     private float finalScore;
+    @Column(nullable = false)
+    private Date requestDate;
     @ManyToOne
     @JoinColumn(nullable = false)
     private Account teacher;
