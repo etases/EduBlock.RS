@@ -10,7 +10,6 @@ import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
 import io.github.etases.edublock.rs.model.output.RecordResponse;
 import io.github.etases.edublock.rs.model.output.Response;
-import io.github.etases.edublock.rs.model.output.StudentRequestValidationResponse;
 import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
 import io.javalin.Javalin;
@@ -98,7 +97,7 @@ public class RecordHandler extends SimpleServerHandler {
                         operation.addTagsItem("Record");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", StudentRequestValidationResponse.class, builder -> builder.description("Student request record validation"));
+                    .result("200", Response.class, builder -> builder.description("Student request record validation"));
         }
 
         @Override

@@ -7,12 +7,10 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
-import io.github.etases.edublock.rs.model.output.AccountWithStudentProfileListResponse;
-import io.github.etases.edublock.rs.model.output.ClassroomListResponse;
-import io.github.etases.edublock.rs.model.output.ClassroomResponse;
-import io.github.etases.edublock.rs.model.output.Response;
+import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
+import io.github.etases.edublock.rs.model.output.element.TeacherWithSubjectOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -35,19 +33,44 @@ public class ClassroomHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.post("/classroom", new CreateHandler().handler(), JwtHandler.Role.STAFF);
-        server.get("/classroom/list", new ListHandler().handler(), JwtHandler.Role.STAFF);
-        server.get("/classroom/homeroom", new HomeroomListHandler().handler(), JwtHandler.Role.TEACHER);
-        server.get("/classroom/<id>", new GetHandler().handler(), JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER);
+        server.get("/classroom", new ListHandler(false, false).handler(), JwtHandler.Role.STAFF);
+        server.get("/classroom/teacher", new ListHandler(true, false).handler(), JwtHandler.Role.TEACHER);
+        server.get("/classroom/student", new ListHandler(false, true).handler(), JwtHandler.Role.STUDENT);
+        server.get("/classroom/<id>", new GetHandler().handler(), JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.put("/classroom/<id>", new UpdateHandler().handler(), JwtHandler.Role.STAFF);
+        server.get("/classroom/<id>/teacher", new TeacherListHandler().handler(), JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.get("/classroom/<id>/student", new StudentListHandler().handler(), JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF);
     }
 
     private class ListHandler implements ContextHandler {
+        private final boolean isTeacher;
+        private final boolean isStudent;
+
+        private ListHandler(boolean isTeacher, boolean isStudent) {
+            this.isTeacher = isTeacher;
+            this.isStudent = isStudent;
+        }
+
         @Override
         public void handle(Context ctx) {
             try (var session = sessionFactory.openSession()) {
-                var query = session.createNamedQuery("Classroom.findAll", Classroom.class);
-                var classrooms = query.getResultList();
+                List<Classroom> classrooms;
+                if (isTeacher) {
+                    long userId = JwtHandler.getUserId(ctx);
+                    var query = session.createNamedQuery("ClassTeacher.findByTeacher", ClassTeacher.class)
+                            .setParameter("teacherId", userId);
+                    var classTeachers = query.getResultList();
+                    classrooms = classTeachers.stream().map(ClassTeacher::getClassroom).toList();
+                } else if (isStudent) {
+                    long userId = JwtHandler.getUserId(ctx);
+                    var query = session.createNamedQuery("ClassStudent.findByStudent", ClassStudent.class)
+                            .setParameter("studentId", userId);
+                    var classStudents = query.getResultList();
+                    classrooms = classStudents.stream().map(ClassStudent::getClassroom).toList();
+                } else {
+                    var query = session.createNamedQuery("Classroom.findAll", Classroom.class);
+                    classrooms = query.getResultList();
+                }
                 List<ClassroomOutput> list = new ArrayList<>();
                 for (var classroom : classrooms) {
                     list.add(ClassroomOutput.fromEntity(classroom, id -> Profile.getOrDefault(session, id)));
@@ -62,7 +85,13 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Get class list");
                         operation.description("Get class list");
-                        operation.addTagsItem("Staff");
+                        if (isTeacher) {
+                            operation.addTagsItem("Teacher");
+                        } else if (isStudent) {
+                            operation.addTagsItem("Student");
+                        } else {
+                            operation.addTagsItem("Staff");
+                        }
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", ClassroomListResponse.class, builder -> builder.description("The list of classroom"));
@@ -70,7 +99,6 @@ public class ClassroomHandler extends SimpleServerHandler {
     }
 
     private class GetHandler implements ContextHandler {
-
         @Override
         public void handle(Context ctx) {
             long classId = Long.parseLong(ctx.pathParam("id"));
@@ -93,6 +121,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                         operation.description("Get class");
                         operation.addTagsItem("Staff");
                         operation.addTagsItem("Teacher");
+                        operation.addTagsItem("Student");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", ClassroomResponse.class, builder -> builder.description("The class"))
@@ -203,36 +232,6 @@ public class ClassroomHandler extends SimpleServerHandler {
         }
     }
 
-    private class HomeroomListHandler implements ContextHandler {
-        @Override
-        public OpenApiDocumentation document() {
-            return OpenApiBuilder.document()
-                    .operation(operation -> {
-                        operation.summary("Get list of classes of the teacher");
-                        operation.description("Get list of classes of the teacher");
-                        operation.addTagsItem("Teacher");
-                    })
-                    .operation(SwaggerHandler.addSecurity())
-                    .result("200", ClassroomListResponse.class, builder -> builder.description("The list of classrooms"));
-        }
-
-        @Override
-        public void handle(Context ctx) {
-            try (var session = sessionFactory.openSession()) {
-                long userId = JwtHandler.getUserId(ctx);
-                var query = session.createNamedQuery("ClassTeacher.findByTeacher", ClassTeacher.class)
-                        .setParameter("teacherId", userId);
-                var classTeachers = query.getResultList();
-                List<ClassroomOutput> list = new ArrayList<>();
-                for (var classTeacher : classTeachers) {
-                    var classroom = classTeacher.getClassroom();
-                    list.add(ClassroomOutput.fromEntity(classroom, id -> Profile.getOrDefault(session, id)));
-                }
-                ctx.json(new ClassroomListResponse(0, "Get classroom list", list));
-            }
-        }
-    }
-
     private class StudentListHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
@@ -266,6 +265,43 @@ public class ClassroomHandler extends SimpleServerHandler {
                 }
                 ctx.json(new AccountWithStudentProfileListResponse(0, "Get student list", list));
             }
+        }
+    }
+
+    private class TeacherListHandler implements ContextHandler {
+
+        @Override
+        public void handle(Context ctx) {
+            long classroomId = Long.parseLong(ctx.pathParam("id"));
+            try (var session = sessionFactory.openSession()) {
+                var classroom = session.get(Classroom.class, classroomId);
+                if (classroom == null) {
+                    ctx.status(404);
+                    ctx.json(new TeacherWithSubjectListResponse(1, "Classroom not found", null));
+                    return;
+                }
+                var classTeachers = classroom.getTeachers();
+                List<TeacherWithSubjectOutput> list = new ArrayList<>();
+                for (var classTeacher : classTeachers) {
+                    list.add(TeacherWithSubjectOutput.fromEntity(classTeacher, id -> Profile.getOrDefault(session, id)));
+                }
+                ctx.json(new TeacherWithSubjectListResponse(0, "Get teacher list", list));
+            }
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get list of teachers of a class");
+                        operation.description("Get list of teachers of a class");
+                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Teacher");
+                        operation.addTagsItem("Student");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .result("200", TeacherWithSubjectListResponse.class, builder -> builder.description("The list of teacher"))
+                    .result("404", TeacherWithSubjectListResponse.class, builder -> builder.description("Classroom not found"));
         }
     }
 }

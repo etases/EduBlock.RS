@@ -13,6 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Getter
 @Setter
+@NamedQuery(name = "ClassStudent.findByStudent", query = "FROM ClassStudent WHERE student.id = :studentId")
 public class ClassStudent implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
