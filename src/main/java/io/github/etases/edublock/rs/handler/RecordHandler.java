@@ -8,9 +8,12 @@ import io.github.etases.edublock.rs.entity.Record;
 import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
+import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
+import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
 import io.github.etases.edublock.rs.model.output.RecordResponse;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.github.etases.edublock.rs.model.output.StudentRequestValidationResponse;
+import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -18,9 +21,12 @@ import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 public class RecordHandler extends SimpleServerHandler {
@@ -35,15 +41,18 @@ public class RecordHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/record/<classroomId>", new GetRecordHandler(true).handler(), JwtHandler.Role.STUDENT);
-        server.get("/record/student/<studentId>/<classroomId>", new GetRecordHandler(false).handler(), JwtHandler.Role.TEACHER);
-        server.post("/record/request", new RequestRecordUpdateHandler().handler(), JwtHandler.Role.STUDENT, JwtHandler.Role.TEACHER);
+        server.get("/record/<classroomId>", new GetHandler(true).handler(), JwtHandler.Role.STUDENT);
+        server.get("/record/<classroomId>/<studentId>", new GetHandler(false).handler(), JwtHandler.Role.TEACHER);
+        server.post("/record/request", new RequestHandler().handler(), JwtHandler.Role.STUDENT, JwtHandler.Role.TEACHER);
+        server.get("/record/pending/list", new ListPendingHandler(false).handler(), JwtHandler.Role.TEACHER);
+        server.get("/record/pending/list/<studentId>", new ListPendingHandler(true).handler(), JwtHandler.Role.TEACHER);
+        server.post("/record/pending/verify", new VerifyHandler().handler(), JwtHandler.Role.TEACHER);
     }
 
-    private class GetRecordHandler implements ContextHandler {
+    private class GetHandler implements ContextHandler {
         private final boolean isOwnRecordOnly;
 
-        private GetRecordHandler(boolean isOwnRecordOnly) {
+        private GetHandler(boolean isOwnRecordOnly) {
             this.isOwnRecordOnly = isOwnRecordOnly;
         }
 
@@ -87,7 +96,7 @@ public class RecordHandler extends SimpleServerHandler {
         }
     }
 
-    private class RequestRecordUpdateHandler implements ContextHandler {
+    private class RequestHandler implements ContextHandler {
 
         @Override
         public OpenApiDocumentation document() {
@@ -169,6 +178,111 @@ public class RecordHandler extends SimpleServerHandler {
                 transaction.commit();
 
                 ctx.json(new Response(0, "Record validation requested"));
+            }
+        }
+    }
+
+    private class ListPendingHandler implements ContextHandler {
+        private final boolean filterByStudent;
+
+        private ListPendingHandler(boolean filterByStudent) {
+            this.filterByStudent = filterByStudent;
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get list of pending record entries");
+                        operation.description("Get list of pending record entries");
+                        operation.addTagsItem("Teacher");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .result("200", PendingRecordEntryListResponse.class, builder -> builder.description("The list of records"));
+        }
+
+        @Override
+        public void handle(Context ctx) {
+            DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+            long userId = jwt.getClaim("id").asLong();
+
+            try (var session = sessionFactory.openSession()) {
+                Query<PendingRecordEntry> query;
+                if (filterByStudent) {
+                    long studentId = Long.parseLong(ctx.pathParam("studentId"));
+                    query = session.createNamedQuery("PendingRecordEntry.findByHomeroomTeacherAndStudent", PendingRecordEntry.class)
+                            .setParameter("studentId", studentId)
+                            .setParameter("teacherId", userId);
+                } else {
+                    query = session.createNamedQuery("PendingRecordEntry.findByHomeroomTeacher", PendingRecordEntry.class)
+                            .setParameter("teacherId", userId);
+                }
+                var records = query.getResultList();
+                List<PendingRecordEntryOutput> list = new ArrayList<>();
+                for (var record : records) {
+                    list.add(PendingRecordEntryOutput.fromEntity(record, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
+                }
+                ctx.json(new PendingRecordEntryListResponse(0, "Get pending record entry list", list));
+            }
+        }
+    }
+
+    private class VerifyHandler implements ContextHandler {
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Verify a record entry");
+                        operation.description("Verify a record entry");
+                        operation.addTagsItem("Teacher");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .result("200", Response.class, builder -> builder.description("Record verified"))
+                    .result("404", Response.class, builder -> builder.description("Record not found"))
+                    .result("403", Response.class, builder -> builder.description("Not authorized"));
+        }
+
+        @Override
+        public void handle(Context ctx) {
+            PendingRecordEntryVerify input = ctx.bodyValidator(PendingRecordEntryVerify.class)
+                    .check(PendingRecordEntryVerify::validate, "Invalid Record Entry id")
+                    .get();
+
+            DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+            long userId = jwt.getClaim("id").asLong();
+
+            try (var session = sessionFactory.openSession()) {
+                Transaction transaction = session.beginTransaction();
+                var account = session.get(Account.class, userId);
+                var pendingRecordEntry = session.get(PendingRecordEntry.class, input.id());
+                if (pendingRecordEntry == null) {
+                    ctx.status(404);
+                    ctx.json(new Response(1, "Record not found"));
+                    return;
+                }
+                if (pendingRecordEntry.getRecord().getClassroom().getHomeroomTeacher().getId() != userId) {
+                    ctx.status(403);
+                    ctx.json(new Response(2, "Not homeroom teacher"));
+                    return;
+                }
+
+                if (input.isAccepted()) {
+                    var recordEntry = new RecordEntry();
+                    recordEntry.setSubject(pendingRecordEntry.getSubject());
+                    recordEntry.setFirstHalfScore(pendingRecordEntry.getFirstHalfScore());
+                    recordEntry.setSecondHalfScore(pendingRecordEntry.getSecondHalfScore());
+                    recordEntry.setFinalScore(pendingRecordEntry.getFinalScore());
+                    recordEntry.setTeacher(pendingRecordEntry.getTeacher());
+                    recordEntry.setRequester(pendingRecordEntry.getRequester());
+                    recordEntry.setRecord(pendingRecordEntry.getRecord());
+                    recordEntry.setRequestDate(pendingRecordEntry.getRequestDate());
+                    recordEntry.setApprovalDate(new Date());
+                    recordEntry.setApprover(account);
+                    session.save(recordEntry);
+                }
+                session.delete(pendingRecordEntry);
+                transaction.commit();
+                ctx.json(new Response(0, "Record verified"));
             }
         }
     }
