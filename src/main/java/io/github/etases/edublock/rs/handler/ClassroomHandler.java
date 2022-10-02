@@ -358,7 +358,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                 }
                 if (errors.isEmpty()) {
                     transaction.commit();
-                    ctx.json(new TeacherWithSubjectListResponse(0, "Teachers added", Collections.emptyList()));
+                    ctx.json(new TeacherWithSubjectErrorListResponse(0, "Teachers added", Collections.emptyList()));
                 } else {
                     transaction.rollback();
                     ctx.status(400);
@@ -377,7 +377,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(TeacherWithSubjectListInput.class, builder -> builder.description("The list of teachers to add"))
-                    .result("200", TeacherWithSubjectListResponse.class, builder -> builder.description("Teachers added"))
+                    .result("200", TeacherWithSubjectErrorListResponse.class, builder -> builder.description("Teachers added"))
                     .result("400", TeacherWithSubjectErrorListResponse.class, builder -> builder.description("Some teachers not added"))
                     .result("404", TeacherWithSubjectErrorListResponse.class, builder -> builder.description("Classroom not found"));
         }
