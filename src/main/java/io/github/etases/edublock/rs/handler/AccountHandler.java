@@ -80,8 +80,8 @@ public class AccountHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get account");
-                        operation.description("Get account");
+                        operation.summary("Get account" + (isOwnOnly ? " (own)" : ". Roles: TEACHER, STAFF, ADMIN"));
+                        operation.description("Get account" + (isOwnOnly ? " (own)" : ". Roles: TEACHER, STAFF, ADMIN"));
                         operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -96,8 +96,8 @@ public class AccountHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("List all accounts");
-                        operation.description("List all accounts");
+                        operation.summary("List all accounts. Roles: ADMIN, STAFF");
+                        operation.summary("List all accounts. Roles: ADMIN, STAFF");
                         operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -124,8 +124,8 @@ public class AccountHandler extends SimpleServerHandler {
             return OpenApiBuilder.document()
                     .operation(SwaggerHandler.addSecurity())
                     .operation(operation -> {
-                        operation.summary("Create multiple accounts");
-                        operation.description("Create multiple accounts");
+                        operation.summary("Create multiple accounts. Roles: ADMIN");
+                        operation.description("Create multiple accounts. Roles: ADMIN");
                         operation.addTagsItem("Account");
                     })
                     .body(AccountCreateListInput.class,
@@ -207,8 +207,8 @@ public class AccountHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Update multiple accounts password");
-                        operation.description("Update multiple accounts password");
+                        operation.summary("Update multiple accounts password. Roles: ADMIN");
+                        operation.description("Update multiple accounts password. Roles: ADMIN");
                         operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -259,8 +259,8 @@ public class AccountHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("List accounts by role");
-                        operation.description("List accounts with a specific role");
+                        operation.summary("List accounts by role. Roles: ADMIN, STAFF");
+                        operation.description("List accounts with a specific role. Roles: ADMIN, STAFF");
                         operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -305,8 +305,8 @@ public class AccountHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Update user profile");
-                        operation.description("Update user profile");
+                        operation.summary("Update user profile. Roles: STAFF");
+                        operation.description("Update user profile. Roles: STAFF");
                         operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -405,8 +405,8 @@ public class AccountHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Update student information");
-                        operation.description("Update student information");
+                        operation.summary("Update student information. Roles: STAFF");
+                        operation.description("Update student information. Roles: STAFF");
                         operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())

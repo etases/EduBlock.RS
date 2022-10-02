@@ -76,8 +76,14 @@ public class RecordHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get personal record");
-                        operation.description("Get personal record");
+                        String description;
+                        if (isOwnRecordOnly) {
+                            description = "Get own record. Roles: STUDENT";
+                        } else {
+                            description = "Get student record. Roles: TEACHER";
+                        }
+                        operation.summary(description);
+                        operation.description(description);
                         operation.addTagsItem("Record");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -92,8 +98,8 @@ public class RecordHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Request record update");
-                        operation.description("Request record update");
+                        operation.summary("Request record update. Roles: STUDENT, TEACHER");
+                        operation.description("Request record update. Roles: STUDENT, TEACHER");
                         operation.addTagsItem("Record");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -182,8 +188,8 @@ public class RecordHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get list of pending record entries");
-                        operation.description("Get list of pending record entries");
+                        operation.summary("Get list of pending record entries. Roles: TEACHER");
+                        operation.description("Get list of pending record entries. Roles: TEACHER");
                         operation.addTagsItem("Record");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -220,8 +226,8 @@ public class RecordHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Verify a record entry");
-                        operation.description("Verify a record entry");
+                        operation.summary("Verify a record entry. Roles: TEACHER");
+                        operation.description("Verify a record entry. Roles: TEACHER");
                         operation.addTagsItem("Record");
                     })
                     .operation(SwaggerHandler.addSecurity())

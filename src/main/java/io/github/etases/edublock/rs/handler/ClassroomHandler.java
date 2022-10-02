@@ -95,8 +95,18 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get class list" + (isHomeroom ? " (homeroom)" : ""));
-                        operation.description("Get class list" + (isHomeroom ? " (homeroom)" : ""));
+                        String description;
+                        if (isTeacher) {
+                            description = "Get classroom list of teacher. Roles: TEACHER";
+                        } else if (isStudent) {
+                            description = "Get classroom list of student. Roles: STUDENT";
+                        } else if (isHomeroom) {
+                            description = "Get homeroom classroom list of teacher. Roles: TEACHER";
+                        } else {
+                            description = "Get classroom list. Roles: STAFF";
+                        }
+                        operation.summary(description);
+                        operation.description(description);
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -123,8 +133,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get class");
-                        operation.description("Get class");
+                        operation.summary("Get class. Roles: STAFF, TEACHER, STUDENT");
+                        operation.description("Get class. Roles: STAFF, TEACHER, STUDENT");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -138,8 +148,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Update class");
-                        operation.description("Update class");
+                        operation.summary("Update class. Roles: STAFF");
+                        operation.description("Update class. Roles: STAFF");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -194,8 +204,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Create class");
-                        operation.description("Create class");
+                        operation.summary("Create class. Roles: STAFF");
+                        operation.description("Create class. Roles: STAFF");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -241,8 +251,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get list of students of a class");
-                        operation.description("Get list of students of a class");
+                        operation.summary("Get list of students of a class. Roles: STAFF, TEACHER");
+                        operation.description("Get list of students of a class. Roles: STAFF, TEACHER");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -296,8 +306,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get list of teachers of a class");
-                        operation.description("Get list of teachers of a class");
+                        operation.summary("Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT");
+                        operation.description("Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -360,8 +370,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Add teachers to a class");
-                        operation.description("Add teachers to a class");
+                        operation.summary("Add teachers to a class. Roles: STAFF");
+                        operation.description("Add teachers to a class. Roles: STAFF");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -398,8 +408,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Remove teachers from a class");
-                        operation.description("Remove teachers from a class");
+                        operation.summary("Remove teachers from a class. Roles: STAFF");
+                        operation.description("Remove teachers from a class. Roles: STAFF");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -451,8 +461,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Add students to a class");
-                        operation.description("Add students to a class");
+                        operation.summary("Add students to a class. Roles: STAFF");
+                        operation.description("Add students to a class. Roles: STAFF");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
@@ -489,8 +499,8 @@ public class ClassroomHandler extends SimpleServerHandler {
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Remove students from a class");
-                        operation.description("Remove students from a class");
+                        operation.summary("Remove students from a class. Roles: STAFF");
+                        operation.description("Remove students from a class. Roles: STAFF");
                         operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
