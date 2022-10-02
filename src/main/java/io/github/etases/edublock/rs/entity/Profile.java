@@ -25,6 +25,8 @@ public class Profile implements Serializable {
     @Column(nullable = false)
     private String lastName;
     @Column(nullable = false)
+    private String gender;
+    @Column(nullable = false)
     private String avatar;
     @Column(nullable = false)
     private Date birthDate;
