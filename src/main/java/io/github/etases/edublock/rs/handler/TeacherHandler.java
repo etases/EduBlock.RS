@@ -5,27 +5,25 @@ import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
-import io.github.etases.edublock.rs.entity.ClassTeacher;
-import io.github.etases.edublock.rs.entity.PendingRecordEntry;
-import io.github.etases.edublock.rs.entity.Profile;
-import io.github.etases.edublock.rs.entity.RecordEntry;
+import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.ClassroomListResponse;
+import io.github.etases.edublock.rs.model.output.RecordEntryListResponse;
 import io.github.etases.edublock.rs.model.output.Response;
-import io.github.etases.edublock.rs.model.output.ResponseWithData;
-import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
-import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
-import io.github.etases.edublock.rs.model.output.element.ProfileOutput;
+import io.github.etases.edublock.rs.model.output.StudentWithProfileListResponse;
+import io.github.etases.edublock.rs.model.output.element.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
 import io.javalin.plugin.openapi.dsl.OpenApiDocumentation;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class TeacherHandler extends SimpleServerHandler {
 
@@ -40,8 +38,9 @@ public class TeacherHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.get("/teacher/class/list", new ClassListHandler().handler(), JwtHandler.Roles.TEACHER);
-        server.get("/teacher/student/list", new StudentListHandler().handler(), JwtHandler.Roles.TEACHER);
-        server.get("/teacher/record/pending/list", new PendingRecordEntryListHandler().handler(), JwtHandler.Roles.TEACHER);
+        server.get("/teacher/class/<classroomId>/student", new StudentListHandler().handler(), JwtHandler.Roles.TEACHER);
+        server.get("/teacher/record/pending/list", new PendingRecordEntryListHandler(false).handler(), JwtHandler.Roles.TEACHER);
+        server.get("/teacher/record/pending/list/<studentId>", new PendingRecordEntryListHandler(true).handler(), JwtHandler.Roles.TEACHER);
         server.post("/teacher/record/pending/verify", new RecordEntryVerifyHandler().handler(), JwtHandler.Roles.TEACHER);
     }
 
@@ -69,57 +68,62 @@ public class TeacherHandler extends SimpleServerHandler {
                 List<ClassroomOutput> list = new ArrayList<>();
                 for (var classTeacher : classTeachers) {
                     var classroom = classTeacher.getClassroom();
-                    list.add(new ClassroomOutput(
-                            classroom.getId(),
-                            classroom.getName(),
-                            classroom.getGrade()
-                    ));
+                    list.add(ClassroomOutput.fromEntity(classroom, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
                 }
                 ctx.json(new ClassroomListResponse(0, "Get classroom list", list));
             }
         }
     }
 
-    // TODO: Filter by homeroom teacher & classroom
     private class StudentListHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
                     .operation(operation -> {
-                        operation.summary("Get list of students");
-                        operation.description("Get list of students");
+                        operation.summary("Get list of students of a class");
+                        operation.description("Get list of students of a class");
                         operation.addTagsItem("Teacher");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", ResponseWithData.class, builder -> builder.description("The list of students"));
+                    .result("200", StudentWithProfileListResponse.class, builder -> builder.description("The list of students"))
+                    .result("404", StudentWithProfileListResponse.class, builder -> builder.description("Classroom not found"));
         }
 
         @Override
         public void handle(Context ctx) {
+            long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
             try (var session = sessionFactory.openSession()) {
-                var query = session.createNamedQuery("Profile.findAll", Profile.class);
-                var students = query.getResultList();
-                List<ProfileOutput> list = new ArrayList<>();
-                for (var student : students) {
-                    list.add(new ProfileOutput(
-                                    student.getId(),
-                                    student.getFirstName(),
-                                    student.getLastName(),
-                                    student.getPhone(),
-                                    student.getBirthDate(),
-                                    student.getAddress(),
-                                    student.getEmail(),
-                                    student.getAvatar()
-                            )
-                    );
+                var classroom = session.get(Classroom.class, classroomId);
+                if (classroom == null) {
+                    ctx.status(404);
+                    ctx.json(new StudentWithProfileListResponse(1, "Classroom not found", null));
+                    return;
                 }
-                ctx.json(new ResponseWithData(0, "Get classroom list", list));
+                var classStudents = classroom.getStudents();
+                List<StudentWithProfileOutput> list = new ArrayList<>();
+                for (var classStudent : classStudents) {
+                    Student student = classStudent.getStudent();
+                    Profile profile = session.get(Profile.class, student.getId());
+                    if (profile == null) {
+                        profile = new Profile();
+                    }
+                    list.add(new StudentWithProfileOutput(
+                            StudentOutput.fromEntity(student),
+                            ProfileOutput.fromEntity(profile)
+                    ));
+                }
+                ctx.json(new StudentWithProfileListResponse(0, "Get student list", list));
             }
         }
     }
 
-    // TODO: Filter by homeroom teacher
     private class PendingRecordEntryListHandler implements ContextHandler {
+        private final boolean filterByStudent;
+
+        private PendingRecordEntryListHandler(boolean filterByStudent) {
+            this.filterByStudent = filterByStudent;
+        }
+
         @Override
         public OpenApiDocumentation document() {
             return OpenApiBuilder.document()
@@ -129,33 +133,36 @@ public class TeacherHandler extends SimpleServerHandler {
                         operation.addTagsItem("Teacher");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", ResponseWithData.class, builder -> builder.description("The list of records"));
+                    .result("200", RecordEntryListResponse.class, builder -> builder.description("The list of records"));
         }
 
         @Override
         public void handle(Context ctx) {
+            DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+            long userId = jwt.getClaim("id").asLong();
+
             try (var session = sessionFactory.openSession()) {
-                var query = session.createNamedQuery("PendingRecordEntry.findAll", PendingRecordEntry.class);
-                var records = query.getResultList();
-                List<PendingRecordEntryOutput> list = new ArrayList<>();
-                for (var record : records) {
-                    list.add(new PendingRecordEntryOutput(
-                                    record.getId(),
-                                    record.getSubject(),
-                                    record.getFirstHalfScore(),
-                                    record.getSecondHalfScore(),
-                                    record.getFinalScore(),
-                                    record.getTeacher()
-                            )
-                    );
+                Query<PendingRecordEntry> query;
+                if (filterByStudent) {
+                    long studentId = Long.parseLong(ctx.pathParam("studentId"));
+                    query = session.createNamedQuery("PendingRecordEntry.findByHomeroomTeacherAndStudent", PendingRecordEntry.class)
+                            .setParameter("studentId", studentId)
+                            .setParameter("teacherId", userId);
+                } else {
+                    query = session.createNamedQuery("PendingRecordEntry.findByHomeroomTeacher", PendingRecordEntry.class)
+                            .setParameter("teacherId", userId);
                 }
-                ctx.json(new ResponseWithData(0, "Get classroom list", list));
+                var records = query.getResultList();
+                List<RecordEntryOutput> list = new ArrayList<>();
+                for (var record : records) {
+                    list.add(RecordEntryOutput.fromEntity(record, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
+                }
+                ctx.json(new RecordEntryListResponse(0, "Get pending record entry list", list));
             }
         }
     }
 
 
-    // TODO: Filter by homeroom teacher
     private class RecordEntryVerifyHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
@@ -167,7 +174,8 @@ public class TeacherHandler extends SimpleServerHandler {
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", Response.class, builder -> builder.description("Record verified"))
-                    .result("404", Response.class, builder -> builder.description("Record not found"));
+                    .result("404", Response.class, builder -> builder.description("Record not found"))
+                    .result("403", Response.class, builder -> builder.description("Not authorized"));
         }
 
         @Override
@@ -176,12 +184,20 @@ public class TeacherHandler extends SimpleServerHandler {
                     .check(PendingRecordEntryVerify::validate, "Invalid Record Entry id")
                     .get();
 
+            DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+            long userId = jwt.getClaim("id").asLong();
+
             try (var session = sessionFactory.openSession()) {
                 Transaction transaction = session.beginTransaction();
                 var pendingRecordEntry = session.get(PendingRecordEntry.class, input.id());
                 if (pendingRecordEntry == null) {
                     ctx.status(404);
                     ctx.json(new Response(1, "Record not found"));
+                    return;
+                }
+                if (pendingRecordEntry.getRecord().getClassroom().getHomeroomTeacher().getId() != userId) {
+                    ctx.status(403);
+                    ctx.json(new Response(2, "Not homeroom teacher"));
                     return;
                 }
 

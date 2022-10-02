@@ -11,7 +11,6 @@ import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
 import io.github.etases.edublock.rs.model.output.RecordResponse;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.github.etases.edublock.rs.model.output.StudentRequestValidationResponse;
-import io.github.etases.edublock.rs.model.output.element.RecordEntryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -21,6 +20,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 public class RecordHandler extends SimpleServerHandler {
 
@@ -34,33 +34,40 @@ public class RecordHandler extends SimpleServerHandler {
 
     @Override
     protected void setupServer(Javalin server) {
-        server.get("/record/<classroomId>", new GetRecordHandler().handler(), JwtHandler.Roles.STUDENT);
+        server.get("/record/<classroomId>", new GetRecordHandler(true).handler(), JwtHandler.Roles.STUDENT);
+        server.get("/record/student/<studentId>/<classroomId>", new GetRecordHandler(false).handler(), JwtHandler.Roles.TEACHER);
         server.post("/record/request", new RequestRecordUpdateHandler().handler(), JwtHandler.Roles.STUDENT, JwtHandler.Roles.TEACHER);
     }
 
     private class GetRecordHandler implements ContextHandler {
+        private final boolean isOwnRecordOnly;
+
+        private GetRecordHandler(boolean isOwnRecordOnly) {
+            this.isOwnRecordOnly = isOwnRecordOnly;
+        }
 
         @Override
         public void handle(Context ctx) {
             try (var session = sessionFactory.openSession()) {
-                DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
-                long userId = jwt.getClaim("id").asLong();
+                long studentId;
+                if (isOwnRecordOnly) {
+                    DecodedJWT jwt = JwtUtil.getDecodedFromContext(ctx);
+                    studentId = jwt.getClaim("id").asLong();
+                } else {
+                    studentId = Long.parseLong(ctx.pathParam("studentId"));
+                }
+
                 long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
                 var query = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
-                        .setParameter("student", userId)
+                        .setParameter("studentId", studentId)
                         .setParameter("classroomId", classroomId);
                 var record = query.uniqueResult();
-                var recordOutput = new RecordOutput(
-                        record.getClassroom().getId(),
-                        record.getClassroom().getName(),
-                        record.getRecordEntry().stream().map(recordEntry -> new RecordEntryOutput(
-                                recordEntry.getSubject().getId(),
-                                recordEntry.getSubject().getName(),
-                                recordEntry.getFirstHalfScore(),
-                                recordEntry.getSecondHalfScore(),
-                                recordEntry.getFinalScore()
-                        )).toList()
-                );
+                if (record == null) {
+                    ctx.status(404);
+                    ctx.json(new RecordResponse(1, "Record not found", null));
+                    return;
+                }
+                var recordOutput = RecordOutput.fromEntity(record, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new));
                 ctx.json(new RecordResponse(0, "Get personal record", recordOutput));
             }
         }
@@ -74,7 +81,8 @@ public class RecordHandler extends SimpleServerHandler {
                         operation.addTagsItem("Record");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", RecordOutput.class, builder -> builder.description("The record"));
+                    .result("200", RecordResponse.class, builder -> builder.description("The record"))
+                    .result("404", RecordResponse.class, builder -> builder.description("Record not found"));
         }
     }
 
@@ -134,7 +142,7 @@ public class RecordHandler extends SimpleServerHandler {
                 var teacher = classTeacher.getTeacher();
 
                 var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
-                        .setParameter("student", input.studentId())
+                        .setParameter("studentId", input.studentId())
                         .setParameter("classroomId", input.classroomId());
                 var record = recordQuery.uniqueResult();
                 if (record == null) {

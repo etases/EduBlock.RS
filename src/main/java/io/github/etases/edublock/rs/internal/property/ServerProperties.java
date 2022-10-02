@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public record ServerProperties(String host, int port, boolean devLogging, boolean bypassCors, List<String> allowedOrigins) {
+public record ServerProperties(String host, int port, boolean devLogging, boolean bypassCors,
+                               List<String> allowedOrigins) {
     public static ServerProperties fromMap(Map<?, ?> map) {
         return new ServerProperties(
                 Objects.toString(map.get("host"), "localhost"),

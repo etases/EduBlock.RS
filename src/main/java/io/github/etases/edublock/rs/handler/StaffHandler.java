@@ -12,12 +12,14 @@ import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.ClassCreate;
 import io.github.etases.edublock.rs.model.input.ClassUpdate;
 import io.github.etases.edublock.rs.model.input.ProfileUpdate;
-import io.github.etases.edublock.rs.model.output.AccountListResponse;
+import io.github.etases.edublock.rs.model.output.AccountWithProfileListResponse;
 import io.github.etases.edublock.rs.model.output.ClassroomListResponse;
 import io.github.etases.edublock.rs.model.output.ClassroomResponse;
-import io.github.etases.edublock.rs.model.output.element.AccountOutput;
 import io.github.etases.edublock.rs.model.output.Response;
+import io.github.etases.edublock.rs.model.output.element.AccountOutput;
+import io.github.etases.edublock.rs.model.output.element.AccountWithProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
+import io.github.etases.edublock.rs.model.output.element.ProfileOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -27,6 +29,7 @@ import org.hibernate.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class StaffHandler extends SimpleServerHandler {
     private final SessionFactory sessionFactory;
@@ -57,7 +60,7 @@ public class StaffHandler extends SimpleServerHandler {
                         operation.addTagsItem("Staff");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", AccountListResponse.class, builder -> builder.description("The list of accounts"));
+                    .result("200", AccountWithProfileListResponse.class, builder -> builder.description("The list of accounts"));
         }
 
         @Override
@@ -67,25 +70,15 @@ public class StaffHandler extends SimpleServerHandler {
                 var query = session.createNamedQuery("Account.findByRole", Account.class).setParameter("role", role);
 
                 var accounts = query.getResultList();
-                List<AccountOutput> list = new ArrayList<>();
+                List<AccountWithProfileOutput> list = new ArrayList<>();
                 for (var account : accounts) {
-                    var profile = session.get(Profile.class, account.getId());
-                    if (profile == null) {
-                        profile = new Profile();
-                    }
-                    list.add(new AccountOutput(
-                            account.getId(),
-                            account.getUsername(),
-                            profile.getFirstName(),
-                            profile.getLastName(),
-                            profile.getAvatar(),
-                            profile.getBirthDate(),
-                            profile.getAddress(),
-                            profile.getPhone(),
-                            profile.getEmail(),
-                            account.getRole()));
+                    var profile = Optional.ofNullable(session.get(Profile.class, account.getId())).orElseGet(Profile::new);
+                    list.add(new AccountWithProfileOutput(
+                            AccountOutput.fromEntity(account),
+                            ProfileOutput.fromEntity(profile)
+                    ));
                 }
-                ctx.json(new AccountListResponse(0, "Get account list", list));
+                ctx.json(new AccountWithProfileListResponse(0, "Get account list", list));
             }
         }
     }
@@ -256,11 +249,7 @@ public class StaffHandler extends SimpleServerHandler {
                 classroom.setHomeroomTeacher(homeroomTeacher);
                 session.save(classroom);
                 transaction.commit();
-                var output = new ClassroomOutput(
-                        classroom.getId(),
-                        classroom.getName(),
-                        classroom.getGrade()
-                );
+                var output = ClassroomOutput.fromEntity(classroom, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new));
                 ctx.json(new ClassroomResponse(0, "Class created", output));
             }
         }
@@ -274,11 +263,7 @@ public class StaffHandler extends SimpleServerHandler {
                 var classrooms = query.getResultList();
                 List<ClassroomOutput> list = new ArrayList<>();
                 for (var classroom : classrooms) {
-                    list.add(new ClassroomOutput(
-                            classroom.getId(),
-                            classroom.getName(),
-                            classroom.getGrade()
-                    ));
+                    list.add(ClassroomOutput.fromEntity(classroom, id -> Optional.ofNullable(session.get(Profile.class, id)).orElseGet(Profile::new)));
                 }
                 ctx.json(new ClassroomListResponse(0, "Get classroom list", list));
             }

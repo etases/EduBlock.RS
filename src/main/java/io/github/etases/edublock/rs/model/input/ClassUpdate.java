@@ -2,7 +2,7 @@ package io.github.etases.edublock.rs.model.input;
 
 public record ClassUpdate(
         String name,
-         int grade,
+        int grade,
         long homeroomTeacherId
 ) {
     public boolean validate() {

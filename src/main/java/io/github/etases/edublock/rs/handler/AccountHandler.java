@@ -12,8 +12,13 @@ import io.github.etases.edublock.rs.model.input.AccountCreate;
 import io.github.etases.edublock.rs.model.input.AccountCreateListInput;
 import io.github.etases.edublock.rs.model.input.AccountLogin;
 import io.github.etases.edublock.rs.model.input.AccountLoginListInput;
-import io.github.etases.edublock.rs.model.output.*;
+import io.github.etases.edublock.rs.model.output.AccountCreateErrorListResponse;
+import io.github.etases.edublock.rs.model.output.AccountLoginErrorListResponse;
+import io.github.etases.edublock.rs.model.output.AccountWithProfileListResponse;
+import io.github.etases.edublock.rs.model.output.ResponseWithData;
 import io.github.etases.edublock.rs.model.output.element.AccountOutput;
+import io.github.etases.edublock.rs.model.output.element.AccountWithProfileOutput;
+import io.github.etases.edublock.rs.model.output.element.ProfileOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.plugin.openapi.dsl.OpenApiBuilder;
@@ -54,7 +59,7 @@ public class AccountHandler extends SimpleServerHandler {
                         operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
-                    .result("200", AccountListResponse.class, builder -> builder.description("The list of accounts"));
+                    .result("200", AccountWithProfileListResponse.class, builder -> builder.description("The list of accounts"));
         }
 
         @Override
@@ -62,25 +67,18 @@ public class AccountHandler extends SimpleServerHandler {
             try (var session = sessionFactory.openSession()) {
                 var query = session.createNamedQuery("Account.findAll", Account.class);
                 var accounts = query.getResultList();
-                List<AccountOutput> list = new ArrayList<>();
+                List<AccountWithProfileOutput> list = new ArrayList<>();
                 for (var account : accounts) {
                     var profile = session.get(Profile.class, account.getId());
                     if (profile == null) {
                         profile = new Profile();
                     }
-                    list.add(new AccountOutput(
-                            account.getId(),
-                            account.getUsername(),
-                            profile.getFirstName(),
-                            profile.getLastName(),
-                            profile.getAvatar(),
-                            profile.getBirthDate(),
-                            profile.getAddress(),
-                            profile.getPhone(),
-                            profile.getEmail(),
-                            account.getRole()));
+                    list.add(new AccountWithProfileOutput(
+                            AccountOutput.fromEntity(account),
+                            ProfileOutput.fromEntity(profile)
+                    ));
                 }
-                ctx.json(new AccountListResponse(0, "Get account list", list));
+                ctx.json(new AccountWithProfileListResponse(0, "Get account list", list));
             }
         }
     }
