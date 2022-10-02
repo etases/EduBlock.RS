@@ -5,8 +5,7 @@ import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ContextHandler;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.*;
-import io.github.etases.edublock.rs.model.input.ClassCreate;
-import io.github.etases.edublock.rs.model.input.ClassUpdate;
+import io.github.etases.edublock.rs.model.input.*;
 import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
@@ -19,6 +18,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ClassroomHandler extends SimpleServerHandler {
@@ -41,6 +41,10 @@ public class ClassroomHandler extends SimpleServerHandler {
         server.put("/classroom/<id>", new UpdateHandler().handler(), JwtHandler.Role.STAFF);
         server.get("/classroom/<id>/teacher", new TeacherListHandler().handler(), JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.get("/classroom/<id>/student", new StudentListHandler().handler(), JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF);
+        server.post("/classroom/<id>/student", new AddStudentHandler().handler(), JwtHandler.Role.STAFF);
+        server.delete("/classroom/<id>/student", new RemoveStudentHandler().handler(), JwtHandler.Role.STAFF);
+        server.post("/classroom/<id>/teacher", new AddTeacherHandler().handler(), JwtHandler.Role.STAFF);
+        server.delete("/classroom/<id>/teacher", new RemoveTeacherHandler().handler(), JwtHandler.Role.STAFF);
     }
 
     private class ListHandler implements ContextHandler {
@@ -310,6 +314,144 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", TeacherWithSubjectListResponse.class, builder -> builder.description("The list of teacher"))
                     .result("404", TeacherWithSubjectListResponse.class, builder -> builder.description("Classroom not found"));
+        }
+    }
+
+    private class AddTeacherHandler implements ContextHandler {
+
+        @Override
+        public void handle(Context ctx) {
+            var input = ctx.bodyValidator(TeacherWithSubjectListInput.class)
+                    .check(TeacherWithSubjectListInput::validate, "Invalid data")
+                    .get();
+            long classroomId = Long.parseLong(ctx.pathParam("id"));
+
+            try (var session = sessionFactory.openSession()) {
+                var classroom = session.get(Classroom.class, classroomId);
+                if (classroom == null) {
+                    ctx.status(404);
+                    ctx.json(new TeacherWithSubjectErrorListResponse(1, "Classroom not found", Collections.emptyList()));
+                    return;
+                }
+                Transaction transaction = session.beginTransaction();
+                List<ResponseWithData<TeacherWithSubjectInput>> errors = new ArrayList<>();
+                for (var teacherWithSubject : input.teachers()) {
+                    var teacher = session.get(Account.class, teacherWithSubject.teacherId());
+                    if (teacher == null) {
+                        errors.add(new ResponseWithData<>(1, "Teacher not found", teacherWithSubject));
+                        continue;
+                    }
+                    if (JwtHandler.Role.getRole(teacher.getRole()) != JwtHandler.Role.TEACHER) {
+                        errors.add(new ResponseWithData<>(2, "Teacher is not a teacher", teacherWithSubject));
+                        continue;
+                    }
+                    var subject = session.get(Subject.class, teacherWithSubject.subjectId());
+                    if (subject == null) {
+                        errors.add(new ResponseWithData<>(3, "Subject not found", teacherWithSubject));
+                        continue;
+                    }
+                    var classTeacher = new ClassTeacher();
+                    classTeacher.setClassroom(classroom);
+                    classTeacher.setTeacher(teacher);
+                    classTeacher.setSubject(subject);
+                    session.save(classTeacher);
+                }
+                if (errors.isEmpty()) {
+                    transaction.commit();
+                    ctx.json(new TeacherWithSubjectListResponse(0, "Teachers added", Collections.emptyList()));
+                } else {
+                    transaction.rollback();
+                    ctx.status(400);
+                    ctx.json(new TeacherWithSubjectErrorListResponse(2, "Some teachers not added", errors));
+                }
+            }
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Add teachers to a class");
+                        operation.description("Add teachers to a class");
+                        operation.addTagsItem("Staff");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .body(TeacherWithSubjectListInput.class, builder -> builder.description("The list of teachers to add"))
+                    .result("200", TeacherWithSubjectListResponse.class, builder -> builder.description("Teachers added"))
+                    .result("400", TeacherWithSubjectErrorListResponse.class, builder -> builder.description("Some teachers not added"))
+                    .result("404", TeacherWithSubjectErrorListResponse.class, builder -> builder.description("Classroom not found"));
+        }
+    }
+
+    // TODO
+    private class RemoveTeacherHandler implements ContextHandler {
+        @Override
+        public void handle(Context ctx) {
+
+        }
+    }
+
+    // TODO
+    private class AddStudentHandler implements ContextHandler {
+        @Override
+        public void handle(Context ctx) {
+            var input = ctx.bodyValidator(AccountListInput.class)
+                    .check(AccountListInput::validate, "Invalid data")
+                    .get();
+            long classroomId = Long.parseLong(ctx.pathParam("id"));
+
+            try (var session = sessionFactory.openSession()) {
+                var classroom = session.get(Classroom.class, classroomId);
+                if (classroom == null) {
+                    ctx.status(404);
+                    ctx.json(new AccountErrorListResponse(1, "Classroom not found", Collections.emptyList()));
+                    return;
+                }
+                Transaction transaction = session.beginTransaction();
+                List<ResponseWithData<Long>> errors = new ArrayList<>();
+                for (var accountId : input.accounts()) {
+                    var student = session.get(Student.class, accountId);
+                    if (student == null) {
+                        errors.add(new ResponseWithData<>(1, "Student not found", accountId));
+                        continue;
+                    }
+                    var classStudent = new ClassStudent();
+                    classStudent.setClassroom(classroom);
+                    classStudent.setStudent(student);
+                    session.save(classStudent);
+                }
+                if (errors.isEmpty()) {
+                    transaction.commit();
+                    ctx.json(new AccountErrorListResponse(0, "Students added", Collections.emptyList()));
+                } else {
+                    transaction.rollback();
+                    ctx.status(400);
+                    ctx.json(new AccountErrorListResponse(2, "Some students not added", errors));
+                }
+            }
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Add students to a class");
+                        operation.description("Add students to a class");
+                        operation.addTagsItem("Staff");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .body(AccountListInput.class, builder -> builder.description("The list of students to add"))
+                    .result("200", AccountErrorListResponse.class, builder -> builder.description("Students added"))
+                    .result("400", AccountErrorListResponse.class, builder -> builder.description("Some students not added"))
+                    .result("404", AccountErrorListResponse.class, builder -> builder.description("Classroom not found"));
+        }
+    }
+
+    // TODO
+    private class RemoveStudentHandler implements ContextHandler {
+        @Override
+        public void handle(Context ctx) {
+
         }
     }
 }
