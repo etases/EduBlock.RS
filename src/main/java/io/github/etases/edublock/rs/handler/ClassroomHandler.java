@@ -37,7 +37,7 @@ public class ClassroomHandler extends SimpleServerHandler {
         server.post("/classroom", new CreateHandler().handler(), JwtHandler.Role.STAFF);
         server.get("/classroom/list", new ListHandler().handler(), JwtHandler.Role.STAFF);
         server.get("/classroom/homeroom", new HomeroomListHandler().handler(), JwtHandler.Role.TEACHER);
-        // TODO: GET /classroom/<id>
+        server.get("/classroom/<id>", new GetHandler().handler(), JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER);
         server.put("/classroom/<id>", new UpdateHandler().handler(), JwtHandler.Role.STAFF);
         server.get("/classroom/<id>/student", new StudentListHandler().handler(), JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF);
     }
@@ -69,6 +69,37 @@ public class ClassroomHandler extends SimpleServerHandler {
         }
     }
 
+    private class GetHandler implements ContextHandler {
+
+        @Override
+        public void handle(Context ctx) {
+            long classId = Long.parseLong(ctx.pathParam("id"));
+            try (var session = sessionFactory.openSession()) {
+                Classroom classroom = session.get(Classroom.class, classId);
+                if (classroom == null) {
+                    ctx.status(404);
+                    ctx.json(new ClassroomResponse(1, "Classroom not found", null));
+                    return;
+                }
+                ctx.json(new ClassroomResponse(0, "Get classroom", ClassroomOutput.fromEntity(classroom, id -> Profile.getOrDefault(session, id))));
+            }
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Get class");
+                        operation.description("Get class");
+                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Teacher");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .result("200", ClassroomResponse.class, builder -> builder.description("The class"))
+                    .result("404", ClassroomResponse.class, builder -> builder.description("The class is not found"));
+        }
+    }
+
     private class UpdateHandler implements ContextHandler {
         @Override
         public OpenApiDocumentation document() {
@@ -90,9 +121,9 @@ public class ClassroomHandler extends SimpleServerHandler {
             ClassUpdate input = ctx.bodyValidator(ClassUpdate.class)
                     .check(ClassUpdate::validate, "Invalid data")
                     .get();
+            long classId = Long.parseLong(ctx.pathParam("id"));
 
             try (var session = sessionFactory.openSession()) {
-                long classId = Long.parseLong(ctx.pathParam("id"));
                 Classroom classroom = session.get(Classroom.class, classId);
 
                 if (classroom == null) {
