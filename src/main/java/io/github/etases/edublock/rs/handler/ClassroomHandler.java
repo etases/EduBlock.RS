@@ -383,15 +383,42 @@ public class ClassroomHandler extends SimpleServerHandler {
         }
     }
 
-    // TODO
     private class RemoveTeacherHandler implements ContextHandler {
         @Override
         public void handle(Context ctx) {
+            var input = ctx.bodyValidator(TeacherWithSubjectListInput.class)
+                    .check(TeacherWithSubjectListInput::validate, "Invalid data")
+                    .get();
+            long classroomId = Long.parseLong(ctx.pathParam("id"));
+            try (var session = sessionFactory.openSession()) {
+                Transaction transaction = session.beginTransaction();
+                for (var teacherWithSubject : input.teachers()) {
+                    session.createNamedQuery("ClassTeacher.findByClassroomAndTeacherAndSubject", ClassTeacher.class)
+                            .setParameter("classroomId", classroomId)
+                            .setParameter("teacherId", teacherWithSubject.teacherId())
+                            .setParameter("subjectId", teacherWithSubject.subjectId())
+                            .uniqueResultOptional()
+                            .ifPresent(session::delete);
+                }
+                transaction.commit();
+                ctx.json(new Response(0, "Teachers removed"));
+            }
+        }
 
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Remove teachers from a class");
+                        operation.description("Remove teachers from a class");
+                        operation.addTagsItem("Staff");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .body(TeacherWithSubjectListInput.class, builder -> builder.description("The list of teachers to remove"))
+                    .result("200", Response.class, builder -> builder.description("Teachers removed"));
         }
     }
 
-    // TODO
     private class AddStudentHandler implements ContextHandler {
         @Override
         public void handle(Context ctx) {
@@ -447,11 +474,39 @@ public class ClassroomHandler extends SimpleServerHandler {
         }
     }
 
-    // TODO
     private class RemoveStudentHandler implements ContextHandler {
         @Override
         public void handle(Context ctx) {
+            var input = ctx.bodyValidator(AccountListInput.class)
+                    .check(AccountListInput::validate, "Invalid data")
+                    .get();
+            long classroomId = Long.parseLong(ctx.pathParam("id"));
 
+            try (var session = sessionFactory.openSession()) {
+                Transaction transaction = session.beginTransaction();
+                for (var accountId : input.accounts()) {
+                    session.createNamedQuery("ClassStudent.findByClassroomAndStudent", ClassStudent.class)
+                            .setParameter("classroomId", classroomId)
+                            .setParameter("studentId", accountId)
+                            .uniqueResultOptional()
+                            .ifPresent(session::delete);
+                }
+                transaction.commit();
+                ctx.json(new Response(0, "Students removed"));
+            }
+        }
+
+        @Override
+        public OpenApiDocumentation document() {
+            return OpenApiBuilder.document()
+                    .operation(operation -> {
+                        operation.summary("Remove students from a class");
+                        operation.description("Remove students from a class");
+                        operation.addTagsItem("Staff");
+                    })
+                    .operation(SwaggerHandler.addSecurity())
+                    .body(AccountListInput.class, builder -> builder.description("The list of students to remove"))
+                    .result("200", Response.class, builder -> builder.description("Students removed"));
         }
     }
 }

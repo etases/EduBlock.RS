@@ -14,6 +14,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @NamedQuery(name = "ClassStudent.findByStudent", query = "FROM ClassStudent WHERE student.id = :studentId")
+@NamedQuery(name = "ClassStudent.findByClassroomAndStudent", query = "FROM ClassStudent WHERE classroom.id = :classroomId and student.id = :studentId")
 public class ClassStudent implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

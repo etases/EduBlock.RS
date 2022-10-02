@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class TeacherWithSubjectErrorListResponse extends ResponseWithResponseDataList<TeacherWithSubjectInput>{
+public class TeacherWithSubjectErrorListResponse extends ResponseWithResponseDataList<TeacherWithSubjectInput> {
     public TeacherWithSubjectErrorListResponse(int status, String message, @Nullable List<ResponseWithData<TeacherWithSubjectInput>> responseWithData) {
         super(status, message, responseWithData);
     }
