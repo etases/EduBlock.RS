@@ -261,7 +261,7 @@ public class AccountHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("List accounts by role");
                         operation.description("List accounts with a specific role");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", AccountWithProfileListResponse.class, builder -> builder.description("The list of accounts"))
@@ -307,7 +307,7 @@ public class AccountHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Update user profile");
                         operation.description("Update user profile");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(ProfileUpdate.class)
@@ -407,7 +407,7 @@ public class AccountHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Update student information");
                         operation.description("Update student information");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Account");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(StudentUpdate.class)

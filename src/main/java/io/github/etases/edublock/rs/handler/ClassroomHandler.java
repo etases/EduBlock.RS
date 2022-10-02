@@ -97,13 +97,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Get class list" + (isHomeroom ? " (homeroom)" : ""));
                         operation.description("Get class list" + (isHomeroom ? " (homeroom)" : ""));
-                        if (isTeacher || isHomeroom) {
-                            operation.addTagsItem("Teacher");
-                        } else if (isStudent) {
-                            operation.addTagsItem("Student");
-                        } else {
-                            operation.addTagsItem("Staff");
-                        }
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", ClassroomListResponse.class, builder -> builder.description("The list of classroom"));
@@ -131,9 +125,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Get class");
                         operation.description("Get class");
-                        operation.addTagsItem("Staff");
-                        operation.addTagsItem("Teacher");
-                        operation.addTagsItem("Student");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", ClassroomResponse.class, builder -> builder.description("The class"))
@@ -148,7 +140,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Update class");
                         operation.description("Update class");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(ClassUpdate.class)
@@ -204,7 +196,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Create class");
                         operation.description("Create class");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(ClassCreate.class, builder -> builder.description("The class to create"))
@@ -251,8 +243,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Get list of students of a class");
                         operation.description("Get list of students of a class");
-                        operation.addTagsItem("Teacher");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", AccountWithStudentProfileListResponse.class, builder -> builder.description("The list of students"))
@@ -307,9 +298,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Get list of teachers of a class");
                         operation.description("Get list of teachers of a class");
-                        operation.addTagsItem("Staff");
-                        operation.addTagsItem("Teacher");
-                        operation.addTagsItem("Student");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", TeacherWithSubjectListResponse.class, builder -> builder.description("The list of teacher"))
@@ -373,7 +362,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Add teachers to a class");
                         operation.description("Add teachers to a class");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(TeacherWithSubjectListInput.class, builder -> builder.description("The list of teachers to add"))
@@ -411,7 +400,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Remove teachers from a class");
                         operation.description("Remove teachers from a class");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(TeacherWithSubjectListInput.class, builder -> builder.description("The list of teachers to remove"))
@@ -464,7 +453,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Add students to a class");
                         operation.description("Add students to a class");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(AccountListInput.class, builder -> builder.description("The list of students to add"))
@@ -502,7 +491,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Remove students from a class");
                         operation.description("Remove students from a class");
-                        operation.addTagsItem("Staff");
+                        operation.addTagsItem("Classroom");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .body(AccountListInput.class, builder -> builder.description("The list of students to remove"))

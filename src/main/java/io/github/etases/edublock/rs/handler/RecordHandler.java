@@ -184,7 +184,7 @@ public class RecordHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Get list of pending record entries");
                         operation.description("Get list of pending record entries");
-                        operation.addTagsItem("Teacher");
+                        operation.addTagsItem("Record");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", PendingRecordEntryListResponse.class, builder -> builder.description("The list of records"));
@@ -222,7 +222,7 @@ public class RecordHandler extends SimpleServerHandler {
                     .operation(operation -> {
                         operation.summary("Verify a record entry");
                         operation.description("Verify a record entry");
-                        operation.addTagsItem("Teacher");
+                        operation.addTagsItem("Record");
                     })
                     .operation(SwaggerHandler.addSecurity())
                     .result("200", Response.class, builder -> builder.description("Record verified"))
