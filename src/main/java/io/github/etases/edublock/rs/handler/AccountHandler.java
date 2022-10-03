@@ -183,9 +183,11 @@ public class AccountHandler extends SimpleServerHandler {
                         student.setAccount(account);
                         student.setEthnic("");
                         student.setFatherName("");
-                        student.setMotherName("");
                         student.setFatherJob("");
+                        student.setMotherName("");
                         student.setMotherJob("");
+                        student.setGuardianName("");
+                        student.setGuardianJob("");
                         student.setHomeTown("");
                         session.save(student);
                     }
