@@ -1,9 +1,14 @@
 package io.github.etases.edublock.rs.model.output.element;
 
 import io.github.etases.edublock.rs.entity.Subject;
-import lombok.Value;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Value
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class SubjectOutput {
     long id;
     String name;

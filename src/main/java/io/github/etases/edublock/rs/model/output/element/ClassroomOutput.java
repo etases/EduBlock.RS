@@ -2,11 +2,16 @@ package io.github.etases.edublock.rs.model.output.element;
 
 import io.github.etases.edublock.rs.entity.Classroom;
 import io.github.etases.edublock.rs.entity.Profile;
-import lombok.Value;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.function.LongFunction;
 
-@Value
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ClassroomOutput {
     long id;
     String name;

@@ -1,8 +1,13 @@
 package io.github.etases.edublock.rs.model.output;
 
-import lombok.Value;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Value
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Response {
     int status;
     String message;

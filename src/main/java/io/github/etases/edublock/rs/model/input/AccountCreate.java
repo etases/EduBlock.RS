@@ -1,9 +1,14 @@
 package io.github.etases.edublock.rs.model.input;
 
 import io.javalin.openapi.OpenApiIgnore;
-import lombok.Value;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-@Value
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AccountCreate {
     String firstName;
     String lastName;

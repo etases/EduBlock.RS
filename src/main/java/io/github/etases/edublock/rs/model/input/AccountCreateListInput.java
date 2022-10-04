@@ -1,10 +1,15 @@
 package io.github.etases.edublock.rs.model.input;
 
-import lombok.Value;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
-@Value
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AccountCreateListInput {
     List<AccountCreate> accounts;
 
