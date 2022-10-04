@@ -18,6 +18,7 @@ import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfi
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
+import io.javalin.security.RouteRole;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
@@ -41,15 +42,16 @@ public class AccountHandler extends SimpleServerHandler {
     protected void setupServer(Javalin server) {
         server.get("/account", this::getOwn, JwtHandler.Role.authenticated());
         server.get("/account/list", this::list, JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
-        server.post("/account/list", this::bulkCreate, JwtHandler.Role.ADMIN);
+        server.post("/account/list", this::bulkCreate,
+                mainConfig.getServerProperties().devMode()
+                        ? new RouteRole[0]
+                        : new RouteRole[]{JwtHandler.Role.ADMIN}
+        );
         server.put("/account/list/password", this::bulkUpdatePassword, JwtHandler.Role.ADMIN);
         server.get("/account/role/{role}/list", this::listByRole, JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
         server.get("/account/{id}", this::get, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.put("/account/{id}/profile", this::updateProfile, JwtHandler.Role.STAFF);
         server.put("/account/{id}/student", this::updateStudent, JwtHandler.Role.STAFF);
-
-        // TODO: Remove this or make it development mode only
-        server.post("/account/list/test", this::bulkCreate);
     }
 
     private void get(Context ctx, boolean isOwnOnly) {

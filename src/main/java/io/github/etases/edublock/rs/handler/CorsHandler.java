@@ -2,19 +2,23 @@ package io.github.etases.edublock.rs.handler;
 
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
-import io.github.etases.edublock.rs.api.ServerHandler;
+import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
+import io.javalin.config.JavalinConfig;
 import io.javalin.plugin.bundled.CorsContainer;
 import io.javalin.plugin.bundled.CorsPlugin;
 
-public class CorsHandler implements ServerHandler {
+public class CorsHandler extends SimpleServerHandler {
+    private final MainConfig mainConfig;
+
     @Inject
-    private MainConfig mainConfig;
-    @Inject
-    private ServerBuilder serverBuilder;
+    public CorsHandler(ServerBuilder serverBuilder, MainConfig mainConfig) {
+        super(serverBuilder);
+        this.mainConfig = mainConfig;
+    }
 
     @Override
-    public void setup() {
+    protected void setupConfig(JavalinConfig config) {
         var corsContainer = new CorsContainer();
         corsContainer.add(
                 corsPluginConfig -> {
@@ -28,11 +32,6 @@ public class CorsHandler implements ServerHandler {
                     }
                 }
         );
-        serverBuilder.addConfig(config -> {
-            config.plugins.register(new CorsPlugin(corsContainer.corsConfigs()));
-            if (mainConfig.getServerProperties().devLogging()) {
-                config.plugins.enableDevLogging();
-            }
-        });
+        config.plugins.register(new CorsPlugin(corsContainer.corsConfigs()));
     }
 }
