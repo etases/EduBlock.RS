@@ -138,21 +138,21 @@ public class RecordHandler extends SimpleServerHandler {
         try (var session = sessionFactory.openSession()) {
             var requester = session.get(Account.class, userId);
 
-            Subject subject = session.get(Subject.class, input.subjectId());
+            Subject subject = session.get(Subject.class, input.getSubjectId());
             if (subject == null) {
                 ctx.status(404);
                 ctx.json(new Response(1, "Subject not found"));
                 return;
             }
 
-            Student student = session.get(Student.class, input.studentId());
+            Student student = session.get(Student.class, input.getStudentId());
             if (student == null) {
                 ctx.status(404);
                 ctx.json(new Response(2, "Student not found"));
                 return;
             }
 
-            Classroom classroom = session.get(Classroom.class, input.classroomId());
+            Classroom classroom = session.get(Classroom.class, input.getClassroomId());
             if (classroom == null) {
                 ctx.status(404);
                 ctx.json(new Response(3, "Classroom not found"));
@@ -160,8 +160,8 @@ public class RecordHandler extends SimpleServerHandler {
             }
 
             var classTeacherQuery = session.createNamedQuery("ClassTeacher.findByClassroomAndSubject", ClassTeacher.class)
-                    .setParameter("classroomId", input.classroomId())
-                    .setParameter("subjectId", input.subjectId());
+                    .setParameter("classroomId", input.getClassroomId())
+                    .setParameter("subjectId", input.getSubjectId());
             var classTeacher = classTeacherQuery.uniqueResult();
             if (classTeacher == null) {
                 ctx.status(404);
@@ -171,8 +171,8 @@ public class RecordHandler extends SimpleServerHandler {
             var teacher = classTeacher.getTeacher();
 
             var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
-                    .setParameter("studentId", input.studentId())
-                    .setParameter("classroomId", input.classroomId());
+                    .setParameter("studentId", input.getStudentId())
+                    .setParameter("classroomId", input.getClassroomId());
             var record = recordQuery.uniqueResult();
             if (record == null) {
                 record = new Record();
@@ -185,9 +185,9 @@ public class RecordHandler extends SimpleServerHandler {
             var pending = new PendingRecordEntry();
 
             pending.setSubject(subject);
-            pending.setFirstHalfScore(input.firstHalfScore());
-            pending.setSecondHalfScore(input.secondHalfScore());
-            pending.setFinalScore(input.finalScore());
+            pending.setFirstHalfScore(input.getFirstHalfScore());
+            pending.setSecondHalfScore(input.getSecondHalfScore());
+            pending.setFinalScore(input.getFinalScore());
             pending.setTeacher(teacher);
             pending.setRequester(requester);
             pending.setRequestDate(new Date());
@@ -294,7 +294,7 @@ public class RecordHandler extends SimpleServerHandler {
         try (var session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             var account = session.get(Account.class, userId);
-            var pendingRecordEntry = session.get(PendingRecordEntry.class, input.id());
+            var pendingRecordEntry = session.get(PendingRecordEntry.class, input.getId());
             if (pendingRecordEntry == null) {
                 ctx.status(404);
                 ctx.json(new Response(1, "Record not found"));

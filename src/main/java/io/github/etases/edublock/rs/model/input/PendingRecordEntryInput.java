@@ -1,7 +1,15 @@
 package io.github.etases.edublock.rs.model.input;
 
-public record PendingRecordEntryInput(long studentId, long classroomId, float firstHalfScore, float secondHalfScore,
-                                      float finalScore, long subjectId) {
+import lombok.Value;
+
+@Value
+public class PendingRecordEntryInput {
+    long studentId;
+    long classroomId;
+    float firstHalfScore;
+    float secondHalfScore;
+    float finalScore;
+    long subjectId;
 
     public boolean validate() {
         boolean isStudentIdValid = studentId >= 0;

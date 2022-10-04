@@ -76,18 +76,18 @@ public class JwtHandler extends SimpleServerHandler {
     )
     private void login(Context ctx) {
         AccountLogin accountLogin = ctx.bodyValidator(AccountLogin.class)
-                .check(input -> input.username() != null, "Username cannot be null")
-                .check(input -> input.password() != null, "Password cannot be null")
+                .check(input -> input.getUsername() != null, "Username cannot be null")
+                .check(input -> input.getPassword() != null, "Password cannot be null")
                 .get();
         ctx.future(
                 () -> CompletableFuture.supplyAsync(() -> {
                     try (var session = sessionFactory.openSession()) {
                         return session.createNamedQuery("Account.findByUsername", Account.class)
-                                .setParameter("username", accountLogin.username())
+                                .setParameter("username", accountLogin.getUsername())
                                 .uniqueResult();
                     }
                 }).thenAccept(account -> {
-                    if (account == null || !PasswordUtils.verifyPassword(accountLogin.password(), account.getSalt(), account.getHashedPassword())) {
+                    if (account == null || !PasswordUtils.verifyPassword(accountLogin.getPassword(), account.getSalt(), account.getHashedPassword())) {
                         ctx.status(401);
                         ctx.json(new StringResponse(1, "Invalid username or password", null));
                         return;

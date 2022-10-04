@@ -8,7 +8,10 @@ import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.Student;
-import io.github.etases.edublock.rs.model.input.*;
+import io.github.etases.edublock.rs.model.input.AccountCreateListInput;
+import io.github.etases.edublock.rs.model.input.AccountLoginListInput;
+import io.github.etases.edublock.rs.model.input.ProfileUpdate;
+import io.github.etases.edublock.rs.model.input.StudentUpdate;
 import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
@@ -172,12 +175,12 @@ public class AccountHandler extends SimpleServerHandler {
                 .get();
 
         try (var session = sessionFactory.openSession()) {
-            List<ResponseWithData<AccountCreate>> errors = new ArrayList<>();
+            List<AccountCreateErrorListResponse.ErrorData> errors = new ArrayList<>();
             Transaction transaction = session.beginTransaction();
-            for (var accountCreate : input.accounts()) {
-                var optionalRole = JwtHandler.Role.getRoleOptional(accountCreate.role());
+            for (var accountCreate : input.getAccounts()) {
+                var optionalRole = JwtHandler.Role.getRoleOptional(accountCreate.getRole());
                 if (optionalRole.isEmpty()) {
-                    errors.add(new ResponseWithData<>(1, "Invalid role", accountCreate));
+                    errors.add(new AccountCreateErrorListResponse.ErrorData(1, "Invalid role", accountCreate));
                     continue;
                 }
                 var role = optionalRole.get();
@@ -197,8 +200,8 @@ public class AccountHandler extends SimpleServerHandler {
                 var profile = new Profile();
                 profile.setId(account.getId());
                 profile.setAccount(account);
-                profile.setFirstName(accountCreate.firstName());
-                profile.setLastName(accountCreate.lastName());
+                profile.setFirstName(accountCreate.getFirstName());
+                profile.setLastName(accountCreate.getLastName());
                 profile.setMale(true);
                 profile.setAvatar("");
                 profile.setBirthDate(Date.from(Instant.EPOCH));
@@ -259,18 +262,18 @@ public class AccountHandler extends SimpleServerHandler {
                 .get();
 
         try (var session = sessionFactory.openSession()) {
-            List<ResponseWithData<AccountLogin>> errors = new ArrayList<>();
+            List<AccountLoginErrorListResponse.ErrorData> errors = new ArrayList<>();
             Transaction transaction = session.beginTransaction();
-            for (var accountInput : input.accounts()) {
+            for (var accountInput : input.getAccounts()) {
                 var account = session.createNamedQuery("Account.findByUsername", Account.class)
-                        .setParameter("username", accountInput.username())
+                        .setParameter("username", accountInput.getUsername())
                         .uniqueResult();
                 if (account == null) {
-                    errors.add(new ResponseWithData<>(1, "Username does not exist", accountInput));
+                    errors.add(new AccountLoginErrorListResponse.ErrorData(1, "Username does not exist", accountInput));
                     continue;
                 }
                 String salt = PasswordUtils.generateSalt();
-                String hashedPassword = PasswordUtils.hashPassword(accountInput.password(), salt);
+                String hashedPassword = PasswordUtils.hashPassword(accountInput.getPassword(), salt);
                 account.setSalt(salt);
                 account.setHashedPassword(hashedPassword);
                 session.update(account);
@@ -401,14 +404,14 @@ public class AccountHandler extends SimpleServerHandler {
             }
 
             Transaction transaction = session.beginTransaction();
-            profile.setFirstName(input.firstName());
-            profile.setLastName(input.lastName());
-            profile.setMale(input.male());
-            profile.setAvatar(input.avatar());
-            profile.setBirthDate(input.birthDate());
-            profile.setAddress(input.address());
-            profile.setPhone(input.phone());
-            profile.setEmail(input.email());
+            profile.setFirstName(input.getFirstName());
+            profile.setLastName(input.getLastName());
+            profile.setMale(input.isMale());
+            profile.setAvatar(input.getAvatar());
+            profile.setBirthDate(input.getBirthDate());
+            profile.setAddress(input.getAddress());
+            profile.setPhone(input.getPhone());
+            profile.setEmail(input.getEmail());
             session.update(profile);
             transaction.commit();
             ctx.json(new Response(0, "Profile updated"));
@@ -453,14 +456,14 @@ public class AccountHandler extends SimpleServerHandler {
             }
 
             Transaction transaction = session.beginTransaction();
-            student.setEthnic(input.ethnic());
-            student.setFatherName(input.fatherName());
-            student.setFatherJob(input.fatherJob());
-            student.setMotherName(input.motherName());
-            student.setMotherJob(input.motherJob());
-            student.setGuardianName(input.guardianName());
-            student.setGuardianJob(input.guardianJob());
-            student.setHomeTown(input.homeTown());
+            student.setEthnic(input.getEthnic());
+            student.setFatherName(input.getFatherName());
+            student.setFatherJob(input.getFatherJob());
+            student.setMotherName(input.getMotherName());
+            student.setMotherJob(input.getMotherJob());
+            student.setGuardianName(input.getGuardianName());
+            student.setGuardianJob(input.getGuardianJob());
+            student.setHomeTown(input.getHomeTown());
             session.update(student);
             transaction.commit();
             ctx.json(new Response(0, "Student updated"));

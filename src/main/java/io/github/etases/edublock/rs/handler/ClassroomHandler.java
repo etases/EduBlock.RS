@@ -4,7 +4,10 @@ import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.*;
-import io.github.etases.edublock.rs.model.input.*;
+import io.github.etases.edublock.rs.model.input.AccountListInput;
+import io.github.etases.edublock.rs.model.input.ClassCreate;
+import io.github.etases.edublock.rs.model.input.ClassUpdate;
+import io.github.etases.edublock.rs.model.input.TeacherWithSubjectListInput;
 import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
@@ -226,7 +229,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                 return;
             }
 
-            Account homeroomTeacher = session.get(Account.class, input.homeroomTeacherId());
+            Account homeroomTeacher = session.get(Account.class, input.getHomeroomTeacherId());
             if (homeroomTeacher == null) {
                 ctx.status(404);
                 ctx.json(new Response(2, "Homeroom teacher not found"));
@@ -239,8 +242,8 @@ public class ClassroomHandler extends SimpleServerHandler {
             }
 
             Transaction transaction = session.beginTransaction();
-            classroom.setName(input.name());
-            classroom.setGrade(input.grade());
+            classroom.setName(input.getName());
+            classroom.setGrade(input.getGrade());
             classroom.setHomeroomTeacher(homeroomTeacher);
             session.update(classroom);
             transaction.commit();
@@ -280,7 +283,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                 .check(ClassCreate::validate, "Invalid data")
                 .get();
         try (var session = sessionFactory.openSession()) {
-            Account homeroomTeacher = session.get(Account.class, input.homeroomTeacherId());
+            Account homeroomTeacher = session.get(Account.class, input.getHomeroomTeacherId());
             if (homeroomTeacher == null) {
                 ctx.status(404);
                 ctx.json(new ClassroomResponse(2, "Homeroom teacher not found", null));
@@ -294,8 +297,8 @@ public class ClassroomHandler extends SimpleServerHandler {
 
             Transaction transaction = session.beginTransaction();
             var classroom = new Classroom();
-            classroom.setName(input.name());
-            classroom.setGrade(input.grade());
+            classroom.setName(input.getName());
+            classroom.setGrade(input.getGrade());
             classroom.setHomeroomTeacher(homeroomTeacher);
             session.save(classroom);
             transaction.commit();
@@ -424,20 +427,20 @@ public class ClassroomHandler extends SimpleServerHandler {
                 return;
             }
             Transaction transaction = session.beginTransaction();
-            List<ResponseWithData<TeacherWithSubjectInput>> errors = new ArrayList<>();
-            for (var teacherWithSubject : input.teachers()) {
-                var teacher = session.get(Account.class, teacherWithSubject.teacherId());
+            List<TeacherWithSubjectErrorListResponse.ErrorData> errors = new ArrayList<>();
+            for (var teacherWithSubject : input.getTeachers()) {
+                var teacher = session.get(Account.class, teacherWithSubject.getTeacherId());
                 if (teacher == null) {
-                    errors.add(new ResponseWithData<>(1, "Teacher not found", teacherWithSubject));
+                    errors.add(new TeacherWithSubjectErrorListResponse.ErrorData(1, "Teacher not found", teacherWithSubject));
                     continue;
                 }
                 if (JwtHandler.Role.getRole(teacher.getRole()) != JwtHandler.Role.TEACHER) {
-                    errors.add(new ResponseWithData<>(2, "Teacher is not a teacher", teacherWithSubject));
+                    errors.add(new TeacherWithSubjectErrorListResponse.ErrorData(2, "Teacher is not a teacher", teacherWithSubject));
                     continue;
                 }
-                var subject = session.get(Subject.class, teacherWithSubject.subjectId());
+                var subject = session.get(Subject.class, teacherWithSubject.getSubjectId());
                 if (subject == null) {
-                    errors.add(new ResponseWithData<>(3, "Subject not found", teacherWithSubject));
+                    errors.add(new TeacherWithSubjectErrorListResponse.ErrorData(3, "Subject not found", teacherWithSubject));
                     continue;
                 }
                 var classTeacher = new ClassTeacher();
@@ -481,11 +484,11 @@ public class ClassroomHandler extends SimpleServerHandler {
         long classroomId = Long.parseLong(ctx.pathParam("id"));
         try (var session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
-            for (var teacherWithSubject : input.teachers()) {
+            for (var teacherWithSubject : input.getTeachers()) {
                 session.createNamedQuery("ClassTeacher.findByClassroomAndTeacherAndSubject", ClassTeacher.class)
                         .setParameter("classroomId", classroomId)
-                        .setParameter("teacherId", teacherWithSubject.teacherId())
-                        .setParameter("subjectId", teacherWithSubject.subjectId())
+                        .setParameter("teacherId", teacherWithSubject.getTeacherId())
+                        .setParameter("subjectId", teacherWithSubject.getSubjectId())
                         .uniqueResultOptional()
                         .ifPresent(session::delete);
             }
@@ -535,11 +538,11 @@ public class ClassroomHandler extends SimpleServerHandler {
                 return;
             }
             Transaction transaction = session.beginTransaction();
-            List<ResponseWithData<Long>> errors = new ArrayList<>();
-            for (var accountId : input.accounts()) {
+            List<AccountErrorListResponse.ErrorData> errors = new ArrayList<>();
+            for (var accountId : input.getAccounts()) {
                 var student = session.get(Student.class, accountId);
                 if (student == null) {
-                    errors.add(new ResponseWithData<>(1, "Student not found", accountId));
+                    errors.add(new AccountErrorListResponse.ErrorData(1, "Student not found", accountId));
                     continue;
                 }
                 var classStudent = new ClassStudent();
@@ -583,7 +586,7 @@ public class ClassroomHandler extends SimpleServerHandler {
 
         try (var session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
-            for (var accountId : input.accounts()) {
+            for (var accountId : input.getAccounts()) {
                 session.createNamedQuery("ClassStudent.findByClassroomAndStudent", ClassStudent.class)
                         .setParameter("classroomId", classroomId)
                         .setParameter("studentId", accountId)

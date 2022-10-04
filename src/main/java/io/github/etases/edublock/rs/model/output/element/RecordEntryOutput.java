@@ -2,22 +2,24 @@ package io.github.etases.edublock.rs.model.output.element;
 
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.RecordEntry;
+import lombok.Value;
 
 import java.util.Date;
 import java.util.function.LongFunction;
 
-public record RecordEntryOutput(
-        long subjectId,
-        SubjectOutput subject,
-        float firstHalfScore,
-        float secondHalfScore,
-        float finalScore,
-        Date requestDate,
-        Date approvalDate,
-        AccountWithProfileOutput teacher,
-        AccountWithProfileOutput requester,
-        AccountWithProfileOutput approver
-) {
+@Value
+public class RecordEntryOutput {
+    long subjectId;
+    SubjectOutput subject;
+    float firstHalfScore;
+    float secondHalfScore;
+    float finalScore;
+    Date requestDate;
+    Date approvalDate;
+    AccountWithProfileOutput teacher;
+    AccountWithProfileOutput requester;
+    AccountWithProfileOutput approver;
+
     public static RecordEntryOutput fromEntity(RecordEntry recordEntry, LongFunction<Profile> profileFunction) {
         return new RecordEntryOutput(
                 recordEntry.getSubject().getId(),
