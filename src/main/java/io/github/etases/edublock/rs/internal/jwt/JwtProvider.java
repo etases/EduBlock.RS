@@ -8,10 +8,10 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import io.github.etases.edublock.rs.internal.property.JwtProperties;
 import io.github.etases.edublock.rs.model.output.Response;
-import io.javalin.core.security.AccessManager;
-import io.javalin.core.security.RouteRole;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
+import io.javalin.security.AccessManager;
+import io.javalin.security.RouteRole;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
@@ -64,7 +64,7 @@ public class JwtProvider {
             }
 
             @Override
-            public void manage(@NotNull Handler handler, @NotNull Context context, @NotNull Set<RouteRole> permittedRoles) throws Exception {
+            public void manage(@NotNull Handler handler, @NotNull Context context, @NotNull Set<? extends RouteRole> permittedRoles) throws Exception {
                 Optional<DecodedJWT> optionalJwt = getDecodedJwt(context);
                 boolean matchProperties = optionalJwt.map(properties::isMatch).orElse(false);
                 RouteRole role = optionalJwt.map(this::getRoleFromJwt).orElse(defaultRole);

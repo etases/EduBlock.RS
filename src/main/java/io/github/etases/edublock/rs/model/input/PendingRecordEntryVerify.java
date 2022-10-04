@@ -1,11 +1,18 @@
 package io.github.etases.edublock.rs.model.input;
 
-public record PendingRecordEntryVerify(
-        long id,
-        boolean isAccepted
-) {
-    public boolean validate() {
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class PendingRecordEntryVerify {
+    long id;
+    boolean accepted;
+
+    public boolean validate() {
         return id > 0;
     }
 }

@@ -1,18 +1,25 @@
 package io.github.etases.edublock.rs.model.output.element;
 
 import io.github.etases.edublock.rs.entity.Student;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
-public record StudentOutput(
-        long id,
-        String ethnic,
-        String fatherName,
-        String fatherJob,
-        String motherName,
-        String motherJob,
-        String guardianName,
-        String guardianJob,
-        String homeTown
-) {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class StudentOutput {
+    long id;
+    String ethnic;
+    String fatherName;
+    String fatherJob;
+    String motherName;
+    String motherJob;
+    String guardianName;
+    String guardianJob;
+    String homeTown;
+
     public static StudentOutput fromEntity(Student student) {
         return new StudentOutput(
                 student.getId(),

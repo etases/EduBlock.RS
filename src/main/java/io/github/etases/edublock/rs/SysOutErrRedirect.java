@@ -1,10 +1,10 @@
 package io.github.etases.edublock.rs;
 
 import lombok.experimental.UtilityClass;
+import org.jetbrains.annotations.NotNull;
 import org.tinylog.Logger;
 
 import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
 import java.io.OutputStream;
 import java.io.PrintStream;
 

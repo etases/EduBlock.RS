@@ -90,7 +90,8 @@ public class RequestServer {
                 SwaggerHandler.class,
                 AccountHandler.class,
                 ClassroomHandler.class,
-                RecordHandler.class
+                RecordHandler.class,
+                DevHandler.class
         );
     }
 }

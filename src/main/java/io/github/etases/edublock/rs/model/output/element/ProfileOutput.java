@@ -1,20 +1,27 @@
 package io.github.etases.edublock.rs.model.output.element;
 
 import io.github.etases.edublock.rs.entity.Profile;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.Date;
 
-public record ProfileOutput(
-        long id,
-        String firstName,
-        String lastName,
-        boolean male,
-        String avatar,
-        Date birthDate,
-        String address,
-        String phone,
-        String email
-) {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class ProfileOutput {
+    long id;
+    String firstName;
+    String lastName;
+    boolean male;
+    String avatar;
+    Date birthDate;
+    String address;
+    String phone;
+    String email;
+
     public static ProfileOutput fromEntity(Profile profile) {
         return new ProfileOutput(
                 profile.getId(),

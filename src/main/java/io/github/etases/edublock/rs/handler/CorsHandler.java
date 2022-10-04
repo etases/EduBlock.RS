@@ -2,26 +2,36 @@ package io.github.etases.edublock.rs.handler;
 
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
-import io.github.etases.edublock.rs.api.ServerHandler;
+import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
+import io.javalin.config.JavalinConfig;
+import io.javalin.plugin.bundled.CorsContainer;
+import io.javalin.plugin.bundled.CorsPlugin;
 
-public class CorsHandler implements ServerHandler {
+public class CorsHandler extends SimpleServerHandler {
+    private final MainConfig mainConfig;
+
     @Inject
-    private MainConfig mainConfig;
-    @Inject
-    private ServerBuilder serverBuilder;
+    public CorsHandler(ServerBuilder serverBuilder, MainConfig mainConfig) {
+        super(serverBuilder);
+        this.mainConfig = mainConfig;
+    }
 
     @Override
-    public void setup() {
-        serverBuilder.addConfig(config -> {
-            if (mainConfig.getServerProperties().bypassCors()) {
-                config.enableCorsForAllOrigins();
-            } else {
-                config.enableCorsForOrigin(mainConfig.getServerProperties().allowedOrigins().toArray(new String[0]));
-            }
-            if (mainConfig.getServerProperties().devLogging()) {
-                config.enableDevLogging();
-            }
-        });
+    protected void setupConfig(JavalinConfig config) {
+        var corsContainer = new CorsContainer();
+        corsContainer.add(
+                corsPluginConfig -> {
+                    if (mainConfig.getServerProperties().bypassCors()) {
+                        corsPluginConfig.anyHost();
+                    } else {
+                        var origins = mainConfig.getServerProperties().allowedOrigins();
+                        if (!origins.isEmpty()) {
+                            corsPluginConfig.allowHost(origins.get(0), origins.subList(1, origins.size()).toArray(new String[0]));
+                        }
+                    }
+                }
+        );
+        config.plugins.register(new CorsPlugin(corsContainer.corsConfigs()));
     }
 }

@@ -32,7 +32,7 @@ public class SystemMainConfig implements MainConfig {
         this.serverProperties = new ServerProperties(
                 Optional.ofNullable(System.getenv("RS_SERVER_HOST")).orElse("localhost"),
                 Integer.parseInt(Optional.ofNullable(System.getenv("RS_SERVER_PORT")).orElse("7070")),
-                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_DEV_LOGGING")).orElse("true")),
+                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_DEV_MODE")).orElse("true")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_BYPASS_CORS")).orElse("true")),
                 List.of(Optional.ofNullable(System.getenv("RS_SERVER_ALLOWED_ORIGINS")).orElse("*").split(","))
         );

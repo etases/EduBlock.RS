@@ -1,10 +1,18 @@
 package io.github.etases.edublock.rs.model.output;
 
 import io.github.etases.edublock.rs.model.output.element.AccountWithProfileOutput;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.jetbrains.annotations.Nullable;
 
-public class AccountWithProfileResponse extends ResponseWithData<AccountWithProfileOutput> {
-    public AccountWithProfileResponse(int status, String message, @Nullable AccountWithProfileOutput data) {
-        super(status, message, data);
-    }
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class AccountWithProfileResponse {
+    int status;
+    String message;
+    @Nullable
+    AccountWithProfileOutput data;
 }
