@@ -5,7 +5,7 @@ import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.model.output.ResponseWithData;
 import io.javalin.Javalin;
-import io.javalin.core.validation.ValidationException;
+import io.javalin.validation.ValidationException;
 
 public class ValidationErrorHandler extends SimpleServerHandler {
     @Inject

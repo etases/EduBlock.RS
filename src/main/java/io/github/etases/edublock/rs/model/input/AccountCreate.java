@@ -1,19 +1,20 @@
 package io.github.etases.edublock.rs.model.input;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.javalin.openapi.OpenApiIgnore;
 
 public record AccountCreate(
         String firstName,
         String lastName,
         String role
 ) {
+
     public boolean validate() {
         return firstName != null && !firstName.isBlank()
                 && lastName != null && !lastName.isBlank()
                 && role != null && !role.isBlank();
     }
 
-    @JsonIgnore
+    @OpenApiIgnore
     public String getUsername() {
         StringBuilder sb = new StringBuilder();
         String firstName = this.firstName;

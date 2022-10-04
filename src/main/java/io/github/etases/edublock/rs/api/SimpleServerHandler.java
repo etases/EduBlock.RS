@@ -2,7 +2,7 @@ package io.github.etases.edublock.rs.api;
 
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.javalin.Javalin;
-import io.javalin.core.JavalinConfig;
+import io.javalin.config.JavalinConfig;
 
 /**
  * A simple server handler for {@link JavalinConfig} and {@link Javalin}

@@ -1,7 +1,7 @@
 package io.github.etases.edublock.rs;
 
 import io.javalin.Javalin;
-import io.javalin.core.JavalinConfig;
+import io.javalin.config.JavalinConfig;
 
 import java.util.LinkedList;
 import java.util.List;

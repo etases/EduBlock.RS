@@ -11,7 +11,8 @@
     <properties>
         <java.version>17</java.version>
         <core.version>4.1.26</core.version>
-        <javalin.version>4.6.4</javalin.version>
+        <javalin.version>5.0.1</javalin.version>
+        <javalin.openapi.version>5.0.0-SNAPSHOT</javalin.openapi.version>
         <tinylog.version>2.5.0</tinylog.version>
         <jline.version>3.21.0</jline.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -32,6 +33,11 @@
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                             <version>1.18.24</version>
+                        </path>
+                        <path>
+                            <groupId>io.javalin</groupId>
+                            <artifactId>openapi-annotation-processor</artifactId>
+                            <version>${javalin.openapi.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
@@ -85,6 +91,14 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>reposilite-release</id>
+            <url>https://maven.reposilite.com/releases</url>
+        </repository>
+        <repository>
+            <id>reposilite-snapshot</id>
+            <url>https://maven.reposilite.com/snapshots</url>
         </repository>
     </repositories>
 
@@ -163,8 +177,13 @@
         </dependency>
         <dependency>
             <groupId>io.javalin</groupId>
-            <artifactId>javalin-openapi</artifactId>
-            <version>${javalin.version}</version>
+            <artifactId>javalin-openapi-plugin</artifactId>
+            <version>${javalin.openapi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.javalin</groupId>
+            <artifactId>javalin-swagger-plugin</artifactId>
+            <version>${javalin.openapi.version}</version>
         </dependency>
         <dependency>
             <groupId>com.auth0</groupId>
