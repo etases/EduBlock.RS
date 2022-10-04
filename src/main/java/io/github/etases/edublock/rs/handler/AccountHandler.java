@@ -47,6 +47,9 @@ public class AccountHandler extends SimpleServerHandler {
         server.get("/account/{id}", this::get, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.put("/account/{id}/profile", this::updateProfile, JwtHandler.Role.STAFF);
         server.put("/account/{id}/student", this::updateStudent, JwtHandler.Role.STAFF);
+
+        // TODO: Remove this or make it development mode only
+        server.post("/account/list/test", this::bulkCreate);
     }
 
     private void get(Context ctx, boolean isOwnOnly) {
