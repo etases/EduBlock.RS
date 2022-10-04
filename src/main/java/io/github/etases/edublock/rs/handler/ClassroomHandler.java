@@ -151,6 +151,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Get class. Roles: STAFF, TEACHER, STUDENT",
             description = "Get class. Roles: STAFF, TEACHER, STUDENT",
             tags = "Classroom",
+            pathParams = @OpenApiParam(name = "id", description = "Classroom ID"),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -184,6 +185,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Update class. Roles: STAFF",
             description = "Update class. Roles: STAFF",
             tags = "Classroom",
+            pathParams = @OpenApiParam(name = "id", description = "Classroom ID"),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = ClassUpdate.class)),
             responses = {
@@ -308,6 +310,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Get list of students of a class. Roles: STAFF, TEACHER",
             description = "Get list of students of a class. Roles: STAFF, TEACHER",
             tags = "Classroom",
+            pathParams = @OpenApiParam(name = "id", description = "Classroom ID"),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -347,6 +350,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT",
             description = "Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT",
             tags = "Classroom",
+            pathParams = @OpenApiParam(name = "id", description = "Classroom ID"),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -385,6 +389,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Add teachers to a class. Roles: STAFF",
             description = "Add teachers to a class. Roles: STAFF",
             tags = "Classroom",
+            pathParams = @OpenApiParam(name = "id", description = "Classroom ID"),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = TeacherWithSubjectListInput.class)),
             responses = {
@@ -458,6 +463,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Remove teachers from a class. Roles: STAFF",
             description = "Remove teachers from a class. Roles: STAFF",
             tags = "Classroom",
+            pathParams = @OpenApiParam(name = "id", description = "Classroom ID"),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = TeacherWithSubjectListInput.class)),
             responses = {
@@ -494,6 +500,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Add students to a class. Roles: STAFF",
             description = "Add students to a class. Roles: STAFF",
             tags = "Classroom",
+            pathParams = @OpenApiParam(name = "id", description = "Classroom ID"),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = AccountListInput.class)),
             responses = {
@@ -557,6 +564,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Remove students from a class. Roles: STAFF",
             description = "Remove students from a class. Roles: STAFF",
             tags = "Classroom",
+            pathParams = @OpenApiParam(name = "id", description = "Classroom ID"),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = AccountListInput.class)),
             responses = {
