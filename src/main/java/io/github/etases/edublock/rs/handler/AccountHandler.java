@@ -100,7 +100,7 @@ public class AccountHandler extends SimpleServerHandler {
             description = "Get account. Roles: TEACHER, STAFF, ADMIN",
             tags = "Account",
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
-            pathParams = @OpenApiParam(name = "id", description = "The account id"),
+            pathParams = @OpenApiParam(name = "id", description = "The account id", required = true),
             responses = {
                     @OpenApiResponse(
                             status = "200",
@@ -295,7 +295,7 @@ public class AccountHandler extends SimpleServerHandler {
             summary = "List accounts by role. Roles: ADMIN, STAFF",
             description = "List accounts with a specific role. Roles: ADMIN, STAFF",
             tags = {"Account"},
-            pathParams = @OpenApiParam(name = "role", description = "The role of the accounts"),
+            pathParams = @OpenApiParam(name = "role", description = "The role of the accounts", required = true),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -350,7 +350,7 @@ public class AccountHandler extends SimpleServerHandler {
             summary = "Update user profile. Roles: STAFF",
             description = "Update user profile. Roles: STAFF",
             tags = "Account",
-            pathParams = @OpenApiParam(name = "id", description = "The id of the account"),
+            pathParams = @OpenApiParam(name = "id", description = "The id of the account", required = true),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = ProfileUpdate.class)),
             responses = {
@@ -424,7 +424,7 @@ public class AccountHandler extends SimpleServerHandler {
             summary = "Update student information. Roles: STAFF",
             description = "Update student information. Roles: STAFF",
             tags = "Account",
-            pathParams = @OpenApiParam(name = "id", description = "The id of the account"),
+            pathParams = @OpenApiParam(name = "id", description = "The id of the account", required = true),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = StudentUpdate.class)),
             responses = {

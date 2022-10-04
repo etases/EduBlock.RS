@@ -68,7 +68,7 @@ public class RecordHandler extends SimpleServerHandler {
             summary = "Get own record. Roles: STUDENT",
             description = "Get own record. Roles: STUDENT",
             tags = "Record",
-            pathParams = @OpenApiParam(name = "classroomId", description = "Classroom ID"),
+            pathParams = @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -94,8 +94,8 @@ public class RecordHandler extends SimpleServerHandler {
             description = "Get student record. Roles: TEACHER",
             tags = "Record",
             pathParams = {
-                    @OpenApiParam(name = "classroomId", description = "Classroom ID"),
-                    @OpenApiParam(name = "studentId", description = "Student ID")
+                    @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
+                    @OpenApiParam(name = "studentId", description = "Student ID", required = true)
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
@@ -246,7 +246,7 @@ public class RecordHandler extends SimpleServerHandler {
             summary = "Get list of pending record entries of a student. Roles: TEACHER",
             description = "Get list of pending record entries of a student. Roles: TEACHER",
             tags = "Record",
-            pathParams = @OpenApiParam(name = "studentId", description = "Student ID"),
+            pathParams = @OpenApiParam(name = "studentId", description = "Student ID", required = true),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
