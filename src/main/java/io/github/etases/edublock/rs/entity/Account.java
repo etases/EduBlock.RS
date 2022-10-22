@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -31,6 +32,8 @@ public class Account implements Serializable {
     private String salt;
     @Column(nullable = false)
     private String role;
+    @Column(nullable = false)
+    private Date createdAt;
 
     @OneToMany(mappedBy = "teacher")
     private List<ClassTeacher> classrooms;

@@ -205,6 +205,7 @@ public class AccountHandler extends SimpleServerHandler {
                 account.setSalt(salt);
                 account.setHashedPassword(hashedPassword);
                 account.setRole(role.name().toUpperCase());
+                account.setCreatedAt(new Date(System.currentTimeMillis()));
                 session.save(account);
                 var profile = new Profile();
                 profile.setId(account.getId());
