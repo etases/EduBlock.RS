@@ -16,6 +16,7 @@ public class ClassroomOutput {
     long id;
     String name;
     int grade;
+    int year;
     AccountWithProfileOutput homeroomTeacher;
 
     public static ClassroomOutput fromEntity(Classroom classroom, LongFunction<Profile> profileFunction) {
@@ -23,6 +24,7 @@ public class ClassroomOutput {
                 classroom.getId(),
                 classroom.getName(),
                 classroom.getGrade(),
+                classroom.getYear(),
                 AccountWithProfileOutput.fromEntity(classroom.getHomeroomTeacher(), profileFunction)
         );
     }

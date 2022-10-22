@@ -244,6 +244,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             Transaction transaction = session.beginTransaction();
             classroom.setName(input.getName());
             classroom.setGrade(input.getGrade());
+            classroom.setYear(input.getYear());
             classroom.setHomeroomTeacher(homeroomTeacher);
             session.update(classroom);
             transaction.commit();
@@ -299,6 +300,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             var classroom = new Classroom();
             classroom.setName(input.getName());
             classroom.setGrade(input.getGrade());
+            classroom.setYear(input.getYear());
             classroom.setHomeroomTeacher(homeroomTeacher);
             session.save(classroom);
             transaction.commit();

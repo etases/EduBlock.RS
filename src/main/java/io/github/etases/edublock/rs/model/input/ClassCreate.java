@@ -11,11 +11,13 @@ import lombok.experimental.FieldDefaults;
 public class ClassCreate {
     String name;
     int grade;
+    int year;
     long homeroomTeacherId;
 
     public boolean validate() {
         return name != null && !name.isBlank()
                 && grade > 0 && grade < 13
+                && year > 0
                 && homeroomTeacherId > 0;
     }
 }
