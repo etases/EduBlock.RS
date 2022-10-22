@@ -8,10 +8,8 @@ import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.Student;
-import io.github.etases.edublock.rs.model.input.AccountCreateListInput;
-import io.github.etases.edublock.rs.model.input.AccountLoginListInput;
-import io.github.etases.edublock.rs.model.input.ProfileUpdate;
-import io.github.etases.edublock.rs.model.input.StudentUpdate;
+import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
+import io.github.etases.edublock.rs.model.input.*;
 import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
@@ -134,6 +132,10 @@ public class AccountHandler extends SimpleServerHandler {
             summary = "List all accounts. Roles: ADMIN, STAFF",
             description = "List all accounts. Roles: ADMIN, STAFF",
             tags = "Account",
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
@@ -142,14 +144,16 @@ public class AccountHandler extends SimpleServerHandler {
             )
     )
     private void list(Context ctx) {
+        var paginationParameter = PaginationParameter.fromQuery(ctx);
         try (var session = sessionFactory.openSession()) {
             var query = session.createNamedQuery("Account.findAll", Account.class);
             var accounts = query.getResultList();
+            var pagedPair = PaginationUtil.getPagedList(accounts, paginationParameter);
             List<AccountWithProfileOutput> list = new ArrayList<>();
-            for (var account : accounts) {
+            for (var account : pagedPair.getKey()) {
                 list.add(AccountWithProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
             }
-            ctx.json(new AccountWithProfileListResponse(0, "Get account list", list));
+            ctx.json(new AccountWithProfileListResponse(0, "Get account list", pagedPair.getValue(), list));
         }
     }
 
@@ -301,6 +305,10 @@ public class AccountHandler extends SimpleServerHandler {
             description = "List accounts with a specific role. Roles: ADMIN, STAFF",
             tags = {"Account"},
             pathParams = @OpenApiParam(name = "role", description = "The role of the accounts", required = true),
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -321,10 +329,11 @@ public class AccountHandler extends SimpleServerHandler {
             }
     )
     private void listByRole(Context ctx) {
+        var paginationParameter = PaginationParameter.fromQuery(ctx);
         var optionalRole = JwtHandler.Role.getRoleOptional(ctx.pathParam("role"));
         if (optionalRole.isEmpty()) {
             ctx.status(400);
-            ctx.json(new AccountWithProfileListResponse(1, "Invalid role", null));
+            ctx.json(new AccountWithProfileListResponse(1, "Invalid role", null, null));
             return;
         }
         var role = optionalRole.get();
@@ -332,19 +341,21 @@ public class AccountHandler extends SimpleServerHandler {
             if (role == JwtHandler.Role.STUDENT) {
                 var query = session.createNamedQuery("Student.findAll", Student.class);
                 var accounts = query.getResultList();
+                var pagedPair = PaginationUtil.getPagedList(accounts, paginationParameter);
                 List<AccountWithStudentProfileOutput> list = new ArrayList<>();
-                for (var account : accounts) {
+                for (var account : pagedPair.getKey()) {
                     list.add(AccountWithStudentProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
                 }
-                ctx.json(new AccountWithStudentProfileListResponse(0, "Get account list", list));
+                ctx.json(new AccountWithStudentProfileListResponse(0, "Get account list", pagedPair.getValue(), list));
             } else {
                 var query = session.createNamedQuery("Account.findByRole", Account.class).setParameter("role", role.name());
                 var accounts = query.getResultList();
+                var pagedPair = PaginationUtil.getPagedList(accounts, paginationParameter);
                 List<AccountWithProfileOutput> list = new ArrayList<>();
                 for (var account : accounts) {
                     list.add(AccountWithProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
                 }
-                ctx.json(new AccountWithProfileListResponse(0, "Get account list", list));
+                ctx.json(new AccountWithProfileListResponse(0, "Get account list", pagedPair.getValue(), list));
             }
         }
     }

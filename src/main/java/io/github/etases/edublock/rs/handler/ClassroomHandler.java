@@ -4,10 +4,8 @@ import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.*;
-import io.github.etases.edublock.rs.model.input.AccountListInput;
-import io.github.etases.edublock.rs.model.input.ClassCreate;
-import io.github.etases.edublock.rs.model.input.ClassUpdate;
-import io.github.etases.edublock.rs.model.input.TeacherWithSubjectListInput;
+import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
+import io.github.etases.edublock.rs.model.input.*;
 import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.ClassroomOutput;
@@ -49,6 +47,7 @@ public class ClassroomHandler extends SimpleServerHandler {
     }
 
     private void list(Context ctx, boolean isTeacher, boolean isStudent, boolean isHomeroom) {
+        var paginationParameter = PaginationParameter.fromQuery(ctx);
         try (var session = sessionFactory.openSession()) {
             List<Classroom> classrooms;
             if (isTeacher) {
@@ -72,11 +71,12 @@ public class ClassroomHandler extends SimpleServerHandler {
                 var query = session.createNamedQuery("Classroom.findAll", Classroom.class);
                 classrooms = query.getResultList();
             }
+            var pagedPair = PaginationUtil.getPagedList(classrooms, paginationParameter);
             List<ClassroomOutput> list = new ArrayList<>();
-            for (var classroom : classrooms) {
+            for (var classroom : pagedPair.getKey()) {
                 list.add(ClassroomOutput.fromEntity(classroom, id -> Profile.getOrDefault(session, id)));
             }
-            ctx.json(new ClassroomListResponse(0, "Get classroom list", list));
+            ctx.json(new ClassroomListResponse(0, "Get classroom list", pagedPair.getValue(), list));
         }
     }
 
@@ -86,6 +86,10 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Get classroom list. Roles: STAFF",
             description = "Get classroom list. Roles: STAFF",
             tags = "Classroom",
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
@@ -103,6 +107,10 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Get classroom list of teacher. Roles: TEACHER",
             description = "Get classroom list of teacher. Roles: TEACHER",
             tags = "Classroom",
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
@@ -120,6 +128,10 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Get classroom list of student. Roles: STUDENT",
             description = "Get classroom list of student. Roles: STUDENT",
             tags = "Classroom",
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
@@ -137,6 +149,10 @@ public class ClassroomHandler extends SimpleServerHandler {
             summary = "Get homeroom classroom list of teacher. Roles: TEACHER",
             description = "Get homeroom classroom list of teacher. Roles: TEACHER",
             tags = "Classroom",
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
@@ -316,6 +332,10 @@ public class ClassroomHandler extends SimpleServerHandler {
             description = "Get list of students of a class. Roles: STAFF, TEACHER",
             tags = "Classroom",
             pathParams = @OpenApiParam(name = "id", description = "Classroom ID", required = true),
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -331,21 +351,23 @@ public class ClassroomHandler extends SimpleServerHandler {
             }
     )
     private void studentList(Context ctx) {
+        var paginationParameter = PaginationParameter.fromQuery(ctx);
         long classroomId = Long.parseLong(ctx.pathParam("id"));
         try (var session = sessionFactory.openSession()) {
             var classroom = session.get(Classroom.class, classroomId);
             if (classroom == null) {
                 ctx.status(404);
-                ctx.json(new AccountWithStudentProfileListResponse(1, "Classroom not found", null));
+                ctx.json(new AccountWithStudentProfileListResponse(1, "Classroom not found", null, null));
                 return;
             }
             var classStudents = classroom.getStudents();
+            var pagedPair = PaginationUtil.getPagedList(classStudents, paginationParameter);
             List<AccountWithStudentProfileOutput> list = new ArrayList<>();
-            for (var classStudent : classStudents) {
+            for (var classStudent : pagedPair.getKey()) {
                 Student student = classStudent.getStudent();
                 list.add(AccountWithStudentProfileOutput.fromEntity(student, id -> Profile.getOrDefault(session, id)));
             }
-            ctx.json(new AccountWithStudentProfileListResponse(0, "Get student list", list));
+            ctx.json(new AccountWithStudentProfileListResponse(0, "Get student list", pagedPair.getValue(), list));
         }
     }
 
@@ -356,6 +378,10 @@ public class ClassroomHandler extends SimpleServerHandler {
             description = "Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT",
             tags = "Classroom",
             pathParams = @OpenApiParam(name = "id", description = "Classroom ID", required = true),
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -371,20 +397,22 @@ public class ClassroomHandler extends SimpleServerHandler {
             }
     )
     private void teacherList(Context ctx) {
+        var paginationParameter = PaginationParameter.fromQuery(ctx);
         long classroomId = Long.parseLong(ctx.pathParam("id"));
         try (var session = sessionFactory.openSession()) {
             var classroom = session.get(Classroom.class, classroomId);
             if (classroom == null) {
                 ctx.status(404);
-                ctx.json(new TeacherWithSubjectListResponse(1, "Classroom not found", null));
+                ctx.json(new TeacherWithSubjectListResponse(1, "Classroom not found", null, null));
                 return;
             }
             var classTeachers = classroom.getTeachers();
+            var pagedPair = PaginationUtil.getPagedList(classTeachers, paginationParameter);
             List<TeacherWithSubjectOutput> list = new ArrayList<>();
-            for (var classTeacher : classTeachers) {
+            for (var classTeacher : pagedPair.getKey()) {
                 list.add(TeacherWithSubjectOutput.fromEntity(classTeacher, id -> Profile.getOrDefault(session, id)));
             }
-            ctx.json(new TeacherWithSubjectListResponse(0, "Get teacher list", list));
+            ctx.json(new TeacherWithSubjectListResponse(0, "Get teacher list", pagedPair.getValue(), list));
         }
     }
 

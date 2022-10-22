@@ -7,7 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -39,7 +39,7 @@ public class Student implements Serializable {
     private String homeTown;
 
     @OneToMany(mappedBy = "student")
-    private Set<ClassStudent> classrooms;
+    private List<ClassStudent> classrooms;
     @OneToMany(mappedBy = "student")
-    private Set<Record> records;
+    private List<Record> records;
 }

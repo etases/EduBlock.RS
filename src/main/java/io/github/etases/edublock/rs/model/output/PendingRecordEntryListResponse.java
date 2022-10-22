@@ -1,5 +1,6 @@
 package io.github.etases.edublock.rs.model.output;
 
+import io.github.etases.edublock.rs.model.output.element.PaginationInfo;
 import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -15,6 +16,7 @@ import java.util.List;
 public class PendingRecordEntryListResponse {
     int status;
     String message;
+    PaginationInfo pageInfo;
     @Nullable
     List<PendingRecordEntryOutput> data;
 }

@@ -4,6 +4,8 @@ import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Record;
 import io.github.etases.edublock.rs.entity.*;
+import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
+import io.github.etases.edublock.rs.model.input.PaginationParameter;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
@@ -202,6 +204,7 @@ public class RecordHandler extends SimpleServerHandler {
 
     private void listPending(Context ctx, boolean filterByStudent) {
         long userId = JwtHandler.getUserId(ctx);
+        var paginationParameter = PaginationParameter.fromQuery(ctx);
 
         try (var session = sessionFactory.openSession()) {
             Query<PendingRecordEntry> query;
@@ -215,11 +218,12 @@ public class RecordHandler extends SimpleServerHandler {
                         .setParameter("teacherId", userId);
             }
             var records = query.getResultList();
+            var pagedPair = PaginationUtil.getPagedList(records, paginationParameter);
             List<PendingRecordEntryOutput> list = new ArrayList<>();
-            for (var record : records) {
+            for (var record : pagedPair.getKey()) {
                 list.add(PendingRecordEntryOutput.fromEntity(record, id -> Profile.getOrDefault(session, id)));
             }
-            ctx.json(new PendingRecordEntryListResponse(0, "Get pending record entry list", list));
+            ctx.json(new PendingRecordEntryListResponse(0, "Get pending record entry list", pagedPair.getValue(), list));
         }
     }
 
@@ -229,6 +233,10 @@ public class RecordHandler extends SimpleServerHandler {
             summary = "Get list of pending record entries. Roles: TEACHER",
             description = "Get list of pending record entries. Roles: TEACHER",
             tags = "Record",
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
@@ -247,6 +255,10 @@ public class RecordHandler extends SimpleServerHandler {
             description = "Get list of pending record entries of a student. Roles: TEACHER",
             tags = "Record",
             pathParams = @OpenApiParam(name = "studentId", description = "Student ID", required = true),
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",

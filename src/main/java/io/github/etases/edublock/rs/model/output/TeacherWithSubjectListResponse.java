@@ -1,5 +1,6 @@
 package io.github.etases.edublock.rs.model.output;
 
+import io.github.etases.edublock.rs.model.output.element.PaginationInfo;
 import io.github.etases.edublock.rs.model.output.element.TeacherWithSubjectOutput;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -15,6 +16,7 @@ import java.util.List;
 public class TeacherWithSubjectListResponse {
     int status;
     String message;
+    PaginationInfo pageInfo;
     @Nullable
     List<TeacherWithSubjectOutput> data;
 }

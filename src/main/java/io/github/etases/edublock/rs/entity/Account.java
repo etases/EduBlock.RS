@@ -7,7 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -33,17 +33,17 @@ public class Account implements Serializable {
     private String role;
 
     @OneToMany(mappedBy = "teacher")
-    private Set<ClassTeacher> classrooms;
+    private List<ClassTeacher> classrooms;
     @OneToMany(mappedBy = "teacher")
-    private Set<RecordEntry> recordEntries;
+    private List<RecordEntry> recordEntries;
     @OneToMany(mappedBy = "requester")
-    private Set<RecordEntry> requestedRecordEntries;
+    private List<RecordEntry> requestedRecordEntries;
     @OneToMany(mappedBy = "approver")
-    private Set<RecordEntry> approvedRecordEntries;
+    private List<RecordEntry> approvedRecordEntries;
     @OneToMany(mappedBy = "teacher")
-    private Set<PendingRecordEntry> pendingRecordEntries;
+    private List<PendingRecordEntry> pendingRecordEntries;
     @OneToMany(mappedBy = "requester")
-    private Set<PendingRecordEntry> requestedPendingRecordEntries;
+    private List<PendingRecordEntry> requestedPendingRecordEntries;
     @OneToMany(mappedBy = "homeroomTeacher")
-    private Set<Classroom> homeClassrooms;
+    private List<Classroom> homeClassrooms;
 }

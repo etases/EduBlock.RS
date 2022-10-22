@@ -7,7 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -33,9 +33,9 @@ public class Classroom implements Serializable {
     private Account homeroomTeacher;
 
     @OneToMany(mappedBy = "classroom")
-    private Set<ClassStudent> students;
+    private List<ClassStudent> students;
     @OneToMany(mappedBy = "classroom")
-    private Set<ClassTeacher> teachers;
+    private List<ClassTeacher> teachers;
     @OneToMany(mappedBy = "classroom")
-    private Set<Record> records;
+    private List<Record> records;
 }
