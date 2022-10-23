@@ -8,6 +8,7 @@ import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.Student;
+import io.github.etases.edublock.rs.internal.filter.ListSessionInputFilter;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
 import io.github.etases.edublock.rs.model.input.*;
 import io.github.etases.edublock.rs.model.output.*;
@@ -23,9 +24,43 @@ import org.hibernate.Transaction;
 import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class AccountHandler extends SimpleServerHandler {
+    private static final ListSessionInputFilter<Account> ACCOUNTS_FILTER = ListSessionInputFilter.<Account>create()
+            .addFilter("id", (input, o) -> Long.toString(o.getId()).equals(input))
+            .addFilter("username", (input, o) -> o.getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("firstname", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getFirstName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("lastname", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getLastName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("email", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getEmail().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("phone", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getPhone().contains(input))
+            .addFilter("year", (input, o) -> {
+                Calendar calendar = Calendar.getInstance();
+                if (input == null || input.isEmpty()) {
+                    calendar.setTimeInMillis(System.currentTimeMillis());
+                    input = Integer.toString(calendar.get(Calendar.YEAR));
+                }
+                calendar.setTime(o.getCreatedAt());
+                return Integer.toString(calendar.get(Calendar.YEAR)).equals(input);
+            });
+    private static final ListSessionInputFilter<Student> STUDENTS_FILTER = ListSessionInputFilter.<Student>create()
+            .addFilter("id", (input, o) -> Long.toString(o.getId()).equals(input))
+            .addFilter("username", (input, o) -> o.getAccount().getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("firstname", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getFirstName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("lastname", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getLastName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("email", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getEmail().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("phone", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getPhone().contains(input))
+            .addFilter("year", (input, o) -> {
+                Calendar calendar = Calendar.getInstance();
+                if (input == null || input.isEmpty()) {
+                    calendar.setTimeInMillis(System.currentTimeMillis());
+                    input = Integer.toString(calendar.get(Calendar.YEAR));
+                }
+                calendar.setTime(o.getAccount().getCreatedAt());
+                return Integer.toString(calendar.get(Calendar.YEAR)).equals(input);
+            });
     private final SessionFactory sessionFactory;
     private final MainConfig mainConfig;
 
@@ -134,7 +169,9 @@ public class AccountHandler extends SimpleServerHandler {
             tags = "Account",
             queryParams = {
                     @OpenApiParam(name = "pageNumber", description = "Page number"),
-                    @OpenApiParam(name = "pageSize", description = "Page size")
+                    @OpenApiParam(name = "pageSize", description = "Page size"),
+                    @OpenApiParam(name = "filter", description = "Filter Type"),
+                    @OpenApiParam(name = "input", description = "Filter Input"),
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
@@ -148,7 +185,8 @@ public class AccountHandler extends SimpleServerHandler {
         try (var session = sessionFactory.openSession()) {
             var query = session.createNamedQuery("Account.findAll", Account.class);
             var accounts = query.getResultList();
-            var pagedPair = PaginationUtil.getPagedList(accounts, paginationParameter);
+            var filtered = ACCOUNTS_FILTER.filter(session, accounts, ctx);
+            var pagedPair = PaginationUtil.getPagedList(filtered, paginationParameter);
             List<AccountWithProfileOutput> list = new ArrayList<>();
             for (var account : pagedPair.getKey()) {
                 list.add(AccountWithProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
@@ -308,7 +346,9 @@ public class AccountHandler extends SimpleServerHandler {
             pathParams = @OpenApiParam(name = "role", description = "The role of the accounts", required = true),
             queryParams = {
                     @OpenApiParam(name = "pageNumber", description = "Page number"),
-                    @OpenApiParam(name = "pageSize", description = "Page size")
+                    @OpenApiParam(name = "pageSize", description = "Page size"),
+                    @OpenApiParam(name = "filter", description = "Filter Type"),
+                    @OpenApiParam(name = "input", description = "Filter Input"),
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
@@ -342,7 +382,8 @@ public class AccountHandler extends SimpleServerHandler {
             if (role == JwtHandler.Role.STUDENT) {
                 var query = session.createNamedQuery("Student.findAll", Student.class);
                 var accounts = query.getResultList();
-                var pagedPair = PaginationUtil.getPagedList(accounts, paginationParameter);
+                var filtered = STUDENTS_FILTER.filter(session, accounts, ctx);
+                var pagedPair = PaginationUtil.getPagedList(filtered, paginationParameter);
                 List<AccountWithStudentProfileOutput> list = new ArrayList<>();
                 for (var account : pagedPair.getKey()) {
                     list.add(AccountWithStudentProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
@@ -351,7 +392,8 @@ public class AccountHandler extends SimpleServerHandler {
             } else {
                 var query = session.createNamedQuery("Account.findByRole", Account.class).setParameter("role", role.name());
                 var accounts = query.getResultList();
-                var pagedPair = PaginationUtil.getPagedList(accounts, paginationParameter);
+                var filtered = ACCOUNTS_FILTER.filter(session, accounts, ctx);
+                var pagedPair = PaginationUtil.getPagedList(filtered, paginationParameter);
                 List<AccountWithProfileOutput> list = new ArrayList<>();
                 for (var account : accounts) {
                     list.add(AccountWithProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));

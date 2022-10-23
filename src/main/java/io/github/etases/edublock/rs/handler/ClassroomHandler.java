@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.*;
+import io.github.etases.edublock.rs.internal.filter.ListSessionInputFilter;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
 import io.github.etases.edublock.rs.model.input.*;
 import io.github.etases.edublock.rs.model.output.*;
@@ -16,11 +17,27 @@ import io.javalin.openapi.*;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class ClassroomHandler extends SimpleServerHandler {
+    private static final ListSessionInputFilter<Classroom> CLASSROOMS_FILTER = ListSessionInputFilter.<Classroom>create()
+            .addFilter("id", (input, o) -> Long.toString(o.getId()).equals(input))
+            .addFilter("name", (input, o) -> o.getName().equals(input))
+            .addFilter("grade", (input, o) -> Integer.toString(o.getGrade()).equals(input))
+            .addFilter("homeroomTeacherId", (input, o) -> Long.toString(o.getHomeroomTeacher().getId()).equals(input))
+            .addFilter("homeroomTeacherUserName", (input, o) -> o.getHomeroomTeacher().getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherFirstName", (session, input, o) -> Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getFirstName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherLastName", (session, input, o) -> Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getLastName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherEmail", (session, input, o) -> Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getEmail().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherPhone", (session, input, o) -> Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getPhone().contains(input))
+            .addFilter("year", (input, o) -> {
+                if (input == null || input.isEmpty()) {
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(System.currentTimeMillis());
+                    input = Integer.toString(calendar.get(Calendar.YEAR));
+                }
+                return Integer.toString(o.getYear()).equals(input);
+            });
     private final SessionFactory sessionFactory;
 
     @Inject
@@ -71,7 +88,8 @@ public class ClassroomHandler extends SimpleServerHandler {
                 var query = session.createNamedQuery("Classroom.findAll", Classroom.class);
                 classrooms = query.getResultList();
             }
-            var pagedPair = PaginationUtil.getPagedList(classrooms, paginationParameter);
+            var filtered = CLASSROOMS_FILTER.filter(session, classrooms, ctx);
+            var pagedPair = PaginationUtil.getPagedList(filtered, paginationParameter);
             List<ClassroomOutput> list = new ArrayList<>();
             for (var classroom : pagedPair.getKey()) {
                 list.add(ClassroomOutput.fromEntity(classroom, id -> Profile.getOrDefault(session, id)));
@@ -88,7 +106,9 @@ public class ClassroomHandler extends SimpleServerHandler {
             tags = "Classroom",
             queryParams = {
                     @OpenApiParam(name = "pageNumber", description = "Page number"),
-                    @OpenApiParam(name = "pageSize", description = "Page size")
+                    @OpenApiParam(name = "pageSize", description = "Page size"),
+                    @OpenApiParam(name = "filter", description = "Filter Type"),
+                    @OpenApiParam(name = "input", description = "Filter Input"),
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
@@ -109,7 +129,9 @@ public class ClassroomHandler extends SimpleServerHandler {
             tags = "Classroom",
             queryParams = {
                     @OpenApiParam(name = "pageNumber", description = "Page number"),
-                    @OpenApiParam(name = "pageSize", description = "Page size")
+                    @OpenApiParam(name = "pageSize", description = "Page size"),
+                    @OpenApiParam(name = "filter", description = "Filter Type"),
+                    @OpenApiParam(name = "input", description = "Filter Input"),
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
@@ -130,7 +152,9 @@ public class ClassroomHandler extends SimpleServerHandler {
             tags = "Classroom",
             queryParams = {
                     @OpenApiParam(name = "pageNumber", description = "Page number"),
-                    @OpenApiParam(name = "pageSize", description = "Page size")
+                    @OpenApiParam(name = "pageSize", description = "Page size"),
+                    @OpenApiParam(name = "filter", description = "Filter Type"),
+                    @OpenApiParam(name = "input", description = "Filter Input"),
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
@@ -151,7 +175,9 @@ public class ClassroomHandler extends SimpleServerHandler {
             tags = "Classroom",
             queryParams = {
                     @OpenApiParam(name = "pageNumber", description = "Page number"),
-                    @OpenApiParam(name = "pageSize", description = "Page size")
+                    @OpenApiParam(name = "pageSize", description = "Page size"),
+                    @OpenApiParam(name = "filter", description = "Filter Type"),
+                    @OpenApiParam(name = "input", description = "Filter Input"),
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
