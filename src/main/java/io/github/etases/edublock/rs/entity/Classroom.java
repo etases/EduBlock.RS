@@ -26,7 +26,7 @@ public class Classroom implements Serializable {
     private String name;
     @Column(nullable = false)
     private int grade;
-    @Column(nullable = false)
+    @Column(nullable = false, name = "start_year")
     private int year;
     @ManyToOne
     @JoinColumn(nullable = false)
