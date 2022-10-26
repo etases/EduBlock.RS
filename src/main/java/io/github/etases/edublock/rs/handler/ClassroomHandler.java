@@ -22,7 +22,7 @@ import java.util.*;
 public class ClassroomHandler extends SimpleServerHandler {
     private static final ListSessionInputFilter<Classroom> CLASSROOMS_FILTER = ListSessionInputFilter.<Classroom>create()
             .addFilter("id", (input, o) -> Long.toString(o.getId()).equals(input))
-            .addFilter("name", (input, o) -> o.getName().equals(input))
+            .addFilter("name", (input, o) -> o.getName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
             .addFilter("grade", (input, o) -> Integer.toString(o.getGrade()).equals(input))
             .addFilter("homeroomTeacherId", (input, o) -> Long.toString(o.getHomeroomTeacher().getId()).equals(input))
             .addFilter("homeroomTeacherUserName", (input, o) -> o.getHomeroomTeacher().getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
