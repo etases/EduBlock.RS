@@ -91,6 +91,7 @@ public class RequestServer {
                 AccountHandler.class,
                 ClassroomHandler.class,
                 RecordHandler.class,
+                SubjectHandler.class,
                 DevHandler.class
         );
     }
