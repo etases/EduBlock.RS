@@ -16,6 +16,7 @@ import org.hyperledger.fabric.client.identity.Signers;
 import org.hyperledger.fabric.client.identity.X509Identity;
 import org.tinylog.Logger;
 
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -47,7 +48,9 @@ public class FabricHandler implements ServerHandler {
             var privateKey = Identities.readPrivateKey(keyReader);
             var signer = Signers.newPrivateKeySigner(privateKey);
 
-            var grpcChannelBuilder = NettyChannelBuilder.forTarget(fabricProperties.address());
+            var grpcChannelBuilder = fabricProperties.inetAddress()
+                    ? NettyChannelBuilder.forAddress(new InetSocketAddress(fabricProperties.host(), fabricProperties.port()))
+                    : NettyChannelBuilder.forTarget(fabricProperties.host());
             if (fabricProperties.tlsEnabled()) {
                 var tlsCertReader = Files.newBufferedReader(fabricProperties.tlsCertPath());
                 var tlsCert = Identities.readX509Certificate(tlsCertReader);
