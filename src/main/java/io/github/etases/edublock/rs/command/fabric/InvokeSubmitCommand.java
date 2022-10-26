@@ -10,7 +10,7 @@ public class InvokeSubmitCommand extends Command {
     private final Gateway gateway;
 
     public InvokeSubmitCommand(Gateway gateway) {
-        super("invoke-evaluate");
+        super("invoke-submit");
         this.gateway = gateway;
     }
 
