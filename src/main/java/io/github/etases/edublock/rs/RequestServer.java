@@ -14,6 +14,7 @@ import org.tinylog.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -24,6 +25,7 @@ public class RequestServer {
     private final DatabaseManager databaseManager;
     private final DependencyManager dependencyManager;
     private final ServerTerminal terminal;
+    private final List<ServerHandler> serverHandlers = new ArrayList<>();
     private Javalin server;
 
     RequestServer(String[] args) {
@@ -60,7 +62,8 @@ public class RequestServer {
             return;
         }
 
-        getHandlers().forEach(clazz -> dependencyManager.getInjector().getInstance(clazz).setup());
+        getHandlers().forEach(clazz -> serverHandlers.add(dependencyManager.getInjector().getInstance(clazz)));
+        serverHandlers.forEach(ServerHandler::setup);
 
         server = serverBuilder.build();
         server.start(mainConfig.getServerProperties().host(), mainConfig.getServerProperties().port());
@@ -71,6 +74,7 @@ public class RequestServer {
         if (server != null) {
             server.stop();
         }
+        serverHandlers.forEach(ServerHandler::stop);
         terminal.shutdown();
         commandManager.disable();
     }
@@ -91,7 +95,8 @@ public class RequestServer {
                 AccountHandler.class,
                 ClassroomHandler.class,
                 RecordHandler.class,
-                DevHandler.class
+                DevHandler.class,
+                FabricHandler.class
         );
     }
 }

@@ -8,4 +8,11 @@ public interface ServerHandler {
      * Set up the server
      */
     void setup();
+
+    /**
+     * Stop the server
+     */
+    default void stop() {
+        // Do nothing
+    }
 }
