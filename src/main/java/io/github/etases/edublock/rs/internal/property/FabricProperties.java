@@ -4,7 +4,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 
-public record FabricProperties(boolean enabled, Path certPath, Path keyPath, String mspId, boolean inetAddress, String host, int port,
+public record FabricProperties(boolean enabled, Path certPath, Path keyPath, String mspId, boolean inetAddress,
+                               String host, int port,
                                boolean tlsEnabled, Path tlsCertPath, String tlsOverrideAuthority) {
     public static FabricProperties fromMap(Map<?, ?> map) {
         return new FabricProperties(
