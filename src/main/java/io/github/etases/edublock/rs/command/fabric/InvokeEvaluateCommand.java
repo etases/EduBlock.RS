@@ -30,7 +30,10 @@ public class InvokeEvaluateCommand extends Command {
         try {
             var network = gateway.getNetwork(channel);
             var contract = network.getContract(contractName);
-            var result = contract.evaluateTransaction(function, args);
+            var result = contract.newProposal(function)
+                    .addArguments(args)
+                    .build()
+                    .evaluate();
             Logger.info("Result: {}", new String(result, StandardCharsets.UTF_8));
         } catch (Exception e) {
             Logger.error(e);

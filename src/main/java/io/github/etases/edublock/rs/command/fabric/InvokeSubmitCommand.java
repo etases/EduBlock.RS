@@ -30,8 +30,16 @@ public class InvokeSubmitCommand extends Command {
         try {
             var network = gateway.getNetwork(channel);
             var contract = network.getContract(contractName);
-            var result = contract.submitTransaction(function, args);
-            Logger.info("Result: {}", new String(result, StandardCharsets.UTF_8));
+            var result = contract.newProposal(function)
+                    .addArguments(args)
+                    .build()
+                    .endorse()
+                    .submitAsync();
+            if (result.getStatus().isSuccessful()) {
+                Logger.info("Result: {} ({})", new String(result.getResult(), StandardCharsets.UTF_8), result.getStatus().getCode());
+            } else {
+                Logger.error("Error: {}", result.getStatus().getCode());
+            }
         } catch (Exception e) {
             Logger.error(e);
         }
