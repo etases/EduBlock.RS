@@ -257,6 +257,7 @@ public class AccountHandler extends SimpleServerHandler {
                 profile.setAddress("");
                 profile.setPhone("");
                 profile.setEmail("");
+                profile.setUpdated(false);
                 session.save(profile);
                 if (role == JwtHandler.Role.STUDENT) {
                     var student = new Student();
@@ -449,6 +450,7 @@ public class AccountHandler extends SimpleServerHandler {
             profile.setAddress(input.getAddress());
             profile.setPhone(input.getPhone());
             profile.setEmail(input.getEmail());
+            profile.setUpdated(true);
             session.update(profile);
             transaction.commit();
             ctx.json(new Response(0, "Profile updated"));
@@ -544,6 +546,7 @@ public class AccountHandler extends SimpleServerHandler {
             }
 
             Transaction transaction = session.beginTransaction();
+
             student.setEthnic(input.getEthnic());
             student.setFatherName(input.getFatherName());
             student.setFatherJob(input.getFatherJob());
@@ -553,6 +556,11 @@ public class AccountHandler extends SimpleServerHandler {
             student.setGuardianJob(input.getGuardianJob());
             student.setHomeTown(input.getHomeTown());
             session.update(student);
+
+            Profile profile = session.get(Profile.class, student.getId());
+            profile.setUpdated(true);
+            session.update(profile);
+
             transaction.commit();
             ctx.json(new Response(0, "Student updated"));
         }
