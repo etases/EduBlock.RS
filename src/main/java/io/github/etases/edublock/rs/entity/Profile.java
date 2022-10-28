@@ -37,6 +37,8 @@ public class Profile implements Serializable {
     private String phone;
     @Column(nullable = false)
     private String email;
+    @Column(nullable = false)
+    private boolean updated;
 
     public static Profile getOrDefault(Session session, long id) {
         Profile profile = session.get(Profile.class, id);
@@ -51,6 +53,7 @@ public class Profile implements Serializable {
             profile.setAddress("");
             profile.setPhone("");
             profile.setEmail("");
+            profile.setUpdated(false);
         }
         return profile;
     }
