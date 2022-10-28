@@ -14,6 +14,6 @@ public class ClassRecord {
     int year;
     int grade;
     String className;
-    Map<Integer, Subject> subjects; // key : subject id
+    Map<Long, Subject> subjects; // key : subject id
     Classification classification;
 }

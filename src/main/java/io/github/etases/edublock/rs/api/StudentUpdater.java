@@ -3,7 +3,9 @@ package io.github.etases.edublock.rs.api;
 import io.github.etases.edublock.rs.model.fabric.ClassRecord;
 import io.github.etases.edublock.rs.model.fabric.Personal;
 import io.github.etases.edublock.rs.model.fabric.Record;
+import io.github.etases.edublock.rs.model.fabric.RecordHistory;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface StudentUpdater {
@@ -15,5 +17,7 @@ public interface StudentUpdater {
 
     CompletableFuture<Boolean> updateStudentRecord(long studentId, Record record);
 
-    CompletableFuture<Boolean> updateStudentClassRecord(long studentId, long classId, ClassRecord record);
+    CompletableFuture<Boolean> updateStudentClassRecord(long studentId, long classId, ClassRecord classRecord);
+
+    CompletableFuture<List<RecordHistory>> getStudentRecordHistory(long studentId);
 }
