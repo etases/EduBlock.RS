@@ -22,7 +22,7 @@ import java.util.*;
 public class ClassroomHandler extends SimpleServerHandler {
     private static final ListSessionInputFilter<Classroom> CLASSROOMS_FILTER = ListSessionInputFilter.<Classroom>create()
             .addFilter("id", (input, o) -> Long.toString(o.getId()).equals(input))
-            .addFilter("name", (input, o) -> o.getName().equals(input))
+            .addFilter("name", (input, o) -> o.getName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
             .addFilter("grade", (input, o) -> Integer.toString(o.getGrade()).equals(input))
             .addFilter("homeroomTeacherId", (input, o) -> Long.toString(o.getHomeroomTeacher().getId()).equals(input))
             .addFilter("homeroomTeacherUserName", (input, o) -> o.getHomeroomTeacher().getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
@@ -55,10 +55,10 @@ public class ClassroomHandler extends SimpleServerHandler {
         server.get("/classroom/homeroom", this::listHomeroom, JwtHandler.Role.TEACHER);
         server.get("/classroom/{id}", this::get, JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.put("/classroom/{id}", this::update, JwtHandler.Role.STAFF);
-        server.get("/classroom/{id}/teacher", this::studentList, JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
-        server.get("/classroom/{id}/student", this::teacherList, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF);
+        server.get("/classroom/{id}/teacher", this::teacherList, JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.post("/classroom/{id}/teacher", this::addTeacher, JwtHandler.Role.STAFF);
         server.delete("/classroom/{id}/teacher", this::removeTeacher, JwtHandler.Role.STAFF);
+        server.get("/classroom/{id}/student", this::studentList, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF);
         server.post("/classroom/{id}/student", this::addStudent, JwtHandler.Role.STAFF);
         server.delete("/classroom/{id}/student", this::removeStudent, JwtHandler.Role.STAFF);
     }

@@ -84,6 +84,7 @@ public class AccountHandler extends SimpleServerHandler {
         server.get("/account/role/{role}/list", this::listByRole, JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
         server.get("/account/{id}", this::get, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.put("/account/{id}/profile", this::updateProfile, JwtHandler.Role.STAFF);
+        server.put("/account/self/profile", this::updateSelfProfile, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.put("/account/{id}/student", this::updateStudent, JwtHandler.Role.STAFF);
     }
 
@@ -403,35 +404,12 @@ public class AccountHandler extends SimpleServerHandler {
         }
     }
 
-    @OpenApi(
-            path = "/account/{id}/profile",
-            methods = HttpMethod.PUT,
-            summary = "Update user profile. Roles: STAFF",
-            description = "Update user profile. Roles: STAFF",
-            tags = "Account",
-            pathParams = @OpenApiParam(name = "id", description = "The id of the account", required = true),
-            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
-            requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = ProfileUpdate.class)),
-            responses = {
-                    @OpenApiResponse(
-                            status = "200",
-                            description = "The result of the operation",
-                            content = @OpenApiContent(from = Response.class)
-                    ),
-                    @OpenApiResponse(
-                            status = "404",
-                            description = "The account does not exist",
-                            content = @OpenApiContent(from = Response.class)
-                    ),
-            }
-    )
-    private void updateProfile(Context ctx) {
+    private void updateProfile(Context ctx, long accountId) {
         ProfileUpdate input = ctx.bodyValidator(ProfileUpdate.class)
                 .check(ProfileUpdate::validate, "Invalid data")
                 .get();
 
         try (var session = sessionFactory.openSession()) {
-            long accountId = Long.parseLong(ctx.pathParam("id"));
             Account account = session.get(Account.class, accountId);
 
             if (account == null) {
@@ -475,6 +453,57 @@ public class AccountHandler extends SimpleServerHandler {
             transaction.commit();
             ctx.json(new Response(0, "Profile updated"));
         }
+    }
+
+    @OpenApi(
+            path = "/account/{id}/profile",
+            methods = HttpMethod.PUT,
+            summary = "Update user profile. Roles: STAFF",
+            description = "Update user profile. Roles: STAFF",
+            tags = "Account",
+            pathParams = @OpenApiParam(name = "id", description = "The id of the account", required = true),
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = ProfileUpdate.class)),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The result of the operation",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "The account does not exist",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+            }
+    )
+    private void updateProfile(Context ctx) {
+        updateProfile(ctx, Long.parseLong(ctx.pathParam("id")));
+    }
+
+    @OpenApi(
+            path = "/account/self/profile",
+            methods = HttpMethod.PUT,
+            summary = "Update self profile. Roles: STAFF, ADMIN",
+            description = "Update self profile. Roles: STAFF, ADMIN",
+            tags = "Account",
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = ProfileUpdate.class)),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The result of the operation",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "The account does not exist",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+            }
+    )
+    private void updateSelfProfile(Context ctx) {
+        updateProfile(ctx, JwtHandler.getUserId(ctx));
     }
 
     @OpenApi(

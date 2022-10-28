@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@NamedQuery(name = "Subject.findAll", query = "FROM Subject")
 public class Subject implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
