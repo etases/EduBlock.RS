@@ -21,6 +21,7 @@ public class RecordEntryOutput {
     float finalScore;
     Date requestDate;
     Date approvalDate;
+    boolean updateComplete;
     AccountWithProfileOutput teacher;
     AccountWithProfileOutput requester;
     AccountWithProfileOutput approver;
@@ -34,6 +35,7 @@ public class RecordEntryOutput {
                 recordEntry.getFinalScore(),
                 recordEntry.getRequestDate(),
                 recordEntry.getApprovalDate(),
+                recordEntry.isUpdateComplete(),
                 AccountWithProfileOutput.fromEntity(recordEntry.getTeacher(), profileFunction),
                 AccountWithProfileOutput.fromEntity(recordEntry.getRequester(), profileFunction),
                 AccountWithProfileOutput.fromEntity(recordEntry.getApprover(), profileFunction)

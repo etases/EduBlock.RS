@@ -99,7 +99,8 @@ public class RequestServer {
                 RecordHandler.class,
                 SubjectHandler.class,
                 DevHandler.class,
-                FabricHandler.class
+                FabricHandler.class,
+                StudentUpdateHandler.class
         );
     }
 

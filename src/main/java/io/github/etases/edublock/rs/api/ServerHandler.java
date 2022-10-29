@@ -7,7 +7,9 @@ public interface ServerHandler {
     /**
      * Set up the server
      */
-    void setup();
+    default void setup() {
+        // Do nothing
+    }
 
     /**
      * Post set up the server

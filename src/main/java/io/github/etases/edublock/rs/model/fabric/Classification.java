@@ -10,7 +10,11 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class Classification {
-    String firstHaftClassify;
-    String secondHaftClassify;
+    String firstHalfClassify;
+    String secondHalfClassify;
     String finalClassify;
+
+    public static Classification clone(Classification classification) {
+        return classification == null ? new Classification() : new Classification(classification.getFirstHalfClassify(), classification.getSecondHalfClassify(), classification.getFinalClassify());
+    }
 }

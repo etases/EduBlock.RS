@@ -15,6 +15,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Getter
 @Setter
+@NamedQuery(name = "Profile.findUpdated", query = "FROM Profile WHERE updated = true")
 public class Profile implements Serializable {
     @Id
     private long id;

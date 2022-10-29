@@ -330,6 +330,7 @@ public class RecordHandler extends SimpleServerHandler {
                 recordEntry.setRequestDate(pendingRecordEntry.getRequestDate());
                 recordEntry.setApprovalDate(new Date());
                 recordEntry.setApprover(account);
+                recordEntry.setUpdateComplete(false);
                 session.save(recordEntry);
             }
             session.delete(pendingRecordEntry);
