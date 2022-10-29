@@ -81,7 +81,7 @@ public class FabricHandler implements ServerHandler {
     }
 
     @Override
-    public void stop() {
+    public void postStop() {
         if (gateway != null) {
             gateway.close();
         }

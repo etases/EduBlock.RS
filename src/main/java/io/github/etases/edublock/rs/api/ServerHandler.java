@@ -24,4 +24,11 @@ public interface ServerHandler {
     default void stop() {
         // Do nothing
     }
+
+    /**
+     * Post stop the server
+     */
+    default void postStop() {
+        // Do nothing
+    }
 }

@@ -11,20 +11,50 @@ import io.github.etases.edublock.rs.model.fabric.ClassRecord;
 import io.github.etases.edublock.rs.model.fabric.Personal;
 import io.github.etases.edublock.rs.model.fabric.Record;
 import io.github.etases.edublock.rs.model.fabric.Subject;
+import lombok.Getter;
 import org.hibernate.SessionFactory;
+import org.tinylog.Logger;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class StudentUpdateHandler implements ServerHandler {
+    private final AtomicReference<CompletableFuture<Void>> currentFutureRef = new AtomicReference<>();
+    private final AtomicBoolean updateRecords = new AtomicBoolean(false);
     @Inject
     private SessionFactory sessionFactory;
-
+    @Getter
     private StudentUpdater studentUpdater;
+    private ScheduledExecutorService executorService;
 
     @Override
     public void postSetup() {
         studentUpdater = new TemporaryStudentUpdater();
+        executorService = new ScheduledThreadPoolExecutor(1);
+        executorService.scheduleAtFixedRate(() -> {
+            var current = currentFutureRef.get();
+            if (current != null && current.isDone()) return;
+            if (updateRecords.get()) {
+                updateRecords.set(false);
+                currentFutureRef.set(updateRecord().thenAccept(v -> Logger.info("Updated records")));
+            } else {
+                updateRecords.set(true);
+                currentFutureRef.set(updatePersonal().thenAccept(v -> Logger.info("Updated personal")));
+            }
+            Logger.info("Student update scheduled");
+        }, 1, 1, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public void stop() {
+        if (executorService != null) {
+            executorService.shutdown();
+        }
     }
 
     private CompletableFuture<Void> updatePersonal() {
