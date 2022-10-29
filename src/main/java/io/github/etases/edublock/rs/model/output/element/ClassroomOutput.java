@@ -2,6 +2,7 @@ package io.github.etases.edublock.rs.model.output.element;
 
 import io.github.etases.edublock.rs.entity.Classroom;
 import io.github.etases.edublock.rs.entity.Profile;
+import io.github.etases.edublock.rs.model.fabric.ClassRecord;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -27,5 +28,15 @@ public class ClassroomOutput {
                 classroom.getYear(),
                 AccountWithProfileOutput.fromEntity(classroom.getHomeroomTeacher(), profileFunction)
         );
+    }
+
+    public static ClassroomOutput fromFabricModel(long classId, ClassRecord classRecord) {
+        var classroom = new ClassroomOutput();
+        classroom.setId(classId);
+        classroom.setYear(classRecord.getYear());
+        classroom.setGrade(classRecord.getGrade());
+        classroom.setName(classRecord.getClassName());
+        classroom.setHomeroomTeacher(new AccountWithProfileOutput());
+        return classroom;
     }
 }

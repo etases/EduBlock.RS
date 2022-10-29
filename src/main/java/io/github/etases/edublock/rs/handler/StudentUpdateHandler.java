@@ -1,6 +1,7 @@
 package io.github.etases.edublock.rs.handler;
 
 import com.google.inject.Inject;
+import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.api.StudentUpdater;
 import io.github.etases.edublock.rs.entity.Profile;
@@ -11,7 +12,14 @@ import io.github.etases.edublock.rs.model.fabric.ClassRecord;
 import io.github.etases.edublock.rs.model.fabric.Personal;
 import io.github.etases.edublock.rs.model.fabric.Record;
 import io.github.etases.edublock.rs.model.fabric.Subject;
-import lombok.Getter;
+import io.github.etases.edublock.rs.model.output.AccountWithStudentProfileResponse;
+import io.github.etases.edublock.rs.model.output.RecordHistoryResponse;
+import io.github.etases.edublock.rs.model.output.RecordListResponse;
+import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
+import io.github.etases.edublock.rs.model.output.element.RecordHistoryOutput;
+import io.github.etases.edublock.rs.model.output.element.RecordOutput;
+import io.javalin.http.Context;
+import io.javalin.openapi.*;
 import org.hibernate.SessionFactory;
 import org.tinylog.Logger;
 
@@ -28,13 +36,21 @@ public class StudentUpdateHandler implements ServerHandler {
     private final AtomicBoolean updateRecords = new AtomicBoolean(false);
     @Inject
     private SessionFactory sessionFactory;
-    @Getter
+    @Inject
+    private ServerBuilder serverBuilder;
     private StudentUpdater studentUpdater;
     private ScheduledExecutorService executorService;
 
     @Override
     public void postSetup() {
         studentUpdater = new TemporaryStudentUpdater();
+
+        serverBuilder.addHandler(javalin -> {
+            javalin.get("/updater/{id}/personal", this::getPersonal);
+            javalin.get("/updater/{id}/record", this::getRecord);
+            javalin.get("/updater/{id}/history", this::getHistory);
+        });
+
         executorService = new ScheduledThreadPoolExecutor(1);
         executorService.scheduleAtFixedRate(() -> {
             var current = currentFutureRef.get();
@@ -55,6 +71,103 @@ public class StudentUpdateHandler implements ServerHandler {
         if (executorService != null) {
             executorService.shutdown();
         }
+    }
+
+    @OpenApi(
+            path = "/updater/{id}/personal",
+            methods = HttpMethod.GET,
+            summary = "Get student personal.",
+            description = "Get student personal.",
+            tags = "Updater",
+            pathParams = @OpenApiParam(name = "id", description = "The account id", required = true),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The student personal",
+                            content = @OpenApiContent(from = AccountWithStudentProfileResponse.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Personal not found",
+                            content = @OpenApiContent(from = AccountWithStudentProfileResponse.class)
+                    ),
+            }
+    )
+    private void getPersonal(Context ctx) {
+        var id = Long.parseLong(ctx.pathParam("id"));
+        ctx.future(() -> studentUpdater.getStudentPersonal(id).thenAccept(personal -> {
+            if (personal == null) {
+                ctx.status(404);
+                ctx.json(new AccountWithStudentProfileResponse(1, "Personal not found", null));
+                return;
+            }
+            ctx.json(new AccountWithStudentProfileResponse(0, "Get personal", AccountWithStudentProfileOutput.fromFabricModel(id, personal)));
+        }));
+    }
+
+    @OpenApi(
+            path = "/updater/{id}/record",
+            methods = HttpMethod.GET,
+            summary = "Get student record.",
+            description = "Get student record.",
+            tags = "Updater",
+            pathParams = @OpenApiParam(name = "id", description = "The account id", required = true),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The student record",
+                            content = @OpenApiContent(from = RecordListResponse.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Record not found",
+                            content = @OpenApiContent(from = RecordListResponse.class)
+                    ),
+            }
+    )
+    private void getRecord(Context ctx) {
+        var id = Long.parseLong(ctx.pathParam("id"));
+        ctx.future(() -> studentUpdater.getStudentRecord(id).thenAccept(record -> {
+            if (record == null) {
+                ctx.status(404);
+                ctx.json(new RecordListResponse(1, "Record not found", null));
+                return;
+            }
+            ctx.json(new RecordListResponse(0, "OK", RecordOutput.fromFabricModel(record)));
+        }));
+    }
+
+    @OpenApi(
+            path = "/updater/{id}/history",
+            methods = HttpMethod.GET,
+            summary = "Get student record history.",
+            description = "Get student record history.",
+            tags = "Updater",
+            pathParams = @OpenApiParam(name = "id", description = "The account id", required = true),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The student record history",
+                            content = @OpenApiContent(from = RecordHistoryResponse.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Record history not found",
+                            content = @OpenApiContent(from = RecordHistoryResponse.class)
+                    ),
+            }
+    )
+    private void getHistory(Context ctx) {
+        var id = Long.parseLong(ctx.pathParam("id"));
+        ctx.future(() -> studentUpdater.getStudentRecordHistory(id).thenAccept(history -> {
+            if (history == null) {
+                ctx.status(404);
+                ctx.json(new RecordHistoryResponse(1, "Record history not found", null));
+                return;
+            }
+            var output = history.stream().map(RecordHistoryOutput::fromFabricModel).toList();
+            ctx.json(new RecordHistoryResponse(0, "OK", output));
+        }));
     }
 
     private CompletableFuture<Void> updatePersonal() {

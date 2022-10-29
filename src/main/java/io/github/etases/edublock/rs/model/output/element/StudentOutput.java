@@ -1,6 +1,7 @@
 package io.github.etases.edublock.rs.model.output.element;
 
 import io.github.etases.edublock.rs.entity.Student;
+import io.github.etases.edublock.rs.model.fabric.Personal;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -31,6 +32,20 @@ public class StudentOutput {
                 student.getGuardianName(),
                 student.getGuardianJob(),
                 student.getHomeTown()
+        );
+    }
+
+    public static StudentOutput fromFabricModel(long id, Personal personal) {
+        return new StudentOutput(
+                id,
+                personal.getEthnic(),
+                personal.getFatherName(),
+                personal.getFatherJob(),
+                personal.getMotherName(),
+                personal.getMotherJob(),
+                personal.getGuardianName(),
+                personal.getGuardianJob(),
+                personal.getHomeTown()
         );
     }
 }
