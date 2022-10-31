@@ -24,10 +24,7 @@ public class SystemMainConfig implements MainConfig {
                 Optional.ofNullable(System.getenv("RS_DATABASE_NAME")).orElse("edublock"),
                 Optional.ofNullable(System.getenv("RS_DATABASE_USER")).orElse("root"),
                 Optional.ofNullable(System.getenv("RS_DATABASE_PASSWORD")).orElse(""),
-                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_SSL")).orElse("true")),
-                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_USE_SSL")).orElse("true")),
-                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_VERIFY_SERVER_CERTIFICATE")).orElse("true")),
-                Optional.ofNullable(System.getenv("RS_DATABASE_SSL_MODE")).orElse("update")
+                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_IS_MEMORY")).orElse("true"))
         );
         this.serverProperties = new ServerProperties(
                 Optional.ofNullable(System.getenv("RS_SERVER_HOST")).orElse("localhost"),
