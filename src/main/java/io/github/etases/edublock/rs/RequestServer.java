@@ -14,7 +14,9 @@ import org.tinylog.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 public class RequestServer {
@@ -24,6 +26,7 @@ public class RequestServer {
     private final DatabaseManager databaseManager;
     private final DependencyManager dependencyManager;
     private final ServerTerminal terminal;
+    private final Map<Class<? extends ServerHandler>, ServerHandler> serverHandlers = new HashMap<>();
     private Javalin server;
 
     RequestServer(String[] args) {
@@ -60,7 +63,9 @@ public class RequestServer {
             return;
         }
 
-        getHandlers().forEach(clazz -> dependencyManager.getInjector().getInstance(clazz).setup());
+        getHandlers().forEach(clazz -> serverHandlers.put(clazz, dependencyManager.getInjector().getInstance(clazz)));
+        serverHandlers.values().forEach(ServerHandler::setup);
+        serverHandlers.values().forEach(ServerHandler::postSetup);
 
         server = serverBuilder.build();
         server.start(mainConfig.getServerProperties().host(), mainConfig.getServerProperties().port());
@@ -71,6 +76,8 @@ public class RequestServer {
         if (server != null) {
             server.stop();
         }
+        serverHandlers.values().forEach(ServerHandler::stop);
+        serverHandlers.values().forEach(ServerHandler::postStop);
         terminal.shutdown();
         commandManager.disable();
     }
@@ -92,7 +99,24 @@ public class RequestServer {
                 ClassroomHandler.class,
                 RecordHandler.class,
                 SubjectHandler.class,
-                DevHandler.class
+                DevHandler.class,
+                FabricHandler.class,
+                StudentUpdateHandler.class
         );
+    }
+
+    /**
+     * Get the handler by the class
+     *
+     * @param clazz the class
+     * @param <T>   the type of the handler
+     * @return the handler
+     */
+    public <T extends ServerHandler> T getHandler(Class<T> clazz) {
+        var handler = serverHandlers.get(clazz);
+        if (handler == null) {
+            throw new IllegalArgumentException("Handler not found: " + clazz.getName());
+        }
+        return clazz.cast(handler);
     }
 }

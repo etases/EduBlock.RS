@@ -7,5 +7,28 @@ public interface ServerHandler {
     /**
      * Set up the server
      */
-    void setup();
+    default void setup() {
+        // Do nothing
+    }
+
+    /**
+     * Post set up the server
+     */
+    default void postSetup() {
+        // Do nothing
+    }
+
+    /**
+     * Stop the server
+     */
+    default void stop() {
+        // Do nothing
+    }
+
+    /**
+     * Post stop the server
+     */
+    default void postStop() {
+        // Do nothing
+    }
 }

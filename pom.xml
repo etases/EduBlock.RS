@@ -64,6 +64,16 @@
                 <version>3.3.0</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                 </configuration>
                 <executions>
                     <execution>
@@ -227,6 +237,13 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
             <version>1.9</version>
+        </dependency>
+
+        <!-- Fabric Gateway -->
+        <dependency>
+            <groupId>org.hyperledger.fabric</groupId>
+            <artifactId>fabric-gateway</artifactId>
+            <version>1.1.1</version>
         </dependency>
     </dependencies>
 </project>

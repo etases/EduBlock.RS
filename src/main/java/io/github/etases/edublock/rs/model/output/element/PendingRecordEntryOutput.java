@@ -5,6 +5,7 @@ import io.github.etases.edublock.rs.entity.Profile;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.function.LongFunction;
 
@@ -14,14 +15,14 @@ import java.util.function.LongFunction;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PendingRecordEntryOutput {
-    long subjectId;
-    SubjectOutput subject;
-    float firstHalfScore;
-    float secondHalfScore;
-    float finalScore;
-    Date requestDate;
-    AccountWithProfileOutput teacher;
-    AccountWithProfileOutput requester;
+    long subjectId = 0;
+    SubjectOutput subject = new SubjectOutput();
+    float firstHalfScore = 0;
+    float secondHalfScore = 0;
+    float finalScore = 0;
+    Date requestDate = Date.from(Instant.EPOCH);
+    AccountWithProfileOutput teacher = new AccountWithProfileOutput();
+    AccountWithProfileOutput requester = new AccountWithProfileOutput();
 
     public static PendingRecordEntryOutput fromEntity(PendingRecordEntry recordEntry, LongFunction<Profile> profileFunction) {
         return new PendingRecordEntryOutput(

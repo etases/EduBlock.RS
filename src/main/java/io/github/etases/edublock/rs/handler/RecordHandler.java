@@ -1,5 +1,6 @@
 package io.github.etases.edublock.rs.handler;
 
+import io.github.etases.edublock.rs.RequestServer;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Record;
@@ -12,6 +13,7 @@ import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
 import io.github.etases.edublock.rs.model.output.RecordResponse;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
+import io.github.etases.edublock.rs.model.output.element.RecordHistoryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -28,11 +30,13 @@ import java.util.List;
 public class RecordHandler extends SimpleServerHandler {
 
     private final SessionFactory sessionFactory;
+    private final RequestServer requestServer;
 
     @Inject
-    public RecordHandler(ServerBuilder serverBuilder, SessionFactory sessionFactory) {
+    public RecordHandler(ServerBuilder serverBuilder, SessionFactory sessionFactory, RequestServer requestServer) {
         super(serverBuilder);
         this.sessionFactory = sessionFactory;
+        this.requestServer = requestServer;
     }
 
     @Override
@@ -46,10 +50,13 @@ public class RecordHandler extends SimpleServerHandler {
     }
 
     private void get(Context ctx, boolean isOwnRecordOnly) {
-        try (var session = sessionFactory.openSession()) {
-            long studentId = isOwnRecordOnly ? JwtHandler.getUserId(ctx) : Long.parseLong(ctx.pathParam("studentId"));
+        long studentId = isOwnRecordOnly ? JwtHandler.getUserId(ctx) : Long.parseLong(ctx.pathParam("studentId"));
+        long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
+        boolean useUpdater = "true".equalsIgnoreCase(ctx.queryParam("updater"));
+        boolean filterUpdated = "true".equalsIgnoreCase(ctx.queryParam("filterUpdated"));
 
-            long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
+        RecordOutput recordOutput;
+        try (var session = sessionFactory.openSession()) {
             var query = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
                     .setParameter("studentId", studentId)
                     .setParameter("classroomId", classroomId);
@@ -59,7 +66,24 @@ public class RecordHandler extends SimpleServerHandler {
                 ctx.json(new RecordResponse(1, "Record not found", null));
                 return;
             }
-            var recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id));
+            recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated);
+        }
+
+        if (useUpdater) {
+            var studentUpdater = requestServer.getHandler(StudentUpdateHandler.class).getStudentUpdater();
+            ctx.future(() -> studentUpdater.getStudentRecordHistory(studentId).thenAccept(recordHistories -> {
+                var recordEntryOutputsFromHistory = recordHistories.parallelStream()
+                        .map(RecordHistoryOutput::fromFabricModel)
+                        .flatMap(history -> history.getRecord().parallelStream())
+                        .filter(record -> record.getClassroom().getId() == classroomId)
+                        .flatMap(record -> record.getEntries().parallelStream())
+                        .toList();
+                var joinedRecordEntryOutputs = new ArrayList<>(recordOutput.getEntries());
+                joinedRecordEntryOutputs.addAll(recordEntryOutputsFromHistory);
+                recordOutput.setEntries(joinedRecordEntryOutputs);
+                ctx.json(new RecordResponse(0, "Get personal record", recordOutput));
+            }));
+        } else {
             ctx.json(new RecordResponse(0, "Get personal record", recordOutput));
         }
     }
@@ -71,6 +95,10 @@ public class RecordHandler extends SimpleServerHandler {
             description = "Get own record. Roles: STUDENT",
             tags = "Record",
             pathParams = @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
+            queryParams = {
+                    @OpenApiParam(name = "updater", description = "Add entries from updater"),
+                    @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -98,6 +126,10 @@ public class RecordHandler extends SimpleServerHandler {
             pathParams = {
                     @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
                     @OpenApiParam(name = "studentId", description = "Student ID", required = true)
+            },
+            queryParams = {
+                    @OpenApiParam(name = "updater", description = "Add entries from updater"),
+                    @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries")
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
@@ -330,6 +362,7 @@ public class RecordHandler extends SimpleServerHandler {
                 recordEntry.setRequestDate(pendingRecordEntry.getRequestDate());
                 recordEntry.setApprovalDate(new Date());
                 recordEntry.setApprover(account);
+                recordEntry.setUpdateComplete(false);
                 session.save(recordEntry);
             }
             session.delete(pendingRecordEntry);

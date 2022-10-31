@@ -14,6 +14,7 @@ import java.util.Date;
 @AllArgsConstructor
 @Getter
 @Setter
+@NamedQuery(name = "RecordEntry.findNeedUpdate", query = "FROM RecordEntry where updateComplete = false")
 public class RecordEntry implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,6 +33,8 @@ public class RecordEntry implements Serializable {
     private Date requestDate;
     @Column(nullable = false)
     private Date approvalDate;
+    @Column(nullable = false)
+    private boolean updateComplete;
     @ManyToOne
     @JoinColumn(nullable = false)
     private Account teacher;

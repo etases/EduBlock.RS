@@ -10,10 +10,14 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SubjectOutput {
-    long id;
-    String name;
+    long id = -1;
+    String name = "";
 
     public static SubjectOutput fromEntity(Subject subject) {
         return new SubjectOutput(subject.getId(), subject.getName());
+    }
+
+    public static SubjectOutput fromFabricModel(long id, io.github.etases.edublock.rs.model.fabric.Subject subject) {
+        return new SubjectOutput(id, subject.getName());
     }
 }
