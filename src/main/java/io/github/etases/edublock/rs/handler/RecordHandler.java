@@ -52,6 +52,8 @@ public class RecordHandler extends SimpleServerHandler {
     private void get(Context ctx, boolean isOwnRecordOnly) {
         long studentId = isOwnRecordOnly ? JwtHandler.getUserId(ctx) : Long.parseLong(ctx.pathParam("studentId"));
         long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
+        boolean useUpdater = "true".equalsIgnoreCase(ctx.queryParam("updater"));
+        boolean filterUpdated = "true".equalsIgnoreCase(ctx.queryParam("filterUpdated"));
 
         RecordOutput recordOutput;
         try (var session = sessionFactory.openSession()) {
@@ -64,10 +66,9 @@ public class RecordHandler extends SimpleServerHandler {
                 ctx.json(new RecordResponse(1, "Record not found", null));
                 return;
             }
-            recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id));
+            recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated);
         }
 
-        boolean useUpdater = "true".equalsIgnoreCase(ctx.queryParam("updater"));
         if (useUpdater) {
             var studentUpdater = requestServer.getHandler(StudentUpdateHandler.class).getStudentUpdater();
             ctx.future(() -> studentUpdater.getStudentRecordHistory(studentId).thenAccept(recordHistories -> {
@@ -94,7 +95,10 @@ public class RecordHandler extends SimpleServerHandler {
             description = "Get own record. Roles: STUDENT",
             tags = "Record",
             pathParams = @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
-            queryParams = @OpenApiParam(name = "updater", description = "Add entries from updater"),
+            queryParams = {
+                    @OpenApiParam(name = "updater", description = "Add entries from updater"),
+                    @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
@@ -123,7 +127,10 @@ public class RecordHandler extends SimpleServerHandler {
                     @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
                     @OpenApiParam(name = "studentId", description = "Student ID", required = true)
             },
-            queryParams = @OpenApiParam(name = "updater", description = "Add entries from updater"),
+            queryParams = {
+                    @OpenApiParam(name = "updater", description = "Add entries from updater"),
+                    @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries")
+            },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(

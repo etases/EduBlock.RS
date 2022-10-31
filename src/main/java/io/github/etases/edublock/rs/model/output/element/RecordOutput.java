@@ -20,10 +20,12 @@ public class RecordOutput {
     ClassroomOutput classroom = new ClassroomOutput();
     List<RecordEntryOutput> entries = Collections.emptyList();
 
-    public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction) {
+    public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated) {
         return new RecordOutput(
                 ClassroomOutput.fromEntity(record.getClassroom(), profileFunction),
-                record.getRecordEntry().stream().map(entry -> RecordEntryOutput.fromEntity(entry, profileFunction)).toList()
+                record.getRecordEntry().stream()
+                        .filter(entry -> !filterUpdated || !entry.isUpdateComplete())
+                        .map(entry -> RecordEntryOutput.fromEntity(entry, profileFunction)).toList()
         );
     }
 
