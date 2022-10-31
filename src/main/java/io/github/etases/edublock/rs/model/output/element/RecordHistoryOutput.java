@@ -20,9 +20,19 @@ public class RecordHistoryOutput {
     String updatedBy = "";
 
     public static RecordHistoryOutput fromFabricModel(RecordHistory recordHistory) {
+        var recordList = RecordOutput.fromFabricModel(recordHistory.getRecord());
+        recordList.forEach(record -> {
+            var entries = record.getEntries();
+            if (entries != null) {
+                entries.forEach(entry -> {
+                    entry.setRequestDate(recordHistory.getTimestamp());
+                    entry.setApprovalDate(recordHistory.getTimestamp());
+                });
+            }
+        });
         return new RecordHistoryOutput(
                 recordHistory.getTimestamp(),
-                RecordOutput.fromFabricModel(recordHistory.getRecord()),
+                recordList,
                 recordHistory.getUpdatedBy()
         );
     }

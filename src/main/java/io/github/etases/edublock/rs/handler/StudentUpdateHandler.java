@@ -20,6 +20,7 @@ import io.github.etases.edublock.rs.model.output.element.RecordHistoryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
+import lombok.Getter;
 import org.hibernate.SessionFactory;
 import org.tinylog.Logger;
 
@@ -38,6 +39,7 @@ public class StudentUpdateHandler implements ServerHandler {
     private SessionFactory sessionFactory;
     @Inject
     private ServerBuilder serverBuilder;
+    @Getter
     private StudentUpdater studentUpdater;
     private ScheduledExecutorService executorService;
 
