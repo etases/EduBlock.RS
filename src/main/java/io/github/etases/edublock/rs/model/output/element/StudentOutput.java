@@ -11,15 +11,15 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StudentOutput {
-    long id;
-    String ethnic;
-    String fatherName;
-    String fatherJob;
-    String motherName;
-    String motherJob;
-    String guardianName;
-    String guardianJob;
-    String homeTown;
+    long id = 0;
+    String ethnic = "";
+    String fatherName = "";
+    String fatherJob = "";
+    String motherName = "";
+    String motherJob = "";
+    String guardianName = "";
+    String guardianJob = "";
+    String homeTown = "";
 
     public static StudentOutput fromEntity(Student student) {
         return new StudentOutput(

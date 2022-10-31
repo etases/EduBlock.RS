@@ -4,6 +4,7 @@ import io.github.etases.edublock.rs.entity.Account;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Getter
@@ -12,10 +13,10 @@ import java.util.Date;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AccountOutput {
-    long id;
-    String username;
-    String role;
-    Date createdAt;
+    long id = 0;
+    String username = "";
+    String role = "";
+    Date createdAt = Date.from(Instant.EPOCH);
 
     public static AccountOutput fromEntity(Account account) {
         return new AccountOutput(

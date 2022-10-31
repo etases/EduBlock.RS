@@ -14,11 +14,11 @@ import java.util.function.LongFunction;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ClassroomOutput {
-    long id;
-    String name;
-    int grade;
-    int year;
-    AccountWithProfileOutput homeroomTeacher;
+    long id = -1;
+    String name = "";
+    int grade = -1;
+    int year = -1;
+    AccountWithProfileOutput homeroomTeacher = new AccountWithProfileOutput();
 
     public static ClassroomOutput fromEntity(Classroom classroom, LongFunction<Profile> profileFunction) {
         return new ClassroomOutput(

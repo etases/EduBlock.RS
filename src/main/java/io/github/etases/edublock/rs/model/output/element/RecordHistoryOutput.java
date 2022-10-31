@@ -4,6 +4,8 @@ import io.github.etases.edublock.rs.model.fabric.RecordHistory;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Instant;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -13,9 +15,9 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RecordHistoryOutput {
-    Date timestamp;
-    List<RecordOutput> record;
-    String updatedBy;
+    Date timestamp = Date.from(Instant.EPOCH);
+    List<RecordOutput> record = Collections.emptyList();
+    String updatedBy = "";
 
     public static RecordHistoryOutput fromFabricModel(RecordHistory recordHistory) {
         return new RecordHistoryOutput(

@@ -5,6 +5,7 @@ import io.github.etases.edublock.rs.model.fabric.Personal;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Getter
@@ -13,15 +14,15 @@ import java.util.Date;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProfileOutput {
-    long id;
-    String firstName;
-    String lastName;
-    boolean male;
-    String avatar;
-    Date birthDate;
-    String address;
-    String phone;
-    String email;
+    long id = 0;
+    String firstName = "";
+    String lastName = "";
+    boolean male = true;
+    String avatar = "";
+    Date birthDate = Date.from(Instant.EPOCH);
+    String address = "";
+    String phone = "";
+    String email = "";
 
     public static ProfileOutput fromEntity(Profile profile) {
         return new ProfileOutput(

@@ -14,9 +14,9 @@ import java.util.function.LongFunction;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AccountWithStudentProfileOutput {
-    AccountOutput account;
-    StudentOutput student;
-    ProfileOutput profile;
+    AccountOutput account = new AccountOutput();
+    StudentOutput student = new StudentOutput();
+    ProfileOutput profile = new ProfileOutput();
 
     public static AccountWithStudentProfileOutput fromEntity(Student student, LongFunction<Profile> profileFunction) {
         return new AccountWithStudentProfileOutput(

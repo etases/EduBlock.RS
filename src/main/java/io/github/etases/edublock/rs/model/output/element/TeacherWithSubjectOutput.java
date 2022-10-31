@@ -13,8 +13,8 @@ import java.util.function.LongFunction;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TeacherWithSubjectOutput {
-    AccountWithProfileOutput account;
-    SubjectOutput subject;
+    AccountWithProfileOutput account = new AccountWithProfileOutput();
+    SubjectOutput subject = new SubjectOutput();
 
     public static TeacherWithSubjectOutput fromEntity(ClassTeacher classTeacher, LongFunction<Profile> profileFunction) {
         return new TeacherWithSubjectOutput(

@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.LongFunction;
 
@@ -16,8 +17,8 @@ import java.util.function.LongFunction;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RecordOutput {
-    ClassroomOutput classroom;
-    List<RecordEntryOutput> entries;
+    ClassroomOutput classroom = new ClassroomOutput();
+    List<RecordEntryOutput> entries = Collections.emptyList();
 
     public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction) {
         return new RecordOutput(
@@ -32,15 +33,7 @@ public class RecordOutput {
         List<RecordEntryOutput> recordEntryOutputs = new ArrayList<>();
         for (var subjectEntry : classRecord.getSubjects().entrySet()) {
             var subject = subjectEntry.getValue();
-            var recordEntry = new RecordEntryOutput();
-            recordEntry.setSubjectId(subjectEntry.getKey());
-            recordEntry.setSubject(new SubjectOutput(
-                    subjectEntry.getKey(),
-                    subject.getName()
-            ));
-            recordEntry.setFirstHalfScore(subject.getFirstHalfScore());
-            recordEntry.setSecondHalfScore(subject.getSecondHalfScore());
-            recordEntry.setFinalScore(subject.getFinalScore());
+            var recordEntry = RecordEntryOutput.fromFabricModel(subjectEntry.getKey(), subject);
             recordEntryOutputs.add(recordEntry);
         }
 
