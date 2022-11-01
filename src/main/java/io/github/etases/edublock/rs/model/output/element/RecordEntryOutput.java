@@ -24,7 +24,7 @@ public class RecordEntryOutput {
     Date requestDate = Date.from(Instant.EPOCH);
     Date approvalDate = Date.from(Instant.EPOCH);
     boolean updateComplete = false;
-    boolean fabric = false;
+    boolean fromFabric = false;
     AccountWithProfileOutput teacher = new AccountWithProfileOutput();
     AccountWithProfileOutput requester = new AccountWithProfileOutput();
     AccountWithProfileOutput approver = new AccountWithProfileOutput();
@@ -53,7 +53,7 @@ public class RecordEntryOutput {
         recordEntry.setFirstHalfScore(subject.getFirstHalfScore());
         recordEntry.setSecondHalfScore(subject.getSecondHalfScore());
         recordEntry.setFinalScore(subject.getFinalScore());
-        recordEntry.setFabric(true);
+        recordEntry.setFromFabric(true);
         return recordEntry;
     }
 }
