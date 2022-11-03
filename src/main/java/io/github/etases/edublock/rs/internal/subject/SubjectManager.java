@@ -4,10 +4,7 @@ import lombok.experimental.UtilityClass;
 import org.tinylog.Logger;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,30 +18,17 @@ public class SubjectManager {
     static {
         synchronized (lock) {
             subjects = new HashMap<>();
-            var subjectFile = new File("subjects.csv");
-
-            boolean canLoad = true;
-            if (!subjectFile.exists()) {
-                try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects.csv")) {
-                    if (subjectFile.createNewFile()) {
-                        Files.copy(Objects.requireNonNull(stream), subjectFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    }
-                } catch (Exception e) {
-                    Logger.error(e, "Error while creating subjects.csv");
-                    canLoad = false;
+            try (
+                    var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects.csv");
+                    var reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(stream)))
+            ) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    var subject = parseSubject(line);
+                    subjects.put(subject.getId(), subject);
                 }
-            }
-
-            if (canLoad) {
-                try (var reader = new BufferedReader(new FileReader(subjectFile))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        var subject = parseSubject(line);
-                        subjects.put(subject.getId(), subject);
-                    }
-                } catch (Exception e) {
-                    Logger.error(e, "Error while loading subjects.csv");
-                }
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
             }
         }
     }

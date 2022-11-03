@@ -21,35 +21,31 @@ public class ClassificationManager {
     static {
         File classificationFile = new File("classifications.yml");
 
-        boolean canLoad = true;
         if (!classificationFile.exists()) {
             try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("classifications.yml")) {
                 if (classificationFile.createNewFile()) {
                     Files.copy(Objects.requireNonNull(stream), classificationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             } catch (Exception e) {
-                Logger.error(e, "Error while creating classifications.yml");
-                canLoad = false;
+                throw new IllegalStateException(e);
             }
         }
 
-        if (canLoad) {
-            Config config = new SimpleConfig<>(classificationFile, new YamlFile(), (file, yamlFile) -> {
-                yamlFile.setConfigurationFile(file);
-                try {
-                    yamlFile.loadWithComments();
-                } catch (IOException e) {
-                    Logger.warn(e);
-                }
-            });
-
-            if (config.contains("classifications")) {
-                config.getKeys("classifications", false).forEach(key -> {
-                    var values = config.getNormalizedValues("classifications." + key, false);
-                    var classification = Classification.fromMap(key, values);
-                    classifications.add(classification);
-                });
+        Config config = new SimpleConfig<>(classificationFile, new YamlFile(), (file, yamlFile) -> {
+            yamlFile.setConfigurationFile(file);
+            try {
+                yamlFile.loadWithComments();
+            } catch (IOException e) {
+                Logger.warn(e);
             }
+        });
+
+        if (config.contains("classifications")) {
+            config.getKeys("classifications", false).forEach(key -> {
+                var values = config.getNormalizedValues("classifications." + key, false);
+                var classification = Classification.fromMap(key, values);
+                classifications.add(classification);
+            });
         }
     }
 
