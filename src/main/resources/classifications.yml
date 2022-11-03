@@ -42,4 +42,4 @@ classification:
     otherNames:
       - "Fail"
     level: 5
-    rules: []
+    rules: [ ]
