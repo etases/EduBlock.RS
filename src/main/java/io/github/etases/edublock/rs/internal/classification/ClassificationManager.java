@@ -41,10 +41,13 @@ public class ClassificationManager {
         });
 
         if (config.contains("classification")) {
-            config.getKeys("classification", false).forEach(key -> {
-                var values = config.getNormalizedValues("classifications." + key, false);
-                var classification = Classification.fromMap(key, values);
-                classifications.add(classification);
+            config.getValues("classification", false).forEach((key, value) -> {
+                if (value instanceof Map<?, ?> rawMap) {
+                    Map<String, Object> map = new HashMap<>();
+                    rawMap.forEach((k, v) -> map.put(Objects.toString(k), v));
+                    var classification = Classification.fromMap(key, map);
+                    classifications.add(classification);
+                }
             });
         }
     }
@@ -58,6 +61,6 @@ public class ClassificationManager {
     }
 
     public Classification classify(Map<Subject, Float> subjectScoreMap) {
-        return classifications.stream().filter(classification -> classification.isApplicable(subjectScoreMap)).findFirst().orElse(null);
+        return classifications.stream().filter(classification -> classification.isApplicable(subjectScoreMap)).min(Comparator.comparingInt(Classification::getLevel)).orElse(null);
     }
 }

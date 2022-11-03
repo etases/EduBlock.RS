@@ -26,6 +26,16 @@ public class Classification {
     int level = Integer.MAX_VALUE;
     List<String> rules = Collections.emptyList();
 
+    public static Classification fromMap(String identifier, Map<String, Object> map) {
+        var classification = new Classification();
+        classification.setIdentifier(identifier);
+        Optional.ofNullable(map.get("name")).map(Objects::toString).ifPresent(classification::setName);
+        Optional.ofNullable(map.get("otherNames")).map(CollectionUtils::createStringListFromObject).ifPresent(classification::setOtherNames);
+        Optional.ofNullable(map.get("level")).map(Objects::toString).flatMap(Validate::getNumber).map(BigDecimal::intValueExact).ifPresent(classification::setLevel);
+        Optional.ofNullable(map.get("rules")).map(CollectionUtils::createStringListFromObject).ifPresent(classification::setRules);
+        return classification;
+    }
+
     public boolean isApplicable(Map<Subject, Float> subjectScoreMap) {
         var subjects = SubjectManager.getSubjects();
         Map<String, Object> variableMap = new HashMap<>();
@@ -50,15 +60,5 @@ public class Classification {
             }
         }
         return true;
-    }
-
-    public static Classification fromMap(String identifier, Map<String, Object> map) {
-        var classification = new Classification();
-        classification.setIdentifier(identifier);
-        Optional.ofNullable(map.get("name")).map(Objects::toString).ifPresent(classification::setName);
-        Optional.ofNullable(map.get("otherNames")).map(CollectionUtils::createStringListFromObject).ifPresent(classification::setOtherNames);
-        Optional.ofNullable(map.get("level")).map(Objects::toString).flatMap(Validate::getNumber).map(BigDecimal::intValueExact).ifPresent(classification::setLevel);
-        Optional.ofNullable(map.get("rules")).map(CollectionUtils::createStringListFromObject).ifPresent(classification::setRules);
-        return classification;
     }
 }
