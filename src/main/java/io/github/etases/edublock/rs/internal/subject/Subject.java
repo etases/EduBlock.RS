@@ -1,9 +1,7 @@
 package io.github.etases.edublock.rs.internal.subject;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.io.Serializable;
 import java.util.List;
@@ -12,9 +10,10 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Subject implements Serializable {
-    private long id;
-    private String identifier;
-    private String name;
-    private List<String> otherNames;
+    long id;
+    String identifier;
+    String name;
+    List<String> otherNames;
 }

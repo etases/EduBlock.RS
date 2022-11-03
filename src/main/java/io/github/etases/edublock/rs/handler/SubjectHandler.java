@@ -31,7 +31,7 @@ public class SubjectHandler extends SimpleServerHandler {
             tags = "Subject",
             responses = @OpenApiResponse(
                     status = "200",
-                    description = "The list of subjects",
+                    description = "The list of subjects.csv",
                     content = @OpenApiContent(from = SubjectListResponse.class)
             )
     )
