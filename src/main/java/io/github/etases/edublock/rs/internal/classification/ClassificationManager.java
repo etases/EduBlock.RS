@@ -60,11 +60,17 @@ public class ClassificationManager {
     }
 
     public Classification getClassification(String identifier) {
-        return classifications.stream().filter(classification -> classification.getIdentifier().equalsIgnoreCase(identifier)).findFirst().orElse(null);
+        return classifications.stream()
+                .filter(classification -> classification.getIdentifier().equalsIgnoreCase(identifier))
+                .findFirst()
+                .orElse(new Classification(identifier, identifier, Collections.emptyList(), -1, Collections.emptyList()));
     }
 
     public Classification classify(Map<Subject, Float> subjectScoreMap) {
-        return classifications.stream().filter(classification -> classification.isApplicable(subjectScoreMap)).min(Comparator.comparingInt(Classification::getLevel)).orElse(null);
+        return classifications.stream()
+                .filter(classification -> classification.isApplicable(subjectScoreMap))
+                .min(Comparator.comparingInt(Classification::getLevel))
+                .orElse(null);
     }
 
     public Classification classifyRawSubjectMap(Map<Long, Float> subjectScoreMap) {
