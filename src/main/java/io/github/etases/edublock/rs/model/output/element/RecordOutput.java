@@ -22,14 +22,18 @@ public class RecordOutput {
     List<RecordEntryOutput> entries = Collections.emptyList();
     ClassificationReportOutput classification = new ClassificationReportOutput();
 
-    public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated, boolean generateClassification) {
+    public void updateClassification() {
+        classification = ClassificationManager.createReport(entries);
+    }
+
+    public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated) {
         var recordEntryOutputs = record.getRecordEntry().stream()
                 .filter(entry -> !filterUpdated || !entry.isUpdateComplete())
                 .map(entry -> RecordEntryOutput.fromEntity(entry, profileFunction)).toList();
         return new RecordOutput(
                 ClassroomOutput.fromEntity(record.getClassroom(), profileFunction),
                 recordEntryOutputs,
-                generateClassification ? ClassificationManager.createReport(recordEntryOutputs) : new ClassificationReportOutput()
+                new ClassificationReportOutput()
         );
     }
 

@@ -69,7 +69,7 @@ public class RecordHandler extends SimpleServerHandler {
                 ctx.json(new RecordResponse(1, "Record not found", null));
                 return;
             }
-            recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated, generateClassification);
+            recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated);
         }
 
         if (useUpdater) {
@@ -84,9 +84,15 @@ public class RecordHandler extends SimpleServerHandler {
                 var joinedRecordEntryOutputs = new ArrayList<>(recordOutput.getEntries());
                 joinedRecordEntryOutputs.addAll(recordEntryOutputsFromHistory);
                 recordOutput.setEntries(joinedRecordEntryOutputs);
+                if (generateClassification) {
+                    recordOutput.updateClassification();
+                }
                 ctx.json(new RecordResponse(0, "Get personal record", recordOutput));
             }));
         } else {
+            if (generateClassification) {
+                recordOutput.updateClassification();
+            }
             ctx.json(new RecordResponse(0, "Get personal record", recordOutput));
         }
     }

@@ -15,6 +15,7 @@ import java.util.List;
 @Getter
 @Setter
 @NamedQuery(name = "Record.findByStudentAndClassroom", query = "FROM Record WHERE student.id = :studentId and classroom.id = :classroomId")
+@NamedQuery(name = "Record.findByGrade", query = "FROM Record WHERE classroom.grade = :grade")
 public class Record implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
