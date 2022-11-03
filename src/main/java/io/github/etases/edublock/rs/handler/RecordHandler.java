@@ -6,12 +6,13 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Record;
 import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
-import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.internal.subject.Subject;
+import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.model.input.PaginationParameter;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
+import io.github.etases.edublock.rs.model.output.RecordListResponse;
 import io.github.etases.edublock.rs.model.output.RecordResponse;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
@@ -20,6 +21,7 @@ import io.github.etases.edublock.rs.model.output.element.RecordOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
+import me.hsgamer.hscore.common.Pair;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
@@ -28,6 +30,9 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class RecordHandler extends SimpleServerHandler {
 
@@ -49,6 +54,24 @@ public class RecordHandler extends SimpleServerHandler {
         server.post("/record/pending/verify", this::verify, JwtHandler.Role.TEACHER);
         server.get("/record/{classroomId}", this::getOwn, JwtHandler.Role.STUDENT);
         server.get("/record/{classroomId}/{studentId}", this::get, JwtHandler.Role.TEACHER);
+        server.get("/record/list/classroom/{classroomId}", this::listByClassroom, JwtHandler.Role.STAFF);
+        server.get("/record/list/grade/{grade}/{year}", this::listByGradeAndYear, JwtHandler.Role.STAFF);
+    }
+
+    private CompletableFuture<RecordOutput> insertRecordFromUpdater(long studentId, RecordOutput recordOutput) {
+        var studentUpdater = requestServer.getHandler(StudentUpdateHandler.class).getStudentUpdater();
+        return studentUpdater.getStudentRecordHistory(studentId).thenApply(recordHistories -> {
+            var recordEntryOutputsFromHistory = recordHistories.parallelStream()
+                    .map(RecordHistoryOutput::fromFabricModel)
+                    .flatMap(history -> history.getRecord().parallelStream())
+                    .filter(record -> record.getClassroom().getId() == recordOutput.getClassroom().getId())
+                    .flatMap(record -> record.getEntries().parallelStream())
+                    .toList();
+            var joinedRecordEntryOutputs = new ArrayList<>(recordOutput.getEntries());
+            joinedRecordEntryOutputs.addAll(recordEntryOutputsFromHistory);
+            recordOutput.setEntries(joinedRecordEntryOutputs);
+            return recordOutput;
+        });
     }
 
     private void get(Context ctx, boolean isOwnRecordOnly) {
@@ -73,21 +96,11 @@ public class RecordHandler extends SimpleServerHandler {
         }
 
         if (useUpdater) {
-            var studentUpdater = requestServer.getHandler(StudentUpdateHandler.class).getStudentUpdater();
-            ctx.future(() -> studentUpdater.getStudentRecordHistory(studentId).thenAccept(recordHistories -> {
-                var recordEntryOutputsFromHistory = recordHistories.parallelStream()
-                        .map(RecordHistoryOutput::fromFabricModel)
-                        .flatMap(history -> history.getRecord().parallelStream())
-                        .filter(record -> record.getClassroom().getId() == classroomId)
-                        .flatMap(record -> record.getEntries().parallelStream())
-                        .toList();
-                var joinedRecordEntryOutputs = new ArrayList<>(recordOutput.getEntries());
-                joinedRecordEntryOutputs.addAll(recordEntryOutputsFromHistory);
-                recordOutput.setEntries(joinedRecordEntryOutputs);
+            ctx.future(() -> insertRecordFromUpdater(studentId, recordOutput).thenAccept(newRecordOutput -> {
                 if (generateClassification) {
-                    recordOutput.updateClassification();
+                    newRecordOutput.updateClassification();
                 }
-                ctx.json(new RecordResponse(0, "Get personal record", recordOutput));
+                ctx.json(new RecordResponse(0, "Get personal record", newRecordOutput));
             }));
         } else {
             if (generateClassification) {
@@ -245,6 +258,101 @@ public class RecordHandler extends SimpleServerHandler {
         }
     }
 
+    private void list(Context ctx, boolean filterByClassroom) {
+        boolean useUpdater = "true".equalsIgnoreCase(ctx.queryParam("updater"));
+        boolean filterUpdated = "true".equalsIgnoreCase(ctx.queryParam("filterUpdated"));
+        boolean generateClassification = "true".equalsIgnoreCase(ctx.queryParam("generateClassification"));
+
+        Map<Long, RecordOutput> recordOutputs;
+        try (var session = sessionFactory.openSession()) {
+            Query<Record> query;
+            if (filterByClassroom) {
+                long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
+                query = session.createNamedQuery("Record.findByClassroom", Record.class)
+                        .setParameter("classroomId", classroomId);
+            } else {
+                int grade = Integer.parseInt(ctx.pathParam("grade"));
+                int year = Integer.parseInt(ctx.pathParam("year"));
+                query = session.createNamedQuery("Record.findByGradeAndYear", Record.class)
+                        .setParameter("grade", grade)
+                        .setParameter("year", year);
+            }
+            recordOutputs = query.stream()
+                    .map(record -> Pair.of(record.getStudent().getId(), RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated)))
+                    .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        }
+
+        if (useUpdater) {
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+            recordOutputs.forEach((studentId, recordOutput) -> futures.add(insertRecordFromUpdater(studentId, recordOutput).thenAccept(newRecordOutput -> {
+                if (generateClassification) {
+                    newRecordOutput.updateClassification();
+                }
+            })));
+            ctx.future(() -> CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                    .thenApply(v -> new ArrayList<>(recordOutputs.values()))
+                    .thenAccept(newRecordOutputs -> ctx.json(new RecordListResponse(0, "OK", newRecordOutputs)))
+            );
+        } else {
+            if (generateClassification) {
+                recordOutputs.values().forEach(RecordOutput::updateClassification);
+            }
+            ctx.json(new RecordListResponse(0, "OK", new ArrayList<>(recordOutputs.values())));
+        }
+    }
+
+
+    @OpenApi(
+            path = "/record/list/classroom/{classroomId}",
+            methods = HttpMethod.GET,
+            summary = "Get list of records by classroom. Roles: STAFF",
+            description = "Get list of records by classroom. Roles: STAFF",
+            tags = "Record",
+            pathParams = {
+                    @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true)
+            },
+            queryParams = {
+                    @OpenApiParam(name = "updater", description = "Add entries from updater"),
+                    @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries"),
+                    @OpenApiParam(name = "generateClassification", description = "Generate classification")
+            },
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            responses = @OpenApiResponse(
+                    status = "200",
+                    content = @OpenApiContent(from = RecordListResponse.class),
+                    description = "The list of records"
+            )
+    )
+    private void listByClassroom(Context ctx) {
+        list(ctx, true);
+    }
+
+    @OpenApi(
+            path = "/record/list/grade/{grade}/{year}",
+            methods = HttpMethod.GET,
+            summary = "Get list of records by grade and year. Roles: STAFF",
+            description = "Get list of records by grade and year. Roles: STAFF",
+            tags = "Record",
+            pathParams = {
+                    @OpenApiParam(name = "grade", description = "Grade", required = true),
+                    @OpenApiParam(name = "year", description = "Year", required = true)
+            },
+            queryParams = {
+                    @OpenApiParam(name = "updater", description = "Add entries from updater"),
+                    @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries"),
+                    @OpenApiParam(name = "generateClassification", description = "Generate classification")
+            },
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            responses = @OpenApiResponse(
+                    status = "200",
+                    content = @OpenApiContent(from = RecordListResponse.class),
+                    description = "The list of records"
+            )
+    )
+    private void listByGradeAndYear(Context ctx) {
+        list(ctx, false);
+    }
+
     private void listPending(Context ctx, boolean filterByStudent) {
         long userId = JwtHandler.getUserId(ctx);
         var paginationParameter = PaginationParameter.fromQuery(ctx);
@@ -306,7 +414,7 @@ public class RecordHandler extends SimpleServerHandler {
             responses = @OpenApiResponse(
                     status = "200",
                     content = @OpenApiContent(from = PendingRecordEntryListResponse.class),
-                    description = "The list of records"
+                    description = "The list of pending record entries"
             )
     )
     private void listPendingByStudent(Context ctx) {
