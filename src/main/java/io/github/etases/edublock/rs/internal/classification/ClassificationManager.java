@@ -39,6 +39,7 @@ public class ClassificationManager {
                 Logger.warn(e);
             }
         });
+        config.setup();
 
         if (config.contains("classification")) {
             config.getValues("classification", false).forEach((key, value) -> {
