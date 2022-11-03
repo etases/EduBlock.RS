@@ -31,8 +31,8 @@ public class RecordEntryOutput {
 
     public static RecordEntryOutput fromEntity(RecordEntry recordEntry, LongFunction<Profile> profileFunction) {
         return new RecordEntryOutput(
-                recordEntry.getSubject().getId(),
-                SubjectOutput.fromEntity(recordEntry.getSubject()),
+                recordEntry.getSubjectId(),
+                SubjectOutput.fromInternal(recordEntry.getSubjectId()),
                 recordEntry.getFirstHalfScore(),
                 recordEntry.getSecondHalfScore(),
                 recordEntry.getFinalScore(),

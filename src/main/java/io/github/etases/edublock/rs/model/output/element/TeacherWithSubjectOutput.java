@@ -19,7 +19,7 @@ public class TeacherWithSubjectOutput {
     public static TeacherWithSubjectOutput fromEntity(ClassTeacher classTeacher, LongFunction<Profile> profileFunction) {
         return new TeacherWithSubjectOutput(
                 AccountWithProfileOutput.fromEntity(classTeacher.getTeacher(), profileFunction),
-                SubjectOutput.fromEntity(classTeacher.getSubject())
+                SubjectOutput.fromInternal(classTeacher.getSubjectId())
         );
     }
 }

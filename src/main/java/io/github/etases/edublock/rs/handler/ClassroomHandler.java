@@ -6,6 +6,7 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.filter.ListSessionInputFilter;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
+import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.model.input.*;
 import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
@@ -494,7 +495,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                     errors.add(new TeacherWithSubjectErrorListResponse.ErrorData(2, "Teacher is not a teacher", teacherWithSubject));
                     continue;
                 }
-                var subject = session.get(Subject.class, teacherWithSubject.getSubjectId());
+                var subject = SubjectManager.getSubject(teacherWithSubject.getSubjectId());
                 if (subject == null) {
                     errors.add(new TeacherWithSubjectErrorListResponse.ErrorData(3, "Subject not found", teacherWithSubject));
                     continue;
@@ -502,7 +503,7 @@ public class ClassroomHandler extends SimpleServerHandler {
                 var classTeacher = new ClassTeacher();
                 classTeacher.setClassroom(classroom);
                 classTeacher.setTeacher(teacher);
-                classTeacher.setSubject(subject);
+                classTeacher.setSubjectId(subject.getId());
                 session.save(classTeacher);
             }
             if (errors.isEmpty()) {

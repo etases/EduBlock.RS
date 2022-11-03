@@ -59,8 +59,7 @@ public class DatabaseManager {
                 Profile.class,
                 Record.class,
                 RecordEntry.class,
-                Student.class,
-                Subject.class
+                Student.class
         );
     }
 }

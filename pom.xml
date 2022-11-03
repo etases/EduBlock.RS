@@ -11,8 +11,8 @@
     <properties>
         <java.version>17</java.version>
         <core.version>4.1.26</core.version>
-        <javalin.version>5.0.1</javalin.version>
-        <javalin.openapi.version>5.0.0-SNAPSHOT</javalin.openapi.version>
+        <javalin.version>5.1.3</javalin.version>
+        <javalin.openapi.version>5.1.3</javalin.openapi.version>
         <tinylog.version>2.5.0</tinylog.version>
         <jline.version>3.21.0</jline.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -35,7 +35,7 @@
                             <version>1.18.24</version>
                         </path>
                         <path>
-                            <groupId>io.javalin</groupId>
+                            <groupId>io.javalin.community.openapi</groupId>
                             <artifactId>openapi-annotation-processor</artifactId>
                             <version>${javalin.openapi.version}</version>
                         </path>
@@ -186,12 +186,12 @@
             <version>${javalin.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.javalin</groupId>
+            <groupId>io.javalin.community.openapi</groupId>
             <artifactId>javalin-openapi-plugin</artifactId>
             <version>${javalin.openapi.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.javalin</groupId>
+            <groupId>io.javalin.community.openapi</groupId>
             <artifactId>javalin-swagger-plugin</artifactId>
             <version>${javalin.openapi.version}</version>
         </dependency>
