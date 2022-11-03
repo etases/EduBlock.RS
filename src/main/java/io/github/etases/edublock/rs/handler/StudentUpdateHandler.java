@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.api.StudentUpdater;
+import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.entity.Student;
@@ -41,6 +42,8 @@ public class StudentUpdateHandler implements ServerHandler {
     private SessionFactory sessionFactory;
     @Inject
     private ServerBuilder serverBuilder;
+    @Inject
+    private MainConfig mainConfig;
     @Getter
     private StudentUpdater studentUpdater;
     private ScheduledExecutorService executorService;
@@ -192,6 +195,9 @@ public class StudentUpdateHandler implements ServerHandler {
             transaction.commit();
         }
         personalMap.forEach((id, personal) -> futures.add(studentUpdater.updateStudentPersonal(id, personal).thenAccept(success -> {
+            if (mainConfig.getServerProperties().devMode()) {
+                Logger.info("Updated personal: " + id + " " + success);
+            }
         })));
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
     }
@@ -253,6 +259,9 @@ public class StudentUpdateHandler implements ServerHandler {
                     return studentUpdater.updateStudentRecord(studentId, record);
                 })
                 .thenAccept(success -> {
+                    if (mainConfig.getServerProperties().devMode()) {
+                        Logger.info("Updated record: " + studentId + " " + success);
+                    }
                 });
     }
 
