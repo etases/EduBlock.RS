@@ -8,6 +8,7 @@ import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.entity.Student;
 import io.github.etases.edublock.rs.internal.student.TemporaryStudentUpdater;
+import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.model.fabric.ClassRecord;
 import io.github.etases.edublock.rs.model.fabric.Personal;
 import io.github.etases.edublock.rs.model.fabric.Record;
@@ -211,9 +212,9 @@ public class StudentUpdateHandler implements ServerHandler {
                         boolean updateClass = true;
                         for (var recordEntry : recordEntries) {
                             // Update Subject
-                            var subjectId = recordEntry.getSubject().getId();
+                            var subjectId = recordEntry.getId();
                             var outSubject = subjects.getOrDefault(subjectId, Subject.clone(null));
-                            outSubject.setName(recordEntry.getSubject().getName());
+                            outSubject.setName(SubjectManager.getSubject(studentId).getIdentifier());
                             outSubject.setFirstHalfScore(recordEntry.getFirstHalfScore());
                             outSubject.setSecondHalfScore(recordEntry.getSecondHalfScore());
                             outSubject.setFinalScore(recordEntry.getFinalScore());

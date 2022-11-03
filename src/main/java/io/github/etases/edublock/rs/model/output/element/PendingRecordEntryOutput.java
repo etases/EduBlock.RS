@@ -26,8 +26,8 @@ public class PendingRecordEntryOutput {
 
     public static PendingRecordEntryOutput fromEntity(PendingRecordEntry recordEntry, LongFunction<Profile> profileFunction) {
         return new PendingRecordEntryOutput(
-                recordEntry.getSubject().getId(),
-                SubjectOutput.fromEntity(recordEntry.getSubject()),
+                recordEntry.getSubjectId(),
+                SubjectOutput.fromInternal(recordEntry.getSubjectId()),
                 recordEntry.getFirstHalfScore(),
                 recordEntry.getSecondHalfScore(),
                 recordEntry.getFinalScore(),

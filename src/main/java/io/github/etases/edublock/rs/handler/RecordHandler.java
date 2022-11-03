@@ -6,6 +6,8 @@ import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.entity.Record;
 import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
+import io.github.etases.edublock.rs.internal.subject.SubjectManager;
+import io.github.etases.edublock.rs.internal.subject.Subject;
 import io.github.etases.edublock.rs.model.input.PaginationParameter;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
@@ -172,7 +174,7 @@ public class RecordHandler extends SimpleServerHandler {
         try (var session = sessionFactory.openSession()) {
             var requester = session.get(Account.class, userId);
 
-            Subject subject = session.get(Subject.class, input.getSubjectId());
+            Subject subject = SubjectManager.getSubject(input.getSubjectId());
             if (subject == null) {
                 ctx.status(404);
                 ctx.json(new Response(1, "Subject not found"));
@@ -218,7 +220,7 @@ public class RecordHandler extends SimpleServerHandler {
             Transaction transaction = session.beginTransaction();
             var pending = new PendingRecordEntry();
 
-            pending.setSubject(subject);
+            pending.setSubjectId(subject.getId());
             pending.setFirstHalfScore(input.getFirstHalfScore());
             pending.setSecondHalfScore(input.getSecondHalfScore());
             pending.setFinalScore(input.getFinalScore());
@@ -352,7 +354,7 @@ public class RecordHandler extends SimpleServerHandler {
 
             if (input.isAccepted()) {
                 var recordEntry = new RecordEntry();
-                recordEntry.setSubject(pendingRecordEntry.getSubject());
+                recordEntry.setSubjectId(pendingRecordEntry.getSubjectId());
                 recordEntry.setFirstHalfScore(pendingRecordEntry.getFirstHalfScore());
                 recordEntry.setSecondHalfScore(pendingRecordEntry.getSecondHalfScore());
                 recordEntry.setFinalScore(pendingRecordEntry.getFinalScore());

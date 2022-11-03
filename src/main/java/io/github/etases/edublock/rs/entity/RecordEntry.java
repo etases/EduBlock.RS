@@ -20,9 +20,8 @@ public class RecordEntry implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false)
     private long id;
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    private Subject subject;
+    @Column(nullable = false)
+    private long subjectId;
     @Column(nullable = false)
     private float firstHalfScore;
     @Column(nullable = false)
