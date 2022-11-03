@@ -7,6 +7,7 @@ import io.github.etases.edublock.rs.api.StudentUpdater;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.entity.Student;
+import io.github.etases.edublock.rs.internal.classification.ClassificationManager;
 import io.github.etases.edublock.rs.internal.student.TemporaryStudentUpdater;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.model.fabric.ClassRecord;
@@ -209,6 +210,7 @@ public class StudentUpdateHandler implements ServerHandler {
                         var classRecord = classRecords.getOrDefault(classId, ClassRecord.clone(null));
                         var subjects = classRecord.getSubjects();
 
+                        // Update class record
                         boolean updateClass = true;
                         for (var recordEntry : recordEntries) {
                             // Update Subject
@@ -229,6 +231,20 @@ public class StudentUpdateHandler implements ServerHandler {
                                 updateClass = false;
                             }
                         }
+
+                        // Update classification
+                        var classification = classRecord.getClassification();
+                        Map<Long, Float> subjectFirstHalfScores = new HashMap<>();
+                        Map<Long, Float> subjectSecondHalfScores = new HashMap<>();
+                        Map<Long, Float> subjectFinalScores = new HashMap<>();
+                        subjects.forEach((subjectId, subject) -> {
+                            subjectFirstHalfScores.put(subjectId, subject.getFirstHalfScore());
+                            subjectSecondHalfScores.put(subjectId, subject.getSecondHalfScore());
+                            subjectFinalScores.put(subjectId, subject.getFinalScore());
+                        });
+                        classification.setFirstHalfClassify(ClassificationManager.classifyRawSubjectMap(subjectFirstHalfScores).getIdentifier());
+                        classification.setSecondHalfClassify(ClassificationManager.classifyRawSubjectMap(subjectSecondHalfScores).getIdentifier());
+                        classification.setFinalClassify(ClassificationManager.classifyRawSubjectMap(subjectFinalScores).getIdentifier());
 
                         classRecords.put(classId, classRecord);
                     }

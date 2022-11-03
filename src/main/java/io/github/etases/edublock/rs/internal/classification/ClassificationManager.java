@@ -1,5 +1,7 @@
 package io.github.etases.edublock.rs.internal.classification;
 
+import io.github.etases.edublock.rs.entity.Record;
+import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.internal.subject.Subject;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import lombok.experimental.UtilityClass;
@@ -63,5 +65,55 @@ public class ClassificationManager {
 
     public Classification classify(Map<Subject, Float> subjectScoreMap) {
         return classifications.stream().filter(classification -> classification.isApplicable(subjectScoreMap)).min(Comparator.comparingInt(Classification::getLevel)).orElse(null);
+    }
+
+    public Classification classifyRawSubjectMap(Map<Long, Float> subjectScoreMap) {
+        Map<Subject, Float> subjectFloatMap = new HashMap<>();
+        subjectScoreMap.forEach((id, score) -> {
+            Subject subject = SubjectManager.getSubject(id);
+            if (subject != null) {
+                subjectFloatMap.put(subject, score);
+            }
+        });
+        return classify(subjectFloatMap);
+    }
+
+    public ClassificationReport createReport(Record record) {
+        Map<Long, RecordEntry> rawSubjectEntryMap = new HashMap<>();
+        record.getRecordEntry().forEach(recordEntry -> {
+            var subjectId = recordEntry.getSubjectId();
+            rawSubjectEntryMap.merge(subjectId, recordEntry, (oldEntry, newEntry) -> {
+                if (oldEntry.getApprovalDate() == null) {
+                    return newEntry;
+                } else if (newEntry.getApprovalDate() == null) {
+                    return oldEntry;
+                } else {
+                    return oldEntry.getApprovalDate().compareTo(newEntry.getApprovalDate()) > 0 ? oldEntry : newEntry;
+                }
+            });
+        });
+
+        Map<Subject, RecordEntry> subjectEntryMap = new HashMap<>();
+        rawSubjectEntryMap.forEach((subjectId, recordEntry) -> {
+            var subject = SubjectManager.getSubject(subjectId);
+            if (subject != null) {
+                subjectEntryMap.put(subject, recordEntry);
+            }
+        });
+
+        Map<Subject, Float> subjectFirstHalfScoreMap = new HashMap<>();
+        Map<Subject, Float> subjectSecondHalfScoreMap = new HashMap<>();
+        Map<Subject, Float> subjectFinalScoreMap = new HashMap<>();
+        subjectEntryMap.forEach((subject, recordEntry) -> {
+            subjectFirstHalfScoreMap.put(subject, recordEntry.getFirstHalfScore());
+            subjectSecondHalfScoreMap.put(subject, recordEntry.getSecondHalfScore());
+            subjectFinalScoreMap.put(subject, recordEntry.getFinalScore());
+        });
+
+        Classification firstHalfClassify = classify(subjectFirstHalfScoreMap);
+        Classification secondHalfClassify = classify(subjectSecondHalfScoreMap);
+        Classification finalClassify = classify(subjectFinalScoreMap);
+
+        return new ClassificationReport(firstHalfClassify, secondHalfClassify, finalClassify);
     }
 }
