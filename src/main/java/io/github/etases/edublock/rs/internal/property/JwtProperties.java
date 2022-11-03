@@ -8,10 +8,10 @@ import java.util.Objects;
 public record JwtProperties(String secret, String issuer, String audience, String subject) {
     public static JwtProperties fromMap(Map<?, ?> map) {
         return new JwtProperties(
-                Objects.toString(map.get("secret"), ""),
-                Objects.toString(map.get("issuer"), ""),
-                Objects.toString(map.get("audience"), ""),
-                Objects.toString(map.get("subject"), "")
+                Objects.toString(map.get("secret"), "thisisasecret"),
+                Objects.toString(map.get("issuer"), "edublock.issuer"),
+                Objects.toString(map.get("audience"), "edublock.client"),
+                Objects.toString(map.get("subject"), "edublock")
         );
     }
 
