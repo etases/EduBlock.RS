@@ -11,6 +11,7 @@ import org.tinylog.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @UtilityClass
@@ -24,7 +25,7 @@ public class ClassificationManager {
         if (!classificationFile.exists()) {
             try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("classifications.yml")) {
                 if (classificationFile.createNewFile()) {
-                    Files.copy(Objects.requireNonNull(stream), classificationFile.toPath());
+                    Files.copy(Objects.requireNonNull(stream), classificationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             } catch (Exception e) {
                 Logger.error(e, "Error while creating classifications.yml");

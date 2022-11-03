@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class SubjectManager {
             if (!subjectFile.exists()) {
                 try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects.csv")) {
                     if (subjectFile.createNewFile()) {
-                        Files.copy(Objects.requireNonNull(stream), subjectFile.toPath());
+                        Files.copy(Objects.requireNonNull(stream), subjectFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     }
                 } catch (Exception e) {
                     Logger.error(e, "Error while creating subjects.csv");
