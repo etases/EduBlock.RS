@@ -203,6 +203,13 @@ public class StudentUpdateHandler implements ServerHandler {
     }
 
     private CompletableFuture<Void> updateRecord(long studentId, Map<Long, List<RecordEntry>> recordsPerClassMap) {
+        if (recordsPerClassMap.isEmpty()) {
+            return CompletableFuture.runAsync(() -> {
+                if (mainConfig.getServerProperties().devMode()) {
+                    Logger.info("Updated record: " + studentId + " " + true);
+                }
+            });
+        }
         return studentUpdater.getStudentRecord(studentId)
                 .thenApply(Record::clone)
                 .thenCompose(record -> {
