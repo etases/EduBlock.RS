@@ -4,6 +4,8 @@ import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.config.SystemMainConfig;
 import io.github.etases.edublock.rs.handler.*;
+import io.github.etases.edublock.rs.internal.classification.ClassificationManager;
+import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.internal.terminal.ServerTerminal;
 import io.javalin.Javalin;
 import lombok.Getter;
@@ -48,6 +50,10 @@ public class RequestServer {
         databaseManager = new DatabaseManager(this);
         dependencyManager = new DependencyManager(this);
         terminal = dependencyManager.getInjector().getInstance(ServerTerminal.class);
+
+        // Load hard-coded managers
+        SubjectManager.getSubjects();
+        ClassificationManager.getClassifications();
     }
 
     public static void main(String[] args) {

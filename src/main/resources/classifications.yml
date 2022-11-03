@@ -1,0 +1,45 @@
+classification:
+  "GREAT":
+    name: "Giỏi"
+    otherNames:
+      - "Great"
+    level: 1
+    rules:
+      - "math > 8 || literature > 8"
+      - "AVG(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) > 8"
+      - "subjectMin >= 6.5"
+      - "physical >= 10 && national_education >= 10"
+  "GOOD":
+    name: "Khá"
+    otherNames:
+      - "Good"
+    level: 2
+    rules:
+      - "math > 6.5 || literature > 6.5"
+      - "AVG(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) > 6.5"
+      - "subjectMin >= 5.0"
+      - "physical >= 10 && national_education >= 10"
+  "FAIR":
+    name: "Trung bình"
+    other-names:
+      - "Fair"
+    level: 3
+    rules:
+      - "math > 5.0 || literature > 5.0"
+      - "AVG(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) > 5.0"
+      - "subjectMin >= 3.5"
+      - "physical >= 10 && national_education >= 10"
+  "BAD":
+    name: "Yếu"
+    otherNames:
+      - "Bad"
+    level: 4
+    rules:
+      - "subjectMin >= 3.5"
+      - "physical >= 10 && national_education >= 10"
+  "FAIL":
+    name: "Kém"
+    otherNames:
+      - "Fail"
+    level: 5
+    rules: [ ]

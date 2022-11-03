@@ -4,7 +4,6 @@ import lombok.experimental.UtilityClass;
 import org.tinylog.Logger;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +19,7 @@ public class SubjectManager {
         synchronized (lock) {
             subjects = new HashMap<>();
             try (
-                    var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects");
+                    var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects.csv");
                     var reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(stream)))
             ) {
                 String line;
@@ -28,8 +27,8 @@ public class SubjectManager {
                     var subject = parseSubject(line);
                     subjects.put(subject.getId(), subject);
                 }
-            } catch (IOException e) {
-                Logger.error(e, "Error while loading subjects");
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
             }
         }
     }
@@ -38,7 +37,7 @@ public class SubjectManager {
         if (line == null || line.isBlank()) {
             return null;
         }
-        var parts = line.split("\\|");
+        var parts = line.split(",");
         if (parts.length < 3) {
             return null;
         }

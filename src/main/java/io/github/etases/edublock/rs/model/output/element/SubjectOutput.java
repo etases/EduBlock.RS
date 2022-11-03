@@ -1,7 +1,7 @@
 package io.github.etases.edublock.rs.model.output.element;
 
-import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.internal.subject.Subject;
+import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
