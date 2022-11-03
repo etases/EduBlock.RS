@@ -13,12 +13,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * The database session factory
@@ -39,26 +34,14 @@ public class DatabaseManager {
                 .setDatabaseName(databaseProperties.name())
                 .setUsername(databaseProperties.username())
                 .setPassword(databaseProperties.password())
-                .setClientProperty(AvailableSettings.DIALECT, H2Dialect.class.getName());
+                .setClientProperty(AvailableSettings.DIALECT, H2Dialect.class.getName())
+                .setClientProperty(AvailableSettings.HBM2DDL_AUTO, "update");
 
         if (requestServer.getMainConfig().getServerProperties().devMode()) {
             setting
                     .setClientProperty(AvailableSettings.SHOW_SQL, true)
                     .setClientProperty(AvailableSettings.FORMAT_SQL, true)
                     .setClientProperty(AvailableSettings.HBM2DDL_AUTO, "drop-and-create");
-            File dataSqlFile = new File("data.sql");
-            if (!dataSqlFile.exists()) {
-                try {
-                    if (dataSqlFile.createNewFile()) {
-                        Files.copy(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("data.sql")), dataSqlFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            setting.setClientProperty(AvailableSettings.HBM2DDL_LOAD_SCRIPT_SOURCE, dataSqlFile.getAbsolutePath());
-        } else {
-            setting.setClientProperty(AvailableSettings.HBM2DDL_AUTO, "update");
         }
 
         HibernateClient client = new HibernateClient(setting, driver);
