@@ -4,6 +4,8 @@ import io.github.etases.edublock.rs.entity.Record;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.internal.subject.Subject;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
+import io.github.etases.edublock.rs.model.output.element.ClassificationReportOutput;
+import io.github.etases.edublock.rs.model.output.element.RecordEntryOutput;
 import lombok.experimental.UtilityClass;
 import me.hsgamer.hscore.config.Config;
 import me.hsgamer.hscore.config.simpleconfiguration.SimpleConfig;
@@ -121,5 +123,26 @@ public class ClassificationManager {
         Classification finalClassify = classify(subjectFinalScoreMap);
 
         return new ClassificationReport(firstHalfClassify, secondHalfClassify, finalClassify);
+    }
+
+    public ClassificationReportOutput createReport(List<RecordEntryOutput> entryOutputs) {
+        Map<Subject, Float> subjectFirstHalfScoreMap = new HashMap<>();
+        Map<Subject, Float> subjectSecondHalfScoreMap = new HashMap<>();
+        Map<Subject, Float> subjectFinalScoreMap = new HashMap<>();
+        entryOutputs.forEach(recordEntry -> {
+            var subject = SubjectManager.getSubject(recordEntry.getSubjectId());
+            if (subject != null) {
+                subjectFirstHalfScoreMap.put(subject, recordEntry.getFirstHalfScore());
+                subjectSecondHalfScoreMap.put(subject, recordEntry.getSecondHalfScore());
+                subjectFinalScoreMap.put(subject, recordEntry.getFinalScore());
+            }
+        });
+
+        Classification firstHalfClassify = classify(subjectFirstHalfScoreMap);
+        Classification secondHalfClassify = classify(subjectSecondHalfScoreMap);
+        Classification finalClassify = classify(subjectFinalScoreMap);
+        ClassificationReport report = new ClassificationReport(firstHalfClassify, secondHalfClassify, finalClassify);
+
+        return ClassificationReportOutput.fromInternal(report);
     }
 }

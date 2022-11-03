@@ -2,6 +2,7 @@ package io.github.etases.edublock.rs.model.output.element;
 
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.Record;
+import io.github.etases.edublock.rs.internal.classification.ClassificationManager;
 import io.github.etases.edublock.rs.model.fabric.ClassRecord;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,13 +20,16 @@ import java.util.function.LongFunction;
 public class RecordOutput {
     ClassroomOutput classroom = new ClassroomOutput();
     List<RecordEntryOutput> entries = Collections.emptyList();
+    ClassificationReportOutput classification = new ClassificationReportOutput();
 
-    public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated) {
+    public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated, boolean generateClassification) {
+        var recordEntryOutputs = record.getRecordEntry().stream()
+                .filter(entry -> !filterUpdated || !entry.isUpdateComplete())
+                .map(entry -> RecordEntryOutput.fromEntity(entry, profileFunction)).toList();
         return new RecordOutput(
                 ClassroomOutput.fromEntity(record.getClassroom(), profileFunction),
-                record.getRecordEntry().stream()
-                        .filter(entry -> !filterUpdated || !entry.isUpdateComplete())
-                        .map(entry -> RecordEntryOutput.fromEntity(entry, profileFunction)).toList()
+                recordEntryOutputs,
+                generateClassification ? ClassificationManager.createReport(recordEntryOutputs) : new ClassificationReportOutput()
         );
     }
 
@@ -39,7 +43,7 @@ public class RecordOutput {
             recordEntryOutputs.add(recordEntry);
         }
 
-        return new RecordOutput(classroom, recordEntryOutputs);
+        return new RecordOutput(classroom, recordEntryOutputs, ClassificationReportOutput.fromFabricModel(classRecord.getClassification()));
     }
 
     public static List<RecordOutput> fromFabricModel(io.github.etases.edublock.rs.model.fabric.Record record) {
