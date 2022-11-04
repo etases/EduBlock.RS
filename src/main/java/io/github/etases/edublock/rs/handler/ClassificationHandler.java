@@ -63,9 +63,9 @@ public class ClassificationHandler extends SimpleServerHandler {
     private void get(Context ctx) {
         var id = ctx.pathParam("id");
         var classification = ClassificationManager.getClassification(id);
-        if (classification == null) {
+        if (classification.getLevel() < 0) {
             ctx.status(404);
-            ctx.json(new ClassificationResponse(404, "Classification not found", null));
+            ctx.json(new ClassificationResponse(1, "Classification not found", null));
         } else {
             ctx.json(new ClassificationResponse(0, "Get classification", ClassificationOutput.fromInternal(classification)));
         }

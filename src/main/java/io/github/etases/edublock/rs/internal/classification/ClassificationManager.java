@@ -26,6 +26,7 @@ public class ClassificationManager {
         File classificationFile;
         try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("classifications.yml")) {
             classificationFile = File.createTempFile("classification", ".yml");
+            classificationFile.deleteOnExit();
             Files.copy(Objects.requireNonNull(stream), classificationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception e) {
             throw new IllegalStateException(e);
@@ -42,7 +43,7 @@ public class ClassificationManager {
         config.setup();
 
         if (config.contains("classification")) {
-            config.getValues("classification", false).forEach((key, value) -> {
+            config.getNormalizedValues("classification", false).forEach((key, value) -> {
                 if (value instanceof Map<?, ?> rawMap) {
                     Map<String, Object> map = new HashMap<>();
                     rawMap.forEach((k, v) -> map.put(Objects.toString(k), v));
