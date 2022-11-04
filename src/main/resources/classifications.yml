@@ -7,7 +7,7 @@ classification:
     rules:
       - "math > 8 || literature > 8"
       - "AVG(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) > 8"
-      - "subjectMin >= 6.5"
+      - "MIN(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) >= 6.5"
       - "physical >= 10 && national_education >= 10"
   "GOOD":
     name: "Khá"
@@ -17,7 +17,7 @@ classification:
     rules:
       - "math > 6.5 || literature > 6.5"
       - "AVG(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) > 6.5"
-      - "subjectMin >= 5.0"
+      - "MIN(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) >= 5.0"
       - "physical >= 10 && national_education >= 10"
   "FAIR":
     name: "Trung bình"
@@ -27,7 +27,7 @@ classification:
     rules:
       - "math > 5.0 || literature > 5.0"
       - "AVG(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) > 5.0"
-      - "subjectMin >= 3.5"
+      - "MIN(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) >= 3.5"
       - "physical >= 10 && national_education >= 10"
   "BAD":
     name: "Yếu"
@@ -35,7 +35,7 @@ classification:
       - "Bad"
     level: 4
     rules:
-      - "subjectMin >= 3.5"
+      - "MIN(math, literature, physics, chemistry, biology, informatics, history, geography, foreign_language, citizenship, technology) >= 3.5"
       - "physical >= 10 && national_education >= 10"
   "FAIL":
     name: "Kém"

@@ -23,16 +23,12 @@ public class ClassificationManager {
     private static final List<Classification> classifications = new ArrayList<>();
 
     static {
-        File classificationFile = new File("classifications.yml");
-
-        if (!classificationFile.exists()) {
-            try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("classifications.yml")) {
-                if (classificationFile.createNewFile()) {
-                    Files.copy(Objects.requireNonNull(stream), classificationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                }
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
+        File classificationFile;
+        try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("classifications.yml")) {
+            classificationFile = File.createTempFile("classification", ".yml");
+            Files.copy(Objects.requireNonNull(stream), classificationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
 
         Config config = new SimpleConfig<>(classificationFile, new YamlFile(), (file, yamlFile) -> {
@@ -72,7 +68,7 @@ public class ClassificationManager {
         return classifications.stream()
                 .filter(classification -> classification.isApplicable(subjectScoreMap))
                 .min(Comparator.comparingInt(Classification::getLevel))
-                .orElse(null);
+                .orElseGet(Classification::new);
     }
 
     public Classification classifyRawSubjectMap(Map<Long, Float> subjectScoreMap) {

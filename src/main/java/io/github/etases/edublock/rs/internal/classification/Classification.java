@@ -2,7 +2,9 @@ package io.github.etases.edublock.rs.internal.classification;
 
 import com.ezylang.evalex.EvaluationException;
 import com.ezylang.evalex.Expression;
+import com.ezylang.evalex.config.ExpressionConfiguration;
 import com.ezylang.evalex.parser.ParseException;
+import io.github.etases.edublock.rs.internal.classification.function.AverageFunction;
 import io.github.etases.edublock.rs.internal.subject.Subject;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import lombok.*;
@@ -20,6 +22,11 @@ import java.util.*;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Classification {
+    private static final ExpressionConfiguration EXPRESSION_CONFIGURATION = ExpressionConfiguration.defaultConfiguration()
+            .withAdditionalFunctions(
+                    Map.entry("AVG", new AverageFunction())
+            );
+
     String identifier = "";
     String name = "";
     List<String> otherNames = Collections.emptyList();
@@ -43,13 +50,16 @@ public class Classification {
             variableMap.put("subject" + subject.getId(), subjectScoreMap.getOrDefault(subject, 0.0F));
             variableMap.put(subject.getIdentifier().toLowerCase(Locale.ROOT), subjectScoreMap.getOrDefault(subject, 0.0F));
         }
-        variableMap.put("subjectMin", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).min().orElse(0));
-        variableMap.put("subjectMax", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).max().orElse(0));
-        variableMap.put("subjectAvg", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).average().orElse(0));
-        variableMap.put("subjectSum", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).sum());
+        variableMap.put("subject_min", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).min().orElse(0));
+        variableMap.put("subject_max", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).max().orElse(0));
+        variableMap.put("subject_avg", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).average().orElse(0));
+        variableMap.put("subject_sum", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).sum());
+        variableMap.put("subject_min_not_zero", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).filter(value -> value != 0).min().orElse(0));
+        variableMap.put("subject_max_not_zero", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).filter(value -> value != 0).max().orElse(0));
+        variableMap.put("subject_avg_not_zero", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).filter(value -> value != 0).average().orElse(0));
 
         for (String rule : rules) {
-            Expression expression = new Expression(rule).withValues(variableMap);
+            Expression expression = new Expression(rule, EXPRESSION_CONFIGURATION).withValues(variableMap);
             try {
                 if (Boolean.FALSE.equals(expression.evaluate().getBooleanValue())) {
                     return false;
