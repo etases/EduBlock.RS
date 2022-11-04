@@ -50,10 +50,6 @@ public class RequestServer {
         databaseManager = new DatabaseManager(this);
         dependencyManager = new DependencyManager(this);
         terminal = dependencyManager.getInjector().getInstance(ServerTerminal.class);
-
-        // Load hard-coded managers
-        SubjectManager.getSubjects();
-        ClassificationManager.getClassifications();
     }
 
     public static void main(String[] args) {
