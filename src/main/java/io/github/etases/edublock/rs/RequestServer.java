@@ -107,7 +107,8 @@ public class RequestServer {
                 SubjectHandler.class,
                 DevHandler.class,
                 FabricHandler.class,
-                StudentUpdateHandler.class
+                StudentUpdateHandler.class,
+                ClassificationHandler.class
         );
     }
 
