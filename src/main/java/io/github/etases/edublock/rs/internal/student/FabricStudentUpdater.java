@@ -60,7 +60,7 @@ public class FabricStudentUpdater implements StudentUpdater {
                 var result = getContract()
                         .newProposal("updateStudentPersonal")
                         .addArguments(Long.toString(studentId))
-                        .putTransient("personal", gson.toJson(personal).getBytes(StandardCharsets.UTF_8))
+                        .putTransient("personal", gson.toJson(personal))
                         .build()
                         .endorse()
                         .submitAsync();
@@ -93,7 +93,7 @@ public class FabricStudentUpdater implements StudentUpdater {
                 var result = getContract()
                         .newProposal("updateStudentRecord")
                         .addArguments(Long.toString(studentId))
-                        .putTransient("record", gson.toJson(record).getBytes(StandardCharsets.UTF_8))
+                        .putTransient("record", gson.toJson(record))
                         .build()
                         .endorse()
                         .submitAsync();
@@ -112,7 +112,7 @@ public class FabricStudentUpdater implements StudentUpdater {
                 var result = getContract()
                         .newProposal("updateStudentClassRecord")
                         .addArguments(Long.toString(studentId), Long.toString(classId))
-                        .putTransient("classRecord", gson.toJson(classRecord).getBytes(StandardCharsets.UTF_8))
+                        .putTransient("classRecord", gson.toJson(classRecord))
                         .build()
                         .endorse()
                         .submitAsync();
