@@ -17,6 +17,10 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
     private final Gson gson = new Gson();
     private final File localPersonalFile;
     private final File localRecordHistoryFile;
+    private final Type personalType = new TypeToken<Map<String, Personal>>() {
+    }.getType();
+    private final Type recordHistoryType = new TypeToken<Map<String, List<RecordHistory>>>() {
+    }.getType();
 
     public LocalStudentUpdater(File localPersonalFile, File localRecordHistoryFile) {
         this.localPersonalFile = localPersonalFile;
@@ -31,19 +35,15 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
     public void start() {
         super.start();
         if (localPersonalFile.exists()) {
-            Type type = new TypeToken<Map<Long, Personal>>() {
-            }.getType();
             try (var reader = new FileReader(localPersonalFile)) {
-                personalMap.putAll(gson.fromJson(reader, type));
+                personalMap.putAll(gson.fromJson(reader, personalType));
             } catch (Exception e) {
                 Logger.error(e, "Failed to load personal from {}", localPersonalFile);
             }
         }
         if (localRecordHistoryFile.exists()) {
-            Type type = new TypeToken<Map<Long, List<RecordHistory>>>() {
-            }.getType();
             try (var reader = new FileReader(localRecordHistoryFile)) {
-                recordHistoryMap.putAll(gson.fromJson(reader, type));
+                recordHistoryMap.putAll(gson.fromJson(reader, recordHistoryType));
             } catch (Exception e) {
                 Logger.error(e, "Failed to load record history from {}", localRecordHistoryFile);
             }
@@ -76,12 +76,12 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
 
         // Write to file
         try (var writer = new FileWriter(localPersonalFile)) {
-            gson.toJson(personalMap, writer);
+            gson.toJson(personalMap, personalType, writer);
         } catch (Exception e) {
             Logger.error(e, "Failed to save personal to {}", localPersonalFile);
         }
         try (var writer = new FileWriter(localRecordHistoryFile)) {
-            gson.toJson(recordHistoryMap, writer);
+            gson.toJson(recordHistoryMap, recordHistoryType, writer);
         } catch (Exception e) {
             Logger.error(e, "Failed to save record history to {}", localRecordHistoryFile);
         }
