@@ -46,6 +46,9 @@ public class FabricStudentUpdater implements StudentUpdater {
                 // TODO: catch not found payload
                 Logger.error(e);
                 return null;
+            } catch (Exception e) {
+                Logger.error(e);
+                return null;
             }
         });
     }
@@ -63,6 +66,9 @@ public class FabricStudentUpdater implements StudentUpdater {
                         .submitAsync();
                 return result.getStatus().isSuccessful();
             } catch (GatewayException e) {
+                Logger.error(e);
+                return false;
+            } catch (Exception e) {
                 Logger.error(e);
                 return false;
             }
@@ -128,6 +134,9 @@ public class FabricStudentUpdater implements StudentUpdater {
                 var result = getContract().evaluateTransaction("getStudentRecordHistory", Long.toString(studentId));
                 return gson.fromJson(new String(result, StandardCharsets.UTF_8), RecordHistoryList.class).getHistories();
             } catch (GatewayException e) {
+                Logger.error(e);
+                return Collections.emptyList();
+            } catch (Exception e) {
                 Logger.error(e);
                 return Collections.emptyList();
             }
