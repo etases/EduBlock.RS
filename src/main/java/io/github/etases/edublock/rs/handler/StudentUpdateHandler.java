@@ -11,6 +11,7 @@ import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.entity.Student;
 import io.github.etases.edublock.rs.internal.classification.ClassificationManager;
 import io.github.etases.edublock.rs.internal.student.FabricStudentUpdater;
+import io.github.etases.edublock.rs.internal.student.StudentUpdaterWithLogger;
 import io.github.etases.edublock.rs.internal.student.TemporaryStudentUpdater;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.model.fabric.ClassRecord;
@@ -59,6 +60,9 @@ public class StudentUpdateHandler implements ServerHandler {
             studentUpdater = new TemporaryStudentUpdater();
         } else {
             studentUpdater = new FabricStudentUpdater(mainConfig, gateway);
+        }
+        if (mainConfig.getServerProperties().devMode()) {
+            studentUpdater = new StudentUpdaterWithLogger(studentUpdater);
         }
         studentUpdater.start();
 
