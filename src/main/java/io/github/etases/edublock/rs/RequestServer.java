@@ -74,13 +74,12 @@ public class RequestServer {
         terminal.start();
     }
 
-    public void stop() {
+    private void stop() {
         if (server != null) {
             server.stop();
         }
         serverHandlers.values().forEach(ServerHandler::stop);
         serverHandlers.values().forEach(ServerHandler::postStop);
-        terminal.shutdown();
         commandManager.disable();
     }
 
