@@ -65,9 +65,6 @@ public class FabricStudentUpdater implements StudentUpdater {
                         .endorse()
                         .submitAsync();
                 return result.getStatus().isSuccessful();
-            } catch (GatewayException e) {
-                Logger.error(e);
-                return false;
             } catch (Exception e) {
                 Logger.error(e);
                 return false;
@@ -133,9 +130,6 @@ public class FabricStudentUpdater implements StudentUpdater {
             try {
                 var result = getContract().evaluateTransaction("getStudentRecordHistory", Long.toString(studentId));
                 return gson.fromJson(new String(result, StandardCharsets.UTF_8), RecordHistoryList.class).getHistories();
-            } catch (GatewayException e) {
-                Logger.error(e);
-                return Collections.emptyList();
             } catch (Exception e) {
                 Logger.error(e);
                 return Collections.emptyList();
