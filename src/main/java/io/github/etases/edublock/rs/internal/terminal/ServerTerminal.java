@@ -54,9 +54,9 @@ public class ServerTerminal {
                     runCommand(command);
                 }
             } catch (UserInterruptException e) {
-                shutdown();
+                shutdown(0);
             } catch (EndOfFileException e) {
-                // IGNORED
+                shutdown(1);
             }
         }
     }
@@ -76,7 +76,8 @@ public class ServerTerminal {
     /**
      * Shut down the server
      */
-    public void shutdown() {
+    public void shutdown(int statusCode) {
         running = false;
+        System.exit(0);
     }
 }

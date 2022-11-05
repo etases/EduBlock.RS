@@ -11,8 +11,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TemporaryStudentUpdater implements StudentUpdater {
-    private final Map<Long, Personal> personalMap = new ConcurrentHashMap<>();
-    private final Map<Long, List<RecordHistory>> recordHistoryMap = new ConcurrentHashMap<>();
+    protected final Map<Long, Personal> personalMap = new ConcurrentHashMap<>();
+    protected final Map<Long, List<RecordHistory>> recordHistoryMap = new ConcurrentHashMap<>();
 
     @Override
     public CompletableFuture<Personal> getStudentPersonal(long studentId) {
@@ -62,6 +62,6 @@ public class TemporaryStudentUpdater implements StudentUpdater {
 
     @Override
     public CompletableFuture<List<RecordHistory>> getStudentRecordHistory(long studentId) {
-        return CompletableFuture.completedFuture(recordHistoryMap.get(studentId));
+        return CompletableFuture.completedFuture(recordHistoryMap.getOrDefault(studentId, Collections.emptyList()));
     }
 }

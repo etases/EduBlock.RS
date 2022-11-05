@@ -4,8 +4,6 @@ import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.config.SystemMainConfig;
 import io.github.etases.edublock.rs.handler.*;
-import io.github.etases.edublock.rs.internal.classification.ClassificationManager;
-import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.internal.terminal.ServerTerminal;
 import io.javalin.Javalin;
 import lombok.Getter;
@@ -65,6 +63,8 @@ public class RequestServer {
             return;
         }
 
+        Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
+
         getHandlers().forEach(clazz -> serverHandlers.put(clazz, dependencyManager.getInjector().getInstance(clazz)));
         serverHandlers.values().forEach(ServerHandler::setup);
         serverHandlers.values().forEach(ServerHandler::postSetup);
@@ -74,13 +74,12 @@ public class RequestServer {
         terminal.start();
     }
 
-    public void stop() {
+    private void stop() {
         if (server != null) {
             server.stop();
         }
         serverHandlers.values().forEach(ServerHandler::stop);
         serverHandlers.values().forEach(ServerHandler::postStop);
-        terminal.shutdown();
         commandManager.disable();
     }
 

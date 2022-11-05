@@ -10,6 +10,7 @@ import io.github.etases.edublock.rs.config.MainConfig;
 import io.grpc.ManagedChannel;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
+import lombok.Getter;
 import org.hyperledger.fabric.client.Gateway;
 import org.hyperledger.fabric.client.identity.Identities;
 import org.hyperledger.fabric.client.identity.Signers;
@@ -28,6 +29,7 @@ public class FabricHandler implements ServerHandler {
     private CommandManager commandManager;
 
     private ManagedChannel grpcChannel;
+    @Getter
     private Gateway gateway;
 
     @Override

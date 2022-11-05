@@ -1,6 +1,7 @@
 package io.github.etases.edublock.rs.handler;
 
 import com.google.inject.Inject;
+import io.github.etases.edublock.rs.RequestServer;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.api.StudentUpdater;
@@ -9,6 +10,9 @@ import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.entity.Student;
 import io.github.etases.edublock.rs.internal.classification.ClassificationManager;
+import io.github.etases.edublock.rs.internal.student.FabricStudentUpdater;
+import io.github.etases.edublock.rs.internal.student.LocalStudentUpdater;
+import io.github.etases.edublock.rs.internal.student.StudentUpdaterWithLogger;
 import io.github.etases.edublock.rs.internal.student.TemporaryStudentUpdater;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.model.fabric.ClassRecord;
@@ -39,6 +43,8 @@ public class StudentUpdateHandler implements ServerHandler {
     private final AtomicReference<CompletableFuture<Void>> currentFutureRef = new AtomicReference<>();
     private final AtomicBoolean updateRecords = new AtomicBoolean(false);
     @Inject
+    private RequestServer requestServer;
+    @Inject
     private SessionFactory sessionFactory;
     @Inject
     private ServerBuilder serverBuilder;
@@ -50,7 +56,20 @@ public class StudentUpdateHandler implements ServerHandler {
 
     @Override
     public void postSetup() {
-        studentUpdater = new TemporaryStudentUpdater();
+        var gateway = requestServer.getHandler(FabricHandler.class).getGateway();
+        if (mainConfig.getDatabaseProperties().isMemory()) {
+            studentUpdater = new TemporaryStudentUpdater();
+        } else if (gateway == null) {
+            studentUpdater = new LocalStudentUpdater();
+        } else {
+            studentUpdater = new FabricStudentUpdater(mainConfig, gateway);
+        }
+
+        if (mainConfig.getServerProperties().devMode()) {
+            studentUpdater = new StudentUpdaterWithLogger(studentUpdater);
+        }
+
+        studentUpdater.start();
 
         serverBuilder.addHandler(javalin -> {
             javalin.get("/updater/{id}/personal", this::getPersonal);
@@ -77,6 +96,9 @@ public class StudentUpdateHandler implements ServerHandler {
     public void stop() {
         if (executorService != null) {
             executorService.shutdown();
+        }
+        if (studentUpdater != null) {
+            studentUpdater.stop();
         }
     }
 
@@ -180,34 +202,49 @@ public class StudentUpdateHandler implements ServerHandler {
     private CompletableFuture<Void> updatePersonal() {
         List<CompletableFuture<Void>> futures = new LinkedList<>();
         Map<Long, Personal> personalMap = new HashMap<>();
-        try (var session = sessionFactory.openSession()) {
-            var transaction = session.beginTransaction();
-            var profiles = session.createNamedQuery("Profile.findUpdated", Profile.class).getResultList();
-            for (var profile : profiles) {
-                var student = session.get(Student.class, profile.getId());
-                if (student != null) {
-                    var personal = Personal.fromEntity(student, profile);
-                    personalMap.put(student.getId(), personal);
-                }
+        Map<Long, Runnable> completeRunnableMap = new HashMap<>();
+
+        var session = sessionFactory.openSession();
+        var transaction = session.beginTransaction();
+
+        var profiles = session.createNamedQuery("Profile.findUpdated", Profile.class).getResultList();
+        for (var profile : profiles) {
+            var student = session.get(Student.class, profile.getId());
+            var completeRunnable = (Runnable) () -> {
                 profile.setUpdated(false);
                 session.update(profile);
+            };
+            if (student != null) {
+                var personal = Personal.fromEntity(student, profile);
+                personalMap.put(student.getId(), personal);
+                completeRunnableMap.put(student.getId(), completeRunnable);
+            } else {
+                completeRunnable.run();
             }
-            transaction.commit();
         }
+
         personalMap.forEach((id, personal) -> futures.add(studentUpdater.updateStudentPersonal(id, personal).thenAccept(success -> {
             if (mainConfig.getServerProperties().devMode()) {
                 Logger.info("Updated personal: " + id + " " + success);
             }
+            if (Boolean.TRUE.equals(success)) {
+                completeRunnableMap.getOrDefault(id, () -> {
+                }).run();
+            }
         })));
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(v -> {
+            transaction.commit();
+            session.close();
+        });
     }
 
-    private CompletableFuture<Void> updateRecord(long studentId, Map<Long, List<RecordEntry>> recordsPerClassMap) {
+    private CompletableFuture<Boolean> updateRecord(long studentId, Map<Long, List<RecordEntry>> recordsPerClassMap) {
         if (recordsPerClassMap.isEmpty()) {
-            return CompletableFuture.runAsync(() -> {
+            return CompletableFuture.supplyAsync(() -> {
                 if (mainConfig.getServerProperties().devMode()) {
                     Logger.info("Updated record: " + studentId + " " + true);
                 }
+                return true;
             });
         }
         return studentUpdater.getStudentRecord(studentId)
@@ -265,31 +302,45 @@ public class StudentUpdateHandler implements ServerHandler {
                     record.setClassRecords(classRecords);
                     return studentUpdater.updateStudentRecord(studentId, record);
                 })
-                .thenAccept(success -> {
+                .thenApply(success -> {
                     if (mainConfig.getServerProperties().devMode()) {
                         Logger.info("Updated record: " + studentId + " " + success);
                     }
+                    return success;
                 });
     }
 
     private CompletableFuture<Void> updateRecord() {
         Map<Long, Map<Long, List<RecordEntry>>> recordsPerStudentMap = new HashMap<>();
-        try (var session = sessionFactory.openSession()) {
-            var transaction = session.beginTransaction();
-            var recordEntries = session.createNamedQuery("RecordEntry.findNeedUpdate", RecordEntry.class).getResultList();
-            for (var record : recordEntries) {
-                var studentId = record.getRecord().getStudent().getId();
-                var classId = record.getRecord().getClassroom().getId();
-                var recordsPerClassMap = recordsPerStudentMap.computeIfAbsent(studentId, k -> new HashMap<>());
-                var recordEntriesPerClass = recordsPerClassMap.computeIfAbsent(classId, k -> new ArrayList<>());
-                recordEntriesPerClass.add(record);
+        Map<Long, List<Runnable>> recordRunnablePerStudentMap = new HashMap<>();
+
+        var session = sessionFactory.openSession();
+        var transaction = session.beginTransaction();
+
+        var recordEntries = session.createNamedQuery("RecordEntry.findNeedUpdate", RecordEntry.class).getResultList();
+        for (var record : recordEntries) {
+            var studentId = record.getRecord().getStudent().getId();
+            var classId = record.getRecord().getClassroom().getId();
+            var recordsPerClassMap = recordsPerStudentMap.computeIfAbsent(studentId, k -> new HashMap<>());
+            var recordEntriesPerClass = recordsPerClassMap.computeIfAbsent(classId, k -> new ArrayList<>());
+            recordEntriesPerClass.add(record);
+
+            var recordRunnables = recordRunnablePerStudentMap.computeIfAbsent(studentId, k -> new ArrayList<>());
+            recordRunnables.add(() -> {
                 record.setUpdateComplete(true);
                 session.update(record);
-            }
-            transaction.commit();
+            });
         }
+
         List<CompletableFuture<Void>> futures = new LinkedList<>();
-        recordsPerStudentMap.forEach((id, map) -> futures.add(updateRecord(id, map)));
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        recordsPerStudentMap.forEach((id, map) -> futures.add(updateRecord(id, map).thenAccept(success -> {
+            if (Boolean.TRUE.equals(success)) {
+                recordRunnablePerStudentMap.getOrDefault(id, Collections.emptyList()).forEach(Runnable::run);
+            }
+        })));
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenAccept(v -> {
+            transaction.commit();
+            session.close();
+        });
     }
 }

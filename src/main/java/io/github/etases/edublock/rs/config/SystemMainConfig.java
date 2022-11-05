@@ -1,9 +1,6 @@
 package io.github.etases.edublock.rs.config;
 
-import io.github.etases.edublock.rs.internal.property.DatabaseProperties;
-import io.github.etases.edublock.rs.internal.property.FabricProperties;
-import io.github.etases.edublock.rs.internal.property.JwtProperties;
-import io.github.etases.edublock.rs.internal.property.ServerProperties;
+import io.github.etases.edublock.rs.internal.property.*;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -14,6 +11,7 @@ public class SystemMainConfig implements MainConfig {
     private final DatabaseProperties databaseProperties;
     private final ServerProperties serverProperties;
     private final FabricProperties fabricProperties;
+    private final FabricUpdaterProperties fabricUpdaterProperties;
     private final String accountDefaultPassword;
 
     public SystemMainConfig() {
@@ -48,6 +46,10 @@ public class SystemMainConfig implements MainConfig {
                 Path.of(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_TLS_CERT_PATH")).orElse("tls-cert.pem")),
                 Optional.ofNullable(System.getenv("RS_FABRIC_PEER_TLS_OVERRIDE_AUTHORITY")).orElse("peer0.org1.example.com")
         );
+        this.fabricUpdaterProperties = new FabricUpdaterProperties(
+                Optional.ofNullable(System.getenv("RS_FABRIC_UPDATER_CHANNEL_NAME")).orElse("mychannel"),
+                Optional.ofNullable(System.getenv("RS_FABRIC_UPDATER_CHAINCODE_NAME")).orElse("edublock")
+        );
         this.accountDefaultPassword = Optional.ofNullable(System.getenv("RS_ACCOUNT_DEFAULT_PASSWORD")).orElse("password");
     }
 
@@ -69,6 +71,11 @@ public class SystemMainConfig implements MainConfig {
     @Override
     public FabricProperties getFabricProperties() {
         return fabricProperties;
+    }
+
+    @Override
+    public FabricUpdaterProperties getFabricUpdaterProperties() {
+        return fabricUpdaterProperties;
     }
 
     @Override

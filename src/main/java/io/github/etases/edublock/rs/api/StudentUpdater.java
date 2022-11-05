@@ -20,4 +20,12 @@ public interface StudentUpdater {
     CompletableFuture<Boolean> updateStudentClassRecord(long studentId, long classId, ClassRecord classRecord);
 
     CompletableFuture<List<RecordHistory>> getStudentRecordHistory(long studentId);
+
+    default void start() {
+        // do nothing
+    }
+
+    default void stop() {
+        // do nothing
+    }
 }

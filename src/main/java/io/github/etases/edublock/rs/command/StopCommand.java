@@ -19,7 +19,7 @@ public class StopCommand extends Command {
     @Override
     public void runCommand(String argument) {
         Logger.info("Shutting down!");
-        requestServer.stop();
+        System.exit(0);
     }
 
     @Override

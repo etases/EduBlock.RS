@@ -1,7 +1,6 @@
 package io.github.etases.edublock.rs.internal.subject;
 
 import lombok.experimental.UtilityClass;
-import org.tinylog.Logger;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
