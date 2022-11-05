@@ -397,7 +397,7 @@ public class AccountHandler extends SimpleServerHandler {
                 var filtered = ACCOUNTS_FILTER.filter(session, accounts, ctx);
                 var pagedPair = PaginationUtil.getPagedList(filtered, paginationParameter);
                 List<AccountWithProfileOutput> list = new ArrayList<>();
-                for (var account : accounts) {
+                for (var account : pagedPair.getKey()) {
                     list.add(AccountWithProfileOutput.fromEntity(account, id -> Profile.getOrDefault(session, id)));
                 }
                 ctx.json(new AccountWithProfileListResponse(0, "Get account list", pagedPair.getValue(), list));
