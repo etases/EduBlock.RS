@@ -6,6 +6,7 @@ import org.hibernate.Session;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 
 public class ListSessionInputFilter<T> {
@@ -29,7 +30,12 @@ public class ListSessionInputFilter<T> {
     }
 
     public List<T> filter(Session session, List<T> list, String input, String filterName) {
-        Filter<T> filter = filters.get(filterName);
+        Filter<T> filter;
+        if (filterName.equalsIgnoreCase("all")) {
+            filter = (session1, input1, t) -> filters.values().stream().anyMatch(filter1 -> filter1.test(session1, input1, t));
+        } else {
+            filter = this.filters.get(filterName);
+        }
         if (filter == null) {
             return list;
         }
@@ -37,9 +43,9 @@ public class ListSessionInputFilter<T> {
     }
 
     public List<T> filter(Session session, List<T> input, Context context) {
-        String filterName = context.queryParam("filter");
+        String filterName = Optional.ofNullable(context.queryParam("filter")).orElse("all");
         String filterInput = context.queryParam("input");
-        if (filterName == null || filterName.isEmpty()) {
+        if (filterInput == null || filterInput.isEmpty()) {
             return input;
         }
         return filter(session, input, filterInput, filterName);
