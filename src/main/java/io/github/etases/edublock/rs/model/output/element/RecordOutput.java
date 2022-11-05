@@ -22,10 +22,6 @@ public class RecordOutput {
     List<RecordEntryOutput> entries = Collections.emptyList();
     ClassificationReportOutput classification = new ClassificationReportOutput();
 
-    public void updateClassification() {
-        classification = ClassificationManager.createReport(entries);
-    }
-
     public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated) {
         var recordEntryOutputs = record.getRecordEntry().stream()
                 .filter(entry -> !filterUpdated || !entry.isUpdateComplete())
@@ -54,5 +50,9 @@ public class RecordOutput {
         List<RecordOutput> recordOutputs = new ArrayList<>();
         record.getClassRecords().forEach((key, value) -> recordOutputs.add(fromFabricModel(key, value)));
         return recordOutputs;
+    }
+
+    public void updateClassification() {
+        classification = ClassificationManager.createReport(entries);
     }
 }

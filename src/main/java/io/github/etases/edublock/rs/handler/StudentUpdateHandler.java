@@ -1,6 +1,7 @@
 package io.github.etases.edublock.rs.handler;
 
 import com.google.inject.Inject;
+import io.github.etases.edublock.rs.RequestServer;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.ServerHandler;
 import io.github.etases.edublock.rs.api.StudentUpdater;
@@ -9,6 +10,7 @@ import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.entity.Student;
 import io.github.etases.edublock.rs.internal.classification.ClassificationManager;
+import io.github.etases.edublock.rs.internal.student.FabricStudentUpdater;
 import io.github.etases.edublock.rs.internal.student.TemporaryStudentUpdater;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.model.fabric.ClassRecord;
@@ -39,6 +41,8 @@ public class StudentUpdateHandler implements ServerHandler {
     private final AtomicReference<CompletableFuture<Void>> currentFutureRef = new AtomicReference<>();
     private final AtomicBoolean updateRecords = new AtomicBoolean(false);
     @Inject
+    private RequestServer requestServer;
+    @Inject
     private SessionFactory sessionFactory;
     @Inject
     private ServerBuilder serverBuilder;
@@ -50,7 +54,13 @@ public class StudentUpdateHandler implements ServerHandler {
 
     @Override
     public void postSetup() {
-        studentUpdater = new TemporaryStudentUpdater();
+        var gateway = requestServer.getHandler(FabricHandler.class).getGateway();
+        if (gateway == null) {
+            studentUpdater = new TemporaryStudentUpdater();
+        } else {
+            studentUpdater = new FabricStudentUpdater(mainConfig, gateway);
+        }
+        studentUpdater.start();
 
         serverBuilder.addHandler(javalin -> {
             javalin.get("/updater/{id}/personal", this::getPersonal);
@@ -77,6 +87,9 @@ public class StudentUpdateHandler implements ServerHandler {
     public void stop() {
         if (executorService != null) {
             executorService.shutdown();
+        }
+        if (studentUpdater != null) {
+            studentUpdater.stop();
         }
     }
 
