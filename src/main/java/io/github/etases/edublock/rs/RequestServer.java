@@ -63,6 +63,8 @@ public class RequestServer {
             return;
         }
 
+        Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
+
         getHandlers().forEach(clazz -> serverHandlers.put(clazz, dependencyManager.getInjector().getInstance(clazz)));
         serverHandlers.values().forEach(ServerHandler::setup);
         serverHandlers.values().forEach(ServerHandler::postSetup);
