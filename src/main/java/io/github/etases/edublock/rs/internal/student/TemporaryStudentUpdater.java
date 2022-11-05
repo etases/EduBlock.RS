@@ -62,6 +62,6 @@ public class TemporaryStudentUpdater implements StudentUpdater {
 
     @Override
     public CompletableFuture<List<RecordHistory>> getStudentRecordHistory(long studentId) {
-        return CompletableFuture.completedFuture(recordHistoryMap.get(studentId));
+        return CompletableFuture.completedFuture(recordHistoryMap.getOrDefault(studentId, Collections.emptyList()));
     }
 }
