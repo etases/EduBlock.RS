@@ -13,8 +13,8 @@ public final class PaginationUtil {
         int pageSize = parameter.getPageSize();
         int pageNumber = parameter.getPageNumber();
         int totalEntries = list.size();
-        int totalPages = (int) Math.ceil((double) totalEntries / pageSize);
-        int fromIndex = (pageNumber - 1) * pageSize;
+        int totalPages = (int) Math.ceil(totalEntries / (double) pageSize);
+        int fromIndex = Math.min((pageNumber - 1) * pageSize, totalEntries);
         int toIndex = Math.min(fromIndex + pageSize, totalEntries);
         boolean hasNextPage = pageNumber < totalPages;
         boolean hasPreviousPage = pageNumber > 1;
