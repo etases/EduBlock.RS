@@ -22,10 +22,27 @@ public class RecordOutput {
     List<RecordEntryOutput> entries = Collections.emptyList();
     ClassificationReportOutput classification = new ClassificationReportOutput();
 
-    public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated) {
+    public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated, boolean fillAllSubjects) {
         var recordEntryOutputs = record.getRecordEntry().stream()
                 .filter(entry -> !filterUpdated || !entry.isUpdateComplete())
                 .map(entry -> RecordEntryOutput.fromEntity(entry, profileFunction)).toList();
+
+        if (fillAllSubjects) {
+            var subjects = recordEntryOutputs.stream().map(RecordEntryOutput::getSubjectId).toList();
+            var remainingRecordEntryOutputs = record.getClassroom().getTeachers().stream()
+                    .filter(classTeacher -> !subjects.contains(classTeacher.getSubjectId()))
+                    .map(classTeacher -> {
+                        var recordEntryOutput = new RecordEntryOutput();
+                        recordEntryOutput.setSubjectId(classTeacher.getSubjectId());
+                        recordEntryOutput.setSubject(SubjectOutput.fromInternal(classTeacher.getSubjectId()));
+                        recordEntryOutput.setTeacher(AccountWithProfileOutput.fromEntity(classTeacher.getTeacher(), profileFunction));
+                        return recordEntryOutput;
+                    })
+                    .toList();
+            recordEntryOutputs = new ArrayList<>(recordEntryOutputs);
+            recordEntryOutputs.addAll(remainingRecordEntryOutputs);
+        }
+
         return new RecordOutput(
                 ClassroomOutput.fromEntity(record.getClassroom(), profileFunction),
                 recordEntryOutputs,

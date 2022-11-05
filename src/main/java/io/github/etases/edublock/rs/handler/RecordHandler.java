@@ -80,6 +80,7 @@ public class RecordHandler extends SimpleServerHandler {
         boolean useUpdater = "true".equalsIgnoreCase(ctx.queryParam("updater"));
         boolean filterUpdated = "true".equalsIgnoreCase(ctx.queryParam("filterUpdated"));
         boolean generateClassification = "true".equalsIgnoreCase(ctx.queryParam("generateClassification"));
+        boolean fillAllSubjects = "true".equalsIgnoreCase(ctx.queryParam("fillAllSubjects"));
 
         RecordOutput recordOutput;
         try (var session = sessionFactory.openSession()) {
@@ -92,7 +93,7 @@ public class RecordHandler extends SimpleServerHandler {
                 ctx.json(new RecordResponse(1, "Record not found", null));
                 return;
             }
-            recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated);
+            recordOutput = RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated, fillAllSubjects);
         }
 
         if (useUpdater) {
@@ -120,7 +121,8 @@ public class RecordHandler extends SimpleServerHandler {
             queryParams = {
                     @OpenApiParam(name = "updater", description = "Add entries from updater"),
                     @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries"),
-                    @OpenApiParam(name = "generateClassification", description = "Generate classification")
+                    @OpenApiParam(name = "generateClassification", description = "Generate classification"),
+                    @OpenApiParam(name = "fillAllSubjects", description = "Fill all subjects")
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
@@ -153,7 +155,8 @@ public class RecordHandler extends SimpleServerHandler {
             queryParams = {
                     @OpenApiParam(name = "updater", description = "Add entries from updater"),
                     @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries"),
-                    @OpenApiParam(name = "generateClassification", description = "Generate classification")
+                    @OpenApiParam(name = "generateClassification", description = "Generate classification"),
+                    @OpenApiParam(name = "fillAllSubjects", description = "Fill all subjects")
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
@@ -262,6 +265,7 @@ public class RecordHandler extends SimpleServerHandler {
         boolean useUpdater = "true".equalsIgnoreCase(ctx.queryParam("updater"));
         boolean filterUpdated = "true".equalsIgnoreCase(ctx.queryParam("filterUpdated"));
         boolean generateClassification = "true".equalsIgnoreCase(ctx.queryParam("generateClassification"));
+        boolean fillAllSubjects = "true".equalsIgnoreCase(ctx.queryParam("fillAllSubjects"));
 
         Map<Long, RecordOutput> recordOutputs;
         try (var session = sessionFactory.openSession()) {
@@ -278,7 +282,7 @@ public class RecordHandler extends SimpleServerHandler {
                         .setParameter("year", year);
             }
             recordOutputs = query.stream()
-                    .map(record -> Pair.of(record.getStudent().getId(), RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated)))
+                    .map(record -> Pair.of(record.getStudent().getId(), RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated, fillAllSubjects)))
                     .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
         }
 
@@ -314,7 +318,8 @@ public class RecordHandler extends SimpleServerHandler {
             queryParams = {
                     @OpenApiParam(name = "updater", description = "Add entries from updater"),
                     @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries"),
-                    @OpenApiParam(name = "generateClassification", description = "Generate classification")
+                    @OpenApiParam(name = "generateClassification", description = "Generate classification"),
+                    @OpenApiParam(name = "fillAllSubjects", description = "Fill all subjects")
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
@@ -340,7 +345,8 @@ public class RecordHandler extends SimpleServerHandler {
             queryParams = {
                     @OpenApiParam(name = "updater", description = "Add entries from updater"),
                     @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries"),
-                    @OpenApiParam(name = "generateClassification", description = "Generate classification")
+                    @OpenApiParam(name = "generateClassification", description = "Generate classification"),
+                    @OpenApiParam(name = "fillAllSubjects", description = "Fill all subjects")
             },
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
