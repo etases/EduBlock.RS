@@ -258,19 +258,19 @@ public class StudentUpdateHandler implements ServerHandler {
                         recordEntries.sort(Comparator.comparing(RecordEntry::getApprovalDate));
 
                         var classRecord = classRecords.getOrDefault(classId, ClassRecord.clone(null));
-                        var subjects = classRecord.getSubjects();
+                        var updateSubjectMap = classRecord.getSubjects();
 
                         // Update class record
                         boolean updateClass = true;
                         for (var recordEntry : recordEntries) {
                             // Update Subject
-                            var subjectId = recordEntry.getId();
-                            var outSubject = subjects.getOrDefault(subjectId, Subject.clone(null));
-                            outSubject.setName(SubjectManager.getSubject(studentId).getIdentifier());
-                            outSubject.setFirstHalfScore(recordEntry.getFirstHalfScore());
-                            outSubject.setSecondHalfScore(recordEntry.getSecondHalfScore());
-                            outSubject.setFinalScore(recordEntry.getFinalScore());
-                            subjects.put(subjectId, outSubject);
+                            var subjectId = recordEntry.getSubjectId();
+                            var updateSubject = updateSubjectMap.getOrDefault(subjectId, Subject.clone(null));
+                            updateSubject.setName(SubjectManager.getSubject(subjectId).getIdentifier());
+                            updateSubject.setFirstHalfScore(recordEntry.getFirstHalfScore());
+                            updateSubject.setSecondHalfScore(recordEntry.getSecondHalfScore());
+                            updateSubject.setFinalScore(recordEntry.getFinalScore());
+                            updateSubjectMap.put(subjectId, updateSubject);
 
                             // Update Class
                             if (updateClass) {
@@ -287,7 +287,7 @@ public class StudentUpdateHandler implements ServerHandler {
                         Map<Long, Float> subjectFirstHalfScores = new HashMap<>();
                         Map<Long, Float> subjectSecondHalfScores = new HashMap<>();
                         Map<Long, Float> subjectFinalScores = new HashMap<>();
-                        subjects.forEach((subjectId, subject) -> {
+                        updateSubjectMap.forEach((subjectId, subject) -> {
                             subjectFirstHalfScores.put(subjectId, subject.getFirstHalfScore());
                             subjectSecondHalfScores.put(subjectId, subject.getSecondHalfScore());
                             subjectFinalScores.put(subjectId, subject.getFinalScore());
