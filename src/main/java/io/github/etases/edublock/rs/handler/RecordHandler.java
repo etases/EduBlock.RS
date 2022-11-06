@@ -74,6 +74,23 @@ public class RecordHandler extends SimpleServerHandler {
         });
     }
 
+    private Record createEmptyRecord(long studentId, long classroomId) {
+        try (var session = sessionFactory.openSession()) {
+            var student = session.get(Student.class, studentId);
+            var classroom = session.get(Classroom.class, classroomId);
+            if (student == null || classroom == null) {
+                return null;
+            }
+            var transaction = session.beginTransaction();
+            var record = new Record();
+            record.setStudent(student);
+            record.setClassroom(classroom);
+            session.save(record);
+            transaction.commit();
+            return record;
+        }
+    }
+
     private void get(Context ctx, boolean isOwnRecordOnly) {
         long studentId = isOwnRecordOnly ? JwtHandler.getUserId(ctx) : Long.parseLong(ctx.pathParam("studentId"));
         long classroomId = Long.parseLong(ctx.pathParam("classroomId"));
@@ -87,7 +104,7 @@ public class RecordHandler extends SimpleServerHandler {
             var query = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
                     .setParameter("studentId", studentId)
                     .setParameter("classroomId", classroomId);
-            var record = query.uniqueResult();
+            var record = query.uniqueResultOptional().orElseGet(() -> createEmptyRecord(studentId, classroomId));
             if (record == null) {
                 ctx.status(404);
                 ctx.json(new RecordResponse(1, "Record not found", null));
