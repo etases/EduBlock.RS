@@ -40,8 +40,7 @@ public class DatabaseManager {
         if (requestServer.getMainConfig().getServerProperties().devMode()) {
             setting
                     .setClientProperty(AvailableSettings.SHOW_SQL, true)
-                    .setClientProperty(AvailableSettings.FORMAT_SQL, true)
-                    .setClientProperty(AvailableSettings.HBM2DDL_AUTO, "drop-and-create");
+                    .setClientProperty(AvailableSettings.FORMAT_SQL, true);
         }
 
         HibernateClient client = new HibernateClient(setting, driver);

@@ -78,6 +78,8 @@ public class RecordHandler extends SimpleServerHandler {
         var record = new Record();
         record.setStudent(student);
         record.setClassroom(classroom);
+        record.setRecordEntry(new ArrayList<>());
+        record.setPendingRecordEntry(new ArrayList<>());
         return record;
     }
 
@@ -274,7 +276,7 @@ public class RecordHandler extends SimpleServerHandler {
             pending.setRequestDate(new Date());
             pending.setRecord(record);
 
-            session.save(input);
+            session.save(pending);
             transaction.commit();
 
             ctx.json(new Response(0, "Record validation requested"));

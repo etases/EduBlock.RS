@@ -15,6 +15,7 @@ import java.util.function.LongFunction;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PendingRecordEntryOutput {
+    long id;
     long subjectId = 0;
     SubjectOutput subject = new SubjectOutput();
     float firstHalfScore = 0;
@@ -26,6 +27,7 @@ public class PendingRecordEntryOutput {
 
     public static PendingRecordEntryOutput fromEntity(PendingRecordEntry recordEntry, LongFunction<Profile> profileFunction) {
         return new PendingRecordEntryOutput(
+                recordEntry.getId(),
                 recordEntry.getSubjectId(),
                 SubjectOutput.fromInternal(recordEntry.getSubjectId()),
                 recordEntry.getFirstHalfScore(),
