@@ -500,6 +500,15 @@ public class ClassroomHandler extends SimpleServerHandler {
                     errors.add(new TeacherWithSubjectErrorListResponse.ErrorData(3, "Subject not found", teacherWithSubject));
                     continue;
                 }
+                if (session.createNamedQuery("ClassTeacher.findByClassroomAndTeacherAndSubject", ClassTeacher.class)
+                        .setParameter("classroomId", classroomId)
+                        .setParameter("teacherId", teacherWithSubject.getTeacherId())
+                        .setParameter("subjectId", teacherWithSubject.getSubjectId())
+                        .uniqueResultOptional().isPresent()) {
+                    errors.add(new TeacherWithSubjectErrorListResponse.ErrorData(4, "Teacher already in class", teacherWithSubject));
+                    continue;
+                }
+
                 var classTeacher = new ClassTeacher();
                 classTeacher.setClassroom(classroom);
                 classTeacher.setTeacher(teacher);
@@ -546,8 +555,8 @@ public class ClassroomHandler extends SimpleServerHandler {
                         .setParameter("classroomId", classroomId)
                         .setParameter("teacherId", teacherWithSubject.getTeacherId())
                         .setParameter("subjectId", teacherWithSubject.getSubjectId())
-                        .uniqueResultOptional()
-                        .ifPresent(session::delete);
+                        .stream()
+                        .forEach(session::delete);
             }
             transaction.commit();
             ctx.json(new Response(0, "Teachers removed"));
@@ -602,6 +611,14 @@ public class ClassroomHandler extends SimpleServerHandler {
                     errors.add(new AccountErrorListResponse.ErrorData(1, "Student not found", accountId));
                     continue;
                 }
+                if (session.createNamedQuery("ClassStudent.findByClassroomAndStudent", ClassStudent.class)
+                        .setParameter("classroomId", classroomId)
+                        .setParameter("studentId", accountId)
+                        .uniqueResultOptional().isPresent()) {
+                    errors.add(new AccountErrorListResponse.ErrorData(2, "Student already in class", accountId));
+                    continue;
+                }
+
                 var classStudent = new ClassStudent();
                 classStudent.setClassroom(classroom);
                 classStudent.setStudent(student);
@@ -647,8 +664,8 @@ public class ClassroomHandler extends SimpleServerHandler {
                 session.createNamedQuery("ClassStudent.findByClassroomAndStudent", ClassStudent.class)
                         .setParameter("classroomId", classroomId)
                         .setParameter("studentId", accountId)
-                        .uniqueResultOptional()
-                        .ifPresent(session::delete);
+                        .stream()
+                        .forEach(session::delete);
             }
             transaction.commit();
             ctx.json(new Response(0, "Students removed"));
