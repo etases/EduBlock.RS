@@ -17,9 +17,9 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
     private final Gson gson = new Gson();
     private final File localPersonalFile;
     private final File localRecordHistoryFile;
-    private final Type personalType = new TypeToken<Map<String, Personal>>() {
+    private final Type personalType = new TypeToken<Map<Long, Personal>>() {
     }.getType();
-    private final Type recordHistoryType = new TypeToken<Map<String, List<RecordHistory>>>() {
+    private final Type recordHistoryType = new TypeToken<Map<Long, List<RecordHistory>>>() {
     }.getType();
 
     public LocalStudentUpdater(File localPersonalFile, File localRecordHistoryFile) {
