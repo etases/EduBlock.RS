@@ -50,4 +50,16 @@ public class StudentUpdaterWithLogger implements StudentUpdater {
         Logger.info("getStudentRecordHistory({})", studentId);
         return studentUpdater.getStudentRecordHistory(studentId);
     }
+
+    @Override
+    public void start() {
+        Logger.info("start()");
+        studentUpdater.start();
+    }
+
+    @Override
+    public void stop() {
+        Logger.info("stop()");
+        studentUpdater.stop();
+    }
 }

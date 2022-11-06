@@ -80,7 +80,7 @@ public class StudentUpdateHandler implements ServerHandler {
         executorService = new ScheduledThreadPoolExecutor(1);
         executorService.scheduleAtFixedRate(() -> {
             var current = currentFutureRef.get();
-            if (current != null && current.isDone()) return;
+            if (current != null && !current.isDone()) return;
             if (updateRecords.get()) {
                 updateRecords.set(false);
                 currentFutureRef.set(updateRecord().thenAccept(v -> Logger.info("Updated records")));
