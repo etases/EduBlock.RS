@@ -74,6 +74,13 @@ public class RecordHandler extends SimpleServerHandler {
         });
     }
 
+    private Record createEmptyRecord(Student student, Classroom classroom) {
+        var record = new Record();
+        record.setStudent(student);
+        record.setClassroom(classroom);
+        return record;
+    }
+
     private Record createEmptyRecord(long studentId, long classroomId) {
         try (var session = sessionFactory.openSession()) {
             var student = session.get(Student.class, studentId);
@@ -82,9 +89,7 @@ public class RecordHandler extends SimpleServerHandler {
                 return null;
             }
             var transaction = session.beginTransaction();
-            var record = new Record();
-            record.setStudent(student);
-            record.setClassroom(classroom);
+            var record = createEmptyRecord(student, classroom);
             session.save(record);
             transaction.commit();
             return record;
@@ -251,13 +256,11 @@ public class RecordHandler extends SimpleServerHandler {
             var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
                     .setParameter("studentId", input.getStudentId())
                     .setParameter("classroomId", input.getClassroomId());
-            var record = recordQuery.uniqueResult();
-            if (record == null) {
-                record = new Record();
-                record.setStudent(student);
-                record.setClassroom(classroom);
-                session.save(record);
-            }
+            var record = recordQuery.uniqueResultOptional().orElseGet(() -> {
+                var newRecord = createEmptyRecord(student, classroom);
+                session.save(newRecord);
+                return newRecord;
+            });
 
             Transaction transaction = session.beginTransaction();
             var pending = new PendingRecordEntry();
