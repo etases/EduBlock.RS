@@ -405,7 +405,7 @@ public class AccountHandler extends SimpleServerHandler {
         }
     }
 
-    private void updateProfile(Context ctx, long accountId) {
+    private void updateProfile(Context ctx, long accountId, boolean bypassCheck) {
         ProfileUpdate input = ctx.bodyValidator(ProfileUpdate.class)
                 .check(ProfileUpdate::validate, "Invalid data")
                 .get();
@@ -420,16 +420,18 @@ public class AccountHandler extends SimpleServerHandler {
             }
 
             JwtHandler.Role role = JwtHandler.Role.getRole(account.getRole());
-            if (role == JwtHandler.Role.ADMIN) {
-                ctx.status(403);
-                ctx.json(new Response(2, "You cannot update an admin account"));
-                return;
-            } else if (role == JwtHandler.Role.STAFF) {
-                long userId = JwtHandler.getUserId(ctx);
-                if (userId != accountId) {
+            if (!bypassCheck) {
+                if (role == JwtHandler.Role.ADMIN) {
                     ctx.status(403);
-                    ctx.json(new Response(3, "You cannot update another staff account"));
+                    ctx.json(new Response(2, "You cannot update an admin account"));
                     return;
+                } else if (role == JwtHandler.Role.STAFF) {
+                    long userId = JwtHandler.getUserId(ctx);
+                    if (userId != accountId) {
+                        ctx.status(403);
+                        ctx.json(new Response(3, "You cannot update another staff account"));
+                        return;
+                    }
                 }
             }
 
@@ -480,7 +482,7 @@ public class AccountHandler extends SimpleServerHandler {
             }
     )
     private void updateProfile(Context ctx) {
-        updateProfile(ctx, Long.parseLong(ctx.pathParam("id")));
+        updateProfile(ctx, Long.parseLong(ctx.pathParam("id")), false);
     }
 
     @OpenApi(
@@ -505,7 +507,7 @@ public class AccountHandler extends SimpleServerHandler {
             }
     )
     private void updateSelfProfile(Context ctx) {
-        updateProfile(ctx, JwtHandler.getUserId(ctx));
+        updateProfile(ctx, JwtHandler.getUserId(ctx), true);
     }
 
     @OpenApi(
