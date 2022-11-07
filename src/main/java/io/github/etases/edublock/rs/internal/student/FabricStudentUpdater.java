@@ -25,6 +25,15 @@ public class FabricStudentUpdater implements StudentUpdater {
     private Network network;
     private Contract contract;
 
+    private static boolean isNotKnownResponse(GatewayException exception) {
+        for (var errorDetail : exception.getDetails()) {
+            if (errorDetail.getMessage().contains("ASSET_NOT_FOUND")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private Contract getContract() {
         var properties = mainConfig.getFabricUpdaterProperties();
         if (network == null) {
@@ -43,8 +52,9 @@ public class FabricStudentUpdater implements StudentUpdater {
                 var result = getContract().evaluateTransaction("getStudentPersonal", Long.toString(studentId));
                 return gson.fromJson(new String(result, StandardCharsets.UTF_8), Personal.class);
             } catch (GatewayException e) {
-                // TODO: catch not found payload
-                Logger.error(e);
+                if (isNotKnownResponse(e)) {
+                    Logger.error(e);
+                }
                 return null;
             } catch (Exception e) {
                 Logger.error(e);
@@ -79,7 +89,11 @@ public class FabricStudentUpdater implements StudentUpdater {
                 var result = getContract().evaluateTransaction("getStudentRecord", Long.toString(studentId));
                 return gson.fromJson(new String(result, StandardCharsets.UTF_8), Record.class);
             } catch (GatewayException e) {
-                // TODO: catch not found payload
+                if (isNotKnownResponse(e)) {
+                    Logger.error(e);
+                }
+                return null;
+            } catch (Exception e) {
                 Logger.error(e);
                 return null;
             }
