@@ -19,7 +19,7 @@ import java.util.Date;
 @NamedQuery(name = "PendingRecordEntry.findByHomeroomTeacherAndStudent", query = "FROM PendingRecordEntry WHERE record.classroom.homeroomTeacher.id = :teacherId and record.student.id = :studentId")
 public class PendingRecordEntry implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private long id;
     @Column(nullable = false)

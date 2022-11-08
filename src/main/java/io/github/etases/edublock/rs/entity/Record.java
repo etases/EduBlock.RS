@@ -19,7 +19,7 @@ import java.util.List;
 @NamedQuery(name = "Record.findByClassroom", query = "FROM Record WHERE classroom.id = :classroomId")
 public class Record implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private long id;
     @ManyToOne

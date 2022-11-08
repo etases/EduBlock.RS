@@ -21,7 +21,7 @@ import java.util.List;
 @NamedQuery(name = "Account.findByRole", query = "FROM Account WHERE role = :role")
 public class Account implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private long id;
     @Column(nullable = false, unique = true)

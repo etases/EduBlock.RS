@@ -17,7 +17,7 @@ import java.util.Date;
 @NamedQuery(name = "RecordEntry.findNeedUpdate", query = "FROM RecordEntry where updateComplete = false")
 public class RecordEntry implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private long id;
     @Column(nullable = false)

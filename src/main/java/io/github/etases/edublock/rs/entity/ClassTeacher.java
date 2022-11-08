@@ -18,7 +18,7 @@ import java.io.Serializable;
 @NamedQuery(name = "ClassTeacher.findByTeacher", query = "FROM ClassTeacher WHERE teacher.id = :teacherId")
 public class ClassTeacher implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private long id;
     @ManyToOne
