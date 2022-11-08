@@ -18,7 +18,7 @@ import java.util.Date;
 @NamedQuery(name = "Profile.findUpdated", query = "FROM Profile WHERE updated = true")
 public class Profile implements Serializable {
     @Id
-    private long id;
+    private Long id;
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @MapsId
     private Account account;

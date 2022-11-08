@@ -1,9 +1,11 @@
 package io.github.etases.edublock.rs.entity;
 
+import io.github.etases.edublock.rs.entity.generator.UseExistOrIncrementGenerator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -21,9 +23,10 @@ import java.util.List;
 @NamedQuery(name = "Account.findByRole", query = "FROM Account WHERE role = :role")
 public class Account implements Serializable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
-    private long id;
+    @GenericGenerator(name = "ExistOrGenerate", strategy = UseExistOrIncrementGenerator.CLASS_PATH)
+    @GeneratedValue(generator = "ExistOrGenerate")
+    @Column(unique = true, nullable = false)
+    private Long id;
     @Column(nullable = false, unique = true)
     private String username;
     @Column(nullable = false)

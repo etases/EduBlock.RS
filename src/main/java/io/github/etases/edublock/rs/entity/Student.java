@@ -17,7 +17,7 @@ import java.util.List;
 @NamedQuery(name = "Student.findAll", query = "FROM Student")
 public class Student implements Serializable {
     @Id
-    private long id;
+    private Long id;
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @MapsId
     private Account account;
