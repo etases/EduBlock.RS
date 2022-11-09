@@ -13,6 +13,7 @@ public class SystemMainConfig implements MainConfig {
     private final FabricProperties fabricProperties;
     private final FabricUpdaterProperties fabricUpdaterProperties;
     private final String accountDefaultPassword;
+    private final int updaterPeriod;
 
     public SystemMainConfig() {
         this.jwtProperties = new JwtProperties(
@@ -51,6 +52,7 @@ public class SystemMainConfig implements MainConfig {
                 Optional.ofNullable(System.getenv("RS_FABRIC_UPDATER_CHAINCODE_NAME")).orElse("edublock")
         );
         this.accountDefaultPassword = Optional.ofNullable(System.getenv("RS_ACCOUNT_DEFAULT_PASSWORD")).orElse("password");
+        this.updaterPeriod = Integer.parseInt(Optional.ofNullable(System.getenv("RS_UPDATER_PERIOD")).orElse("60"));
     }
 
     @Override
@@ -81,5 +83,10 @@ public class SystemMainConfig implements MainConfig {
     @Override
     public String getDefaultPassword() {
         return accountDefaultPassword;
+    }
+
+    @Override
+    public int getUpdaterPeriod() {
+        return updaterPeriod;
     }
 }

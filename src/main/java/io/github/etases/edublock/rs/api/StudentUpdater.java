@@ -6,6 +6,7 @@ import io.github.etases.edublock.rs.model.fabric.Record;
 import io.github.etases.edublock.rs.model.fabric.RecordHistory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public interface StudentUpdater {
@@ -20,6 +21,10 @@ public interface StudentUpdater {
     CompletableFuture<Boolean> updateStudentClassRecord(long studentId, long classId, ClassRecord classRecord);
 
     CompletableFuture<List<RecordHistory>> getStudentRecordHistory(long studentId);
+
+    CompletableFuture<Map<Long, Personal>> getAllStudentPersonal();
+
+    CompletableFuture<Map<Long, Record>> getAllStudentRecord();
 
     default void start() {
         // do nothing

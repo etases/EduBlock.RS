@@ -15,6 +15,7 @@ import org.tinylog.Logger;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
@@ -147,6 +148,32 @@ public class FabricStudentUpdater implements StudentUpdater {
             } catch (Exception e) {
                 Logger.error(e);
                 return Collections.emptyList();
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Map<Long, Personal>> getAllStudentPersonal() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                var result = getContract().evaluateTransaction("getAllStudentPersonals");
+                return gson.fromJson(new String(result, StandardCharsets.UTF_8), PersonalMap.class).getPersonals();
+            } catch (Exception e) {
+                Logger.error(e);
+                return Collections.emptyMap();
+            }
+        });
+    }
+
+    @Override
+    public CompletableFuture<Map<Long, Record>> getAllStudentRecord() {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                var result = getContract().evaluateTransaction("getAllStudentRecords");
+                return gson.fromJson(new String(result, StandardCharsets.UTF_8), RecordMap.class).getRecords();
+            } catch (Exception e) {
+                Logger.error(e);
+                return Collections.emptyMap();
             }
         });
     }

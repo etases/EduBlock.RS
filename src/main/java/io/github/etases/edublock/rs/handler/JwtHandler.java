@@ -4,11 +4,11 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.Inject;
-import io.github.etases.edublock.rs.PasswordUtils;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
+import io.github.etases.edublock.rs.internal.account.PasswordUtil;
 import io.github.etases.edublock.rs.internal.jwt.JwtProvider;
 import io.github.etases.edublock.rs.internal.jwt.JwtUtil;
 import io.github.etases.edublock.rs.model.input.AccountLogin;
@@ -87,7 +87,7 @@ public class JwtHandler extends SimpleServerHandler {
                                 .uniqueResult();
                     }
                 }).thenAccept(account -> {
-                    if (account == null || !PasswordUtils.verifyPassword(accountLogin.getPassword(), account.getSalt(), account.getHashedPassword())) {
+                    if (account == null || !PasswordUtil.verifyPassword(accountLogin.getPassword(), account.getSalt(), account.getHashedPassword())) {
                         ctx.status(401);
                         ctx.json(new StringResponse(1, "Invalid username or password", null));
                         return;
