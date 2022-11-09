@@ -154,13 +154,27 @@ public class FabricStudentUpdater implements StudentUpdater {
 
     @Override
     public CompletableFuture<Map<Long, Personal>> getAllStudentPersonal() {
-        // TODO: implement
-        return CompletableFuture.completedFuture(Collections.emptyMap());
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                var result = getContract().evaluateTransaction("getAllStudentPersonals");
+                return gson.fromJson(new String(result, StandardCharsets.UTF_8), PersonalMap.class).getPersonals();
+            } catch (Exception e) {
+                Logger.error(e);
+                return Collections.emptyMap();
+            }
+        });
     }
 
     @Override
     public CompletableFuture<Map<Long, Record>> getAllStudentRecord() {
-        // TODO: implement
-        return CompletableFuture.completedFuture(Collections.emptyMap());
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                var result = getContract().evaluateTransaction("getAllStudentRecords");
+                return gson.fromJson(new String(result, StandardCharsets.UTF_8), RecordMap.class).getRecords();
+            } catch (Exception e) {
+                Logger.error(e);
+                return Collections.emptyMap();
+            }
+        });
     }
 }
