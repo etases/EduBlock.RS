@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.tinylog.Logger;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
@@ -49,6 +50,18 @@ public class StudentUpdaterWithLogger implements StudentUpdater {
     public CompletableFuture<List<RecordHistory>> getStudentRecordHistory(long studentId) {
         Logger.info("getStudentRecordHistory({})", studentId);
         return studentUpdater.getStudentRecordHistory(studentId);
+    }
+
+    @Override
+    public CompletableFuture<Map<Long, Personal>> getAllStudentPersonal() {
+        Logger.info("getAllStudentPersonal()");
+        return studentUpdater.getAllStudentPersonal();
+    }
+
+    @Override
+    public CompletableFuture<Map<Long, Record>> getAllStudentRecord() {
+        Logger.info("getAllStudentRecord()");
+        return studentUpdater.getAllStudentRecord();
     }
 
     @Override

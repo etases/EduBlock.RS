@@ -64,4 +64,25 @@ public class TemporaryStudentUpdater implements StudentUpdater {
     public CompletableFuture<List<RecordHistory>> getStudentRecordHistory(long studentId) {
         return CompletableFuture.completedFuture(recordHistoryMap.getOrDefault(studentId, Collections.emptyList()));
     }
+
+    @Override
+    public CompletableFuture<Map<Long, Personal>> getAllStudentPersonal() {
+        return CompletableFuture.completedFuture(Collections.unmodifiableMap(personalMap));
+    }
+
+    @Override
+    public CompletableFuture<Map<Long, Record>> getAllStudentRecord() {
+        var result = new HashMap<Long, Record>();
+        for (var entry : recordHistoryMap.entrySet()) {
+            var recordHistories = entry.getValue();
+            if (recordHistories == null) {
+                continue;
+            }
+            recordHistories.stream()
+                    .max(Comparator.comparing(RecordHistory::getTimestamp))
+                    .map(RecordHistory::getRecord)
+                    .ifPresent(record -> result.put(entry.getKey(), record));
+        }
+        return CompletableFuture.completedFuture(Collections.unmodifiableMap(result));
+    }
 }

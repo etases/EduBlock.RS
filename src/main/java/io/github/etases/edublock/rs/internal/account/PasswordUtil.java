@@ -1,4 +1,4 @@
-package io.github.etases.edublock.rs;
+package io.github.etases.edublock.rs.internal.account;
 
 import lombok.experimental.UtilityClass;
 import org.apache.commons.text.RandomStringGenerator;
@@ -10,7 +10,7 @@ import java.security.spec.KeySpec;
 import java.util.Base64;
 
 @UtilityClass
-public final class PasswordUtils {
+public final class PasswordUtil {
     private static final RandomStringGenerator saltGenerator;
     private static final SecretKeyFactory keyFactory;
 

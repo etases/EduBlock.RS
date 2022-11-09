@@ -1,13 +1,14 @@
 package io.github.etases.edublock.rs.handler;
 
 import com.google.inject.Inject;
-import io.github.etases.edublock.rs.PasswordUtils;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.Account;
 import io.github.etases.edublock.rs.entity.Profile;
 import io.github.etases.edublock.rs.entity.Student;
+import io.github.etases.edublock.rs.internal.account.AccountUtil;
+import io.github.etases.edublock.rs.internal.account.PasswordUtil;
 import io.github.etases.edublock.rs.internal.filter.ListSessionInputFilter;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
 import io.github.etases.edublock.rs.model.input.*;
@@ -232,19 +233,10 @@ public class AccountHandler extends SimpleServerHandler {
                     continue;
                 }
                 var role = optionalRole.get();
-                String username = accountCreate.getUsername();
+                String username = AccountUtil.generateUsername(accountCreate.getFirstName(), accountCreate.getLastName());
                 String password = mainConfig.getDefaultPassword();
-                long count = session.createNamedQuery("Account.countByUsernameRegex", Long.class)
-                        .setParameter("username", username + "%")
-                        .uniqueResult();
-                String salt = PasswordUtils.generateSalt();
-                String hashedPassword = PasswordUtils.hashPassword(password, salt);
-                var account = new Account();
-                account.setUsername(username + (count == 0 ? "" : count));
-                account.setSalt(salt);
-                account.setHashedPassword(hashedPassword);
+                var account = AccountUtil.createAccount(session, username, password);
                 account.setRole(role.name().toUpperCase());
-                account.setCreatedAt(new Date(System.currentTimeMillis()));
                 session.save(account);
                 var profile = new Profile();
                 profile.setId(account.getId());
@@ -257,7 +249,7 @@ public class AccountHandler extends SimpleServerHandler {
                 profile.setAddress("");
                 profile.setPhone("");
                 profile.setEmail("");
-                profile.setUpdated(false);
+                profile.setUpdated(true);
                 session.save(profile);
                 if (role == JwtHandler.Role.STUDENT) {
                     var student = new Student();
@@ -322,8 +314,8 @@ public class AccountHandler extends SimpleServerHandler {
                     errors.add(new AccountLoginErrorListResponse.ErrorData(1, "Username does not exist", accountInput));
                     continue;
                 }
-                String salt = PasswordUtils.generateSalt();
-                String hashedPassword = PasswordUtils.hashPassword(accountInput.getPassword(), salt);
+                String salt = PasswordUtil.generateSalt();
+                String hashedPassword = PasswordUtil.hashPassword(accountInput.getPassword(), salt);
                 account.setSalt(salt);
                 account.setHashedPassword(hashedPassword);
                 session.update(account);
