@@ -18,7 +18,7 @@ import java.util.List;
 @Setter
 @NamedQuery(name = "Classroom.findAll", query = "FROM Classroom")
 @NamedQuery(name = "Classroom.findByName", query = "FROM Classroom WHERE name = :name")
-@NamedQuery(name = "Classroom.findByHomeroomTeacher", query = "FROM Classroom WHERE not (homeroomTeacher = null) and homeroomTeacher.id = :teacherId")
+@NamedQuery(name = "Classroom.findByHomeroomTeacher", query = "FROM Classroom WHERE homeroomTeacher.id = :teacherId")
 public class Classroom implements Serializable {
     @Id
     @GenericGenerator(name = "ExistOrGenerate", strategy = UseExistOrIncrementGenerator.CLASS_PATH)
