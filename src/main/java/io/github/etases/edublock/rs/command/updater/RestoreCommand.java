@@ -4,12 +4,14 @@ import io.github.etases.edublock.rs.api.Command;
 import io.github.etases.edublock.rs.handler.StudentUpdateHandler;
 import org.tinylog.Logger;
 
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RestoreCommand extends Command {
     private final StudentUpdateHandler handler;
     private final AtomicReference<CompletableFuture<Void>> currentFutureRef = new AtomicReference<>();
+    private final AtomicReference<Instant> verifyTimeRef = new AtomicReference<>();
 
     public RestoreCommand(StudentUpdateHandler handler) {
         super("updater-restore");
@@ -18,6 +20,15 @@ public class RestoreCommand extends Command {
 
     @Override
     public void runCommand(String argument) {
+        var verifyTime = verifyTimeRef.get();
+        if (verifyTime == null || Instant.now().isAfter(verifyTime.plusSeconds(5))) {
+            verifyTimeRef.set(Instant.now());
+            Logger.info("Do you really want to restore the updater? Type 'updater-restore' again to confirm.");
+            return;
+        } else {
+            verifyTimeRef.set(null);
+        }
+
         var currentFuture = currentFutureRef.get();
         if (currentFuture != null && !currentFuture.isDone()) {
             Logger.info("Restore already in progress");
