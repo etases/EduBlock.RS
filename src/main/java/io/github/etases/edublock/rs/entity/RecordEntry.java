@@ -38,13 +38,13 @@ public class RecordEntry implements Serializable {
     @Column(nullable = false)
     private boolean updateComplete;
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn
     private Account teacher;
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn
     private Account requester;
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn
     private Account approver;
 
     @ManyToOne
