@@ -77,6 +77,7 @@ public class StudentUpdateHandler implements ServerHandler {
             javalin.get("/updater/{id}/history", this::getHistory);
         });
 
+        var updaterPeriod = Math.max(mainConfig.getUpdaterPeriod(), 1);
         executorService = new ScheduledThreadPoolExecutor(1);
         executorService.scheduleAtFixedRate(() -> {
             var current = currentFutureRef.get();
@@ -89,7 +90,7 @@ public class StudentUpdateHandler implements ServerHandler {
                 currentFutureRef.set(updatePersonal().thenAccept(v -> Logger.info("Updated personal")));
             }
             Logger.info("Student update scheduled");
-        }, 1, 1, TimeUnit.MINUTES);
+        }, updaterPeriod, updaterPeriod, TimeUnit.SECONDS);
     }
 
     @Override

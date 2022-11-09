@@ -36,4 +36,9 @@ public interface MainConfig {
     default String getDefaultPassword() {
         return "password";
     }
+
+    @ConfigPath(value = "updater.period")
+    default int getUpdaterPeriod() {
+        return 60;
+    }
 }
