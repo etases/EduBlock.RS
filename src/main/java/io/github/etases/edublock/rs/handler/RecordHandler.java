@@ -491,7 +491,8 @@ public class RecordHandler extends SimpleServerHandler {
                 ctx.json(new Response(1, "Record not found"));
                 return;
             }
-            if (pendingRecordEntry.getRecord().getClassroom().getHomeroomTeacher().getId() != userId) {
+            var homeRoomTeacher = pendingRecordEntry.getRecord().getClassroom().getHomeroomTeacher();
+            if (homeRoomTeacher == null || homeRoomTeacher.getId() != userId) {
                 ctx.status(403);
                 ctx.json(new Response(2, "Not homeroom teacher"));
                 return;

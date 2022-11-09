@@ -26,6 +26,9 @@ public class PendingRecordEntryOutput {
     AccountWithProfileOutput requester = new AccountWithProfileOutput();
 
     public static PendingRecordEntryOutput fromEntity(PendingRecordEntry recordEntry, LongFunction<Profile> profileFunction) {
+        if (recordEntry == null) {
+            return new PendingRecordEntryOutput();
+        }
         return new PendingRecordEntryOutput(
                 recordEntry.getId(),
                 recordEntry.getSubjectId(),

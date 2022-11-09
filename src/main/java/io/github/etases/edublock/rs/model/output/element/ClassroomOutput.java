@@ -21,6 +21,9 @@ public class ClassroomOutput {
     AccountWithProfileOutput homeroomTeacher = new AccountWithProfileOutput();
 
     public static ClassroomOutput fromEntity(Classroom classroom, LongFunction<Profile> profileFunction) {
+        if (classroom == null) {
+            return new ClassroomOutput();
+        }
         return new ClassroomOutput(
                 classroom.getId(),
                 classroom.getName(),

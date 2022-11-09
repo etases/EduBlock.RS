@@ -23,6 +23,9 @@ public class RecordOutput {
     ClassificationReportOutput classification = new ClassificationReportOutput();
 
     public static RecordOutput fromEntity(Record record, LongFunction<Profile> profileFunction, boolean filterUpdated, boolean fillAllSubjects) {
+        if (record == null) {
+            return new RecordOutput();
+        }
         var recordEntryOutputs = record.getRecordEntry().stream()
                 .filter(entry -> !filterUpdated || !entry.isUpdateComplete())
                 .map(entry -> RecordEntryOutput.fromEntity(entry, profileFunction)).toList();

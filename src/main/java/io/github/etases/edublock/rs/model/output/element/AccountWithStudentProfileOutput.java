@@ -19,6 +19,9 @@ public class AccountWithStudentProfileOutput {
     ProfileOutput profile = new ProfileOutput();
 
     public static AccountWithStudentProfileOutput fromEntity(Student student, LongFunction<Profile> profileFunction) {
+        if (student == null) {
+            return new AccountWithStudentProfileOutput();
+        }
         return new AccountWithStudentProfileOutput(
                 AccountOutput.fromEntity(student.getAccount()),
                 StudentOutput.fromEntity(student),

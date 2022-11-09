@@ -17,6 +17,9 @@ public class ClassificationReportOutput {
     ClassificationOutput finalClassify = new ClassificationOutput();
 
     public static ClassificationReportOutput fromInternal(ClassificationReport classificationReport) {
+        if (classificationReport == null) {
+            return new ClassificationReportOutput();
+        }
         return new ClassificationReportOutput(
                 ClassificationOutput.fromInternal(classificationReport.getFirstHalfClassify()),
                 ClassificationOutput.fromInternal(classificationReport.getSecondHalfClassify()),

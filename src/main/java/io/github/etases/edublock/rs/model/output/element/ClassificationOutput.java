@@ -19,6 +19,9 @@ public class ClassificationOutput {
     int level = Integer.MAX_VALUE;
 
     public static ClassificationOutput fromInternal(Classification classification) {
+        if (classification == null) {
+            return new ClassificationOutput();
+        }
         return new ClassificationOutput(
                 classification.getIdentifier(),
                 classification.getName(),

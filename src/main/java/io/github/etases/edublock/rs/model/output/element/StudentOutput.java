@@ -22,6 +22,9 @@ public class StudentOutput {
     String homeTown = "";
 
     public static StudentOutput fromEntity(Student student) {
+        if (student == null) {
+            return new StudentOutput();
+        }
         return new StudentOutput(
                 student.getId(),
                 student.getEthnic(),

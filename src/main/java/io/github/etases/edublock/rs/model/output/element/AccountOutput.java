@@ -19,6 +19,9 @@ public class AccountOutput {
     Date createdAt = Date.from(Instant.EPOCH);
 
     public static AccountOutput fromEntity(Account account) {
+        if (account == null) {
+            return new AccountOutput();
+        }
         return new AccountOutput(
                 account.getId(),
                 account.getUsername(),

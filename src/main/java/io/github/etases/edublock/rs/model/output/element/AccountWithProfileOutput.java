@@ -17,6 +17,9 @@ public class AccountWithProfileOutput {
     ProfileOutput profile = new ProfileOutput();
 
     public static AccountWithProfileOutput fromEntity(Account account, LongFunction<Profile> profileFunction) {
+        if (account == null) {
+            return new AccountWithProfileOutput();
+        }
         return new AccountWithProfileOutput(
                 AccountOutput.fromEntity(account),
                 ProfileOutput.fromEntity(profileFunction.apply(account.getId()))

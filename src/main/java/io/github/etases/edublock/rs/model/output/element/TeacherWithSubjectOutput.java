@@ -17,6 +17,9 @@ public class TeacherWithSubjectOutput {
     SubjectOutput subject = new SubjectOutput();
 
     public static TeacherWithSubjectOutput fromEntity(ClassTeacher classTeacher, LongFunction<Profile> profileFunction) {
+        if (classTeacher == null) {
+            return new TeacherWithSubjectOutput();
+        }
         return new TeacherWithSubjectOutput(
                 AccountWithProfileOutput.fromEntity(classTeacher.getTeacher(), profileFunction),
                 SubjectOutput.fromInternal(classTeacher.getSubjectId())

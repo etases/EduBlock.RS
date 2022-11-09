@@ -30,6 +30,9 @@ public class RecordEntryOutput {
     AccountWithProfileOutput approver = new AccountWithProfileOutput();
 
     public static RecordEntryOutput fromEntity(RecordEntry recordEntry, LongFunction<Profile> profileFunction) {
+        if (recordEntry == null) {
+            return new RecordEntryOutput();
+        }
         return new RecordEntryOutput(
                 recordEntry.getSubjectId(),
                 SubjectOutput.fromInternal(recordEntry.getSubjectId()),

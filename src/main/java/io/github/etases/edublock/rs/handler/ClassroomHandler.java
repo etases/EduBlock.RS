@@ -25,12 +25,12 @@ public class ClassroomHandler extends SimpleServerHandler {
             .addFilter("id", (input, o) -> Long.toString(o.getId()).equals(input))
             .addFilter("name", (input, o) -> o.getName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
             .addFilter("grade", (input, o) -> Integer.toString(o.getGrade()).equals(input))
-            .addFilter("homeroomTeacherId", (input, o) -> Long.toString(o.getHomeroomTeacher().getId()).equals(input))
-            .addFilter("homeroomTeacherUserName", (input, o) -> o.getHomeroomTeacher().getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("homeroomTeacherFirstName", (session, input, o) -> Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getFirstName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("homeroomTeacherLastName", (session, input, o) -> Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getLastName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("homeroomTeacherEmail", (session, input, o) -> Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getEmail().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("homeroomTeacherPhone", (session, input, o) -> Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getPhone().contains(input))
+            .addFilter("homeroomTeacherId", (input, o) -> o.getHomeroomTeacher() != null && Long.toString(o.getHomeroomTeacher().getId()).equals(input))
+            .addFilter("homeroomTeacherUserName", (input, o) -> o.getHomeroomTeacher() != null && o.getHomeroomTeacher().getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherFirstName", (session, input, o) -> o.getHomeroomTeacher() != null && Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getFirstName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherLastName", (session, input, o) -> o.getHomeroomTeacher() != null && Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getLastName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherEmail", (session, input, o) -> o.getHomeroomTeacher() != null && Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getEmail().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherPhone", (session, input, o) -> o.getHomeroomTeacher() != null && Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getPhone().contains(input))
             .addFilter("year", (input, o) -> {
                 if (input == null || input.isEmpty()) {
                     Calendar calendar = Calendar.getInstance();

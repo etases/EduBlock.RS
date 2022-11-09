@@ -25,6 +25,9 @@ public class ProfileOutput {
     String email = "";
 
     public static ProfileOutput fromEntity(Profile profile) {
+        if (profile == null) {
+            return new ProfileOutput();
+        }
         return new ProfileOutput(
                 profile.getId(),
                 profile.getFirstName(),
