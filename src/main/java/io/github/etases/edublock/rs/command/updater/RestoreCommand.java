@@ -23,7 +23,8 @@ public class RestoreCommand extends Command {
         var verifyTime = verifyTimeRef.get();
         if (verifyTime == null || Instant.now().isAfter(verifyTime.plusSeconds(5))) {
             verifyTimeRef.set(Instant.now());
-            Logger.info("Do you really want to restore the updater? Type 'updater-restore' again to confirm.");
+            Logger.info("It's recommended to do this on a fresh database.");
+            Logger.info("Do you really want to restore the updater? Type the command again to confirm.");
             return;
         } else {
             verifyTimeRef.set(null);
