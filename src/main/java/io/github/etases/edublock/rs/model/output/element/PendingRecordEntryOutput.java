@@ -24,6 +24,8 @@ public class PendingRecordEntryOutput {
     Date requestDate = Date.from(Instant.EPOCH);
     AccountWithProfileOutput teacher = new AccountWithProfileOutput();
     AccountWithProfileOutput requester = new AccountWithProfileOutput();
+    AccountWithStudentProfileOutput student = new AccountWithStudentProfileOutput();
+    ClassroomOutput classroom = new ClassroomOutput();
 
     public static PendingRecordEntryOutput fromEntity(PendingRecordEntry recordEntry, LongFunction<Profile> profileFunction) {
         if (recordEntry == null) {
@@ -38,7 +40,9 @@ public class PendingRecordEntryOutput {
                 recordEntry.getFinalScore(),
                 recordEntry.getRequestDate(),
                 AccountWithProfileOutput.fromEntity(recordEntry.getTeacher(), profileFunction),
-                AccountWithProfileOutput.fromEntity(recordEntry.getRequester(), profileFunction)
+                AccountWithProfileOutput.fromEntity(recordEntry.getRequester(), profileFunction),
+                AccountWithStudentProfileOutput.fromEntity(recordEntry.getRecord().getStudent(), profileFunction),
+                ClassroomOutput.fromEntity(recordEntry.getRecord().getClassroom(), profileFunction)
         );
     }
 }
