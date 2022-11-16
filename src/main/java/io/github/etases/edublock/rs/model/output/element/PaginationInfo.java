@@ -3,6 +3,8 @@ package io.github.etases.edublock.rs.model.output.element;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.Collection;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,4 +17,8 @@ public class PaginationInfo {
     int pageSize;
     boolean hasPreviousPage;
     boolean hasNextPage;
+
+    public static PaginationInfo whole(Collection<?> collection) {
+        return new PaginationInfo(1, collection.size(), 1, collection.size(), false, false);
+    }
 }

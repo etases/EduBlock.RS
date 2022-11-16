@@ -13,8 +13,7 @@ import io.github.etases.edublock.rs.internal.filter.ListSessionInputFilter;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
 import io.github.etases.edublock.rs.model.input.*;
 import io.github.etases.edublock.rs.model.output.*;
-import io.github.etases.edublock.rs.model.output.element.AccountWithProfileOutput;
-import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
+import io.github.etases.edublock.rs.model.output.element.*;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
@@ -208,8 +207,8 @@ public class AccountHandler extends SimpleServerHandler {
             responses = {
                     @OpenApiResponse(
                             status = "200",
-                            description = "The errors of the accounts. Should be empty",
-                            content = @OpenApiContent(from = AccountCreateErrorListResponse.class)
+                            description = "The list of the accounts.",
+                            content = @OpenApiContent(from = AccountWithProfileListResponse.class)
                     ),
                     @OpenApiResponse(
                             status = "400",
@@ -225,6 +224,7 @@ public class AccountHandler extends SimpleServerHandler {
 
         try (var session = sessionFactory.openSession()) {
             List<AccountCreateErrorListResponse.ErrorData> errors = new ArrayList<>();
+            List<AccountWithProfileOutput> outputs = new ArrayList<>();
             Transaction transaction = session.beginTransaction();
             for (var accountCreate : input.getAccounts()) {
                 var optionalRole = JwtHandler.Role.getRoleOptional(accountCreate.getRole());
@@ -265,10 +265,11 @@ public class AccountHandler extends SimpleServerHandler {
                     student.setHomeTown("");
                     session.save(student);
                 }
+                outputs.add(new AccountWithProfileOutput(AccountOutput.fromEntity(account), ProfileOutput.fromEntity(profile)));
             }
             if (errors.isEmpty()) {
                 transaction.commit();
-                ctx.json(new AccountCreateErrorListResponse(0, "Bulk create account successfully", errors));
+                ctx.json(new AccountWithProfileListResponse(0, "Bulk create account successfully", PaginationInfo.whole(outputs), outputs));
             } else {
                 transaction.rollback();
                 ctx.status(400);
