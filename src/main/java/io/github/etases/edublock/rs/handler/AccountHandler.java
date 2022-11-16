@@ -83,8 +83,8 @@ public class AccountHandler extends SimpleServerHandler {
         server.put("/account/list/password", this::bulkUpdatePassword, JwtHandler.Role.ADMIN);
         server.get("/account/role/{role}/list", this::listByRole, JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
         server.get("/account/{id}", this::get, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
-        server.put("/account/{id}/profile", this::updateProfile, JwtHandler.Role.STAFF);
         server.put("/account/self/profile", this::updateSelfProfile, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
+        server.put("/account/{id}/profile", this::updateProfile, JwtHandler.Role.STAFF);
         server.put("/account/{id}/student", this::updateStudent, JwtHandler.Role.STAFF);
     }
 
