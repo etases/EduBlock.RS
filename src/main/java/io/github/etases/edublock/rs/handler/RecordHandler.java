@@ -12,12 +12,13 @@ import io.github.etases.edublock.rs.model.input.PaginationParameter;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
 import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
-import io.github.etases.edublock.rs.model.output.RecordListResponse;
 import io.github.etases.edublock.rs.model.output.RecordResponse;
+import io.github.etases.edublock.rs.model.output.RecordWithStudentListResponse;
 import io.github.etases.edublock.rs.model.output.Response;
 import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordHistoryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
+import io.github.etases.edublock.rs.model.output.element.RecordWithStudentOutput;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
@@ -59,6 +60,22 @@ public class RecordHandler extends SimpleServerHandler {
     }
 
     private CompletableFuture<RecordOutput> insertRecordFromUpdater(long studentId, RecordOutput recordOutput) {
+        var studentUpdater = requestServer.getHandler(StudentUpdateHandler.class).getStudentUpdater();
+        return studentUpdater.getStudentRecordHistory(studentId).thenApply(recordHistories -> {
+            var recordEntryOutputsFromHistory = recordHistories.parallelStream()
+                    .map(RecordHistoryOutput::fromFabricModel)
+                    .flatMap(history -> history.getRecord().parallelStream())
+                    .filter(record -> record.getClassroom().getId() == recordOutput.getClassroom().getId())
+                    .flatMap(record -> record.getEntries().parallelStream())
+                    .toList();
+            var joinedRecordEntryOutputs = new ArrayList<>(recordOutput.getEntries());
+            joinedRecordEntryOutputs.addAll(recordEntryOutputsFromHistory);
+            recordOutput.setEntries(joinedRecordEntryOutputs);
+            return recordOutput;
+        });
+    }
+
+    private CompletableFuture<RecordWithStudentOutput> insertRecordFromUpdater(long studentId, RecordWithStudentOutput recordOutput) {
         var studentUpdater = requestServer.getHandler(StudentUpdateHandler.class).getStudentUpdater();
         return studentUpdater.getStudentRecordHistory(studentId).thenApply(recordHistories -> {
             var recordEntryOutputsFromHistory = recordHistories.parallelStream()
@@ -289,7 +306,7 @@ public class RecordHandler extends SimpleServerHandler {
         boolean generateClassification = "true".equalsIgnoreCase(ctx.queryParam("generateClassification"));
         boolean fillAllSubjects = "true".equalsIgnoreCase(ctx.queryParam("fillAllSubjects"));
 
-        Map<Long, RecordOutput> recordOutputs;
+        Map<Long, RecordWithStudentOutput> recordOutputs;
         try (var session = sessionFactory.openSession()) {
             Query<Record> query;
             if (filterByClassroom) {
@@ -304,7 +321,7 @@ public class RecordHandler extends SimpleServerHandler {
                         .setParameter("year", year);
             }
             recordOutputs = query.stream()
-                    .map(record -> Pair.of(record.getStudent().getId(), RecordOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated, fillAllSubjects)))
+                    .map(record -> Pair.of(record.getStudent().getId(), RecordWithStudentOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated, fillAllSubjects)))
                     .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
         }
 
@@ -317,13 +334,13 @@ public class RecordHandler extends SimpleServerHandler {
             })));
             ctx.future(() -> CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                     .thenApply(v -> new ArrayList<>(recordOutputs.values()))
-                    .thenAccept(newRecordOutputs -> ctx.json(new RecordListResponse(0, "OK", newRecordOutputs)))
+                    .thenAccept(newRecordOutputs -> ctx.json(new RecordWithStudentListResponse(0, "OK", newRecordOutputs)))
             );
         } else {
             if (generateClassification) {
-                recordOutputs.values().forEach(RecordOutput::updateClassification);
+                recordOutputs.values().forEach(RecordWithStudentOutput::updateClassification);
             }
-            ctx.json(new RecordListResponse(0, "OK", new ArrayList<>(recordOutputs.values())));
+            ctx.json(new RecordWithStudentListResponse(0, "OK", new ArrayList<>(recordOutputs.values())));
         }
     }
 
@@ -346,7 +363,7 @@ public class RecordHandler extends SimpleServerHandler {
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
-                    content = @OpenApiContent(from = RecordListResponse.class),
+                    content = @OpenApiContent(from = RecordWithStudentListResponse.class),
                     description = "The list of records"
             )
     )
@@ -373,7 +390,7 @@ public class RecordHandler extends SimpleServerHandler {
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = @OpenApiResponse(
                     status = "200",
-                    content = @OpenApiContent(from = RecordListResponse.class),
+                    content = @OpenApiContent(from = RecordWithStudentListResponse.class),
                     description = "The list of records"
             )
     )
