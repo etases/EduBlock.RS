@@ -55,6 +55,11 @@ public class SystemMainConfig implements MainConfig {
         this.updaterPeriod = Integer.parseInt(Optional.ofNullable(System.getenv("RS_UPDATER_PERIOD")).orElse("60"));
     }
 
+    public static boolean isSystemConfigEnabled() {
+        String env = System.getenv("RS_CONFIG_USE_SYSTEM");
+        return env != null && env.equalsIgnoreCase("true");
+    }
+
     @Override
     public JwtProperties getJwtProperties() {
         return jwtProperties;

@@ -30,7 +30,7 @@ public class RequestServer {
     private Javalin server;
 
     RequestServer(String[] args) {
-        if (System.getProperty("useSystem", "false").equalsIgnoreCase("true")) {
+        if (SystemMainConfig.isSystemConfigEnabled()) {
             mainConfig = new SystemMainConfig();
         } else {
             mainConfig = ConfigGenerator.newInstance(MainConfig.class,
