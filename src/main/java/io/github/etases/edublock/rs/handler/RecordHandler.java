@@ -22,18 +22,13 @@ import io.github.etases.edublock.rs.model.output.element.RecordWithStudentOutput
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
-import me.hsgamer.hscore.common.Pair;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class RecordHandler extends SimpleServerHandler {
 
@@ -306,7 +301,7 @@ public class RecordHandler extends SimpleServerHandler {
         boolean generateClassification = "true".equalsIgnoreCase(ctx.queryParam("generateClassification"));
         boolean fillAllSubjects = "true".equalsIgnoreCase(ctx.queryParam("fillAllSubjects"));
 
-        Map<Long, RecordWithStudentOutput> recordOutputs;
+        Map<Long, RecordWithStudentOutput> recordOutputs = new HashMap<>();
         try (var session = sessionFactory.openSession()) {
             Query<Record> query;
             if (filterByClassroom) {
@@ -320,9 +315,9 @@ public class RecordHandler extends SimpleServerHandler {
                         .setParameter("grade", grade)
                         .setParameter("year", year);
             }
-            recordOutputs = query.stream()
-                    .map(record -> Pair.of(record.getStudent().getId(), RecordWithStudentOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated, fillAllSubjects)))
-                    .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+            for (var record : query.list()) {
+                recordOutputs.put(record.getStudent().getId(), RecordWithStudentOutput.fromEntity(record, id -> Profile.getOrDefault(session, id), filterUpdated, fillAllSubjects));
+            }
         }
 
         if (useUpdater) {
