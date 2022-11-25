@@ -10,11 +10,9 @@ import io.github.etases.edublock.rs.internal.subject.Subject;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import io.github.etases.edublock.rs.model.input.PaginationParameter;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryInput;
+import io.github.etases.edublock.rs.model.input.PendingRecordEntryListInput;
 import io.github.etases.edublock.rs.model.input.PendingRecordEntryVerify;
-import io.github.etases.edublock.rs.model.output.PendingRecordEntryListResponse;
-import io.github.etases.edublock.rs.model.output.RecordResponse;
-import io.github.etases.edublock.rs.model.output.RecordWithStudentListResponse;
-import io.github.etases.edublock.rs.model.output.Response;
+import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.PendingRecordEntryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordHistoryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
@@ -22,6 +20,7 @@ import io.github.etases.edublock.rs.model.output.element.RecordWithStudentOutput
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
@@ -45,6 +44,7 @@ public class RecordHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.post("/record/request", this::request, JwtHandler.Role.STUDENT, JwtHandler.Role.TEACHER);
+        server.post("/record/request/list", this::bulkRequest, JwtHandler.Role.STUDENT, JwtHandler.Role.TEACHER);
         server.get("/record/pending/list", this::listPending, JwtHandler.Role.TEACHER);
         server.get("/record/pending/list/{studentId}", this::listPendingByStudent, JwtHandler.Role.TEACHER);
         server.post("/record/pending/verify", this::verify, JwtHandler.Role.TEACHER);
@@ -212,6 +212,54 @@ public class RecordHandler extends SimpleServerHandler {
         get(ctx, true);
     }
 
+    private Optional<PendingRecordEntryErrorListResponse.ErrorData> tryRequest(Session session, Account requester, PendingRecordEntryInput input) {
+        Subject subject = SubjectManager.getSubject(input.getSubjectId());
+        if (subject == null) {
+            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(1, "Subject not found", input));
+        }
+
+        Student student = session.get(Student.class, input.getStudentId());
+        if (student == null) {
+            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(2, "Student not found", input));
+        }
+
+        Classroom classroom = session.get(Classroom.class, input.getClassroomId());
+        if (classroom == null) {
+            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(3, "Classroom not found", input));
+        }
+
+        var classTeacherQuery = session.createNamedQuery("ClassTeacher.findByClassroomAndSubject", ClassTeacher.class)
+                .setParameter("classroomId", input.getClassroomId())
+                .setParameter("subjectId", input.getSubjectId());
+        var classTeacher = classTeacherQuery.uniqueResult();
+        if (classTeacher == null) {
+            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(4, "ClassTeacher not found", input));
+        }
+        var teacher = classTeacher.getTeacher();
+
+        var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
+                .setParameter("studentId", input.getStudentId())
+                .setParameter("classroomId", input.getClassroomId());
+        var record = recordQuery.uniqueResultOptional().orElseGet(() -> {
+            var newRecord = createEmptyRecord(student, classroom);
+            session.save(newRecord);
+            return newRecord;
+        });
+
+        var pending = new PendingRecordEntry();
+        pending.setSubjectId(subject.getId());
+        pending.setFirstHalfScore(input.getFirstHalfScore());
+        pending.setSecondHalfScore(input.getSecondHalfScore());
+        pending.setFinalScore(input.getFinalScore());
+        pending.setTeacher(teacher);
+        pending.setRequester(requester);
+        pending.setRequestDate(new Date());
+        pending.setRecord(record);
+        session.save(pending);
+
+        return Optional.empty();
+    }
+
     @OpenApi(
             path = "/record/request",
             methods = HttpMethod.POST,
@@ -235,63 +283,66 @@ public class RecordHandler extends SimpleServerHandler {
         try (var session = sessionFactory.openSession()) {
             var requester = session.get(Account.class, userId);
 
-            Subject subject = SubjectManager.getSubject(input.getSubjectId());
-            if (subject == null) {
+            Transaction transaction = session.beginTransaction();
+
+            var optionalErrorData = tryRequest(session, requester, input);
+            if (optionalErrorData.isPresent()) {
+                var errorData = optionalErrorData.get();
                 ctx.status(404);
-                ctx.json(new Response(1, "Subject not found"));
+                ctx.json(new Response(errorData.getStatus(), errorData.getMessage()));
+                transaction.rollback();
                 return;
             }
 
-            Student student = session.get(Student.class, input.getStudentId());
-            if (student == null) {
-                ctx.status(404);
-                ctx.json(new Response(2, "Student not found"));
-                return;
-            }
+            transaction.commit();
+            ctx.json(new Response(0, "Record validation requested"));
+        }
+    }
 
-            Classroom classroom = session.get(Classroom.class, input.getClassroomId());
-            if (classroom == null) {
-                ctx.status(404);
-                ctx.json(new Response(3, "Classroom not found"));
-                return;
+    @OpenApi(
+            path = "/record/request/list",
+            methods = HttpMethod.POST,
+            summary = "Bulk request record update. Roles: STUDENT, TEACHER",
+            description = "Bulk Request record update. Roles: STUDENT, TEACHER",
+            tags = "Record",
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            requestBody = @OpenApiRequestBody(
+                    content = @OpenApiContent(from = PendingRecordEntryListInput.class)
+            ),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The success response",
+                            content = @OpenApiContent(from = PendingRecordEntryErrorListResponse.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "400",
+                            description = "The errors of the requests.",
+                            content = @OpenApiContent(from = PendingRecordEntryErrorListResponse.class)
+                    ),
             }
+    )
+    private void bulkRequest(Context ctx) {
+        PendingRecordEntryListInput input = ctx.bodyValidator(PendingRecordEntryListInput.class).check(PendingRecordEntryListInput::validate, "Invalid data").get();
+        long userId = JwtHandler.getUserId(ctx);
 
-            var classTeacherQuery = session.createNamedQuery("ClassTeacher.findByClassroomAndSubject", ClassTeacher.class)
-                    .setParameter("classroomId", input.getClassroomId())
-                    .setParameter("subjectId", input.getSubjectId());
-            var classTeacher = classTeacherQuery.uniqueResult();
-            if (classTeacher == null) {
-                ctx.status(404);
-                ctx.json(new Response(4, "ClassTeacher not found"));
-                return;
-            }
-            var teacher = classTeacher.getTeacher();
-
-            var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
-                    .setParameter("studentId", input.getStudentId())
-                    .setParameter("classroomId", input.getClassroomId());
-            var record = recordQuery.uniqueResultOptional().orElseGet(() -> {
-                var newRecord = createEmptyRecord(student, classroom);
-                session.save(newRecord);
-                return newRecord;
-            });
+        try (var session = sessionFactory.openSession()) {
+            var requester = session.get(Account.class, userId);
 
             Transaction transaction = session.beginTransaction();
-            var pending = new PendingRecordEntry();
+            List<PendingRecordEntryErrorListResponse.ErrorData> errors = new ArrayList<>();
+            for (PendingRecordEntryInput pendingRecordEntryInput : input.getRequests()) {
+                tryRequest(session, requester, pendingRecordEntryInput).ifPresent(errors::add);
+            }
 
-            pending.setSubjectId(subject.getId());
-            pending.setFirstHalfScore(input.getFirstHalfScore());
-            pending.setSecondHalfScore(input.getSecondHalfScore());
-            pending.setFinalScore(input.getFinalScore());
-            pending.setTeacher(teacher);
-            pending.setRequester(requester);
-            pending.setRequestDate(new Date());
-            pending.setRecord(record);
-
-            session.save(pending);
-            transaction.commit();
-
-            ctx.json(new Response(0, "Record validation requested"));
+            if (errors.isEmpty()) {
+                transaction.commit();
+                ctx.json(new PendingRecordEntryErrorListResponse(0, "Record validation requested", errors));
+            } else {
+                transaction.rollback();
+                ctx.status(400);
+                ctx.json(new PendingRecordEntryErrorListResponse(1, "There are errors in the requests", errors));
+            }
         }
     }
 
