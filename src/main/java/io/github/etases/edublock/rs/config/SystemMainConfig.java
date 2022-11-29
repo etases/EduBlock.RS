@@ -2,7 +2,6 @@ package io.github.etases.edublock.rs.config;
 
 import io.github.etases.edublock.rs.internal.property.*;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,14 +36,14 @@ public class SystemMainConfig implements MainConfig {
         );
         this.fabricProperties = new FabricProperties(
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_ENABLED")).orElse("false")),
-                Path.of(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_CERT_PATH")).orElse("cert.pem")),
-                Path.of(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_KEY_PATH")).orElse("key.pem")),
+                Optional.ofNullable(System.getenv("RS_FABRIC_PEER_CERT_PEM")).orElse(""),
+                Optional.ofNullable(System.getenv("RS_FABRIC_PEER_KEY_PEM")).orElse(""),
                 Optional.ofNullable(System.getenv("RS_FABRIC_PEER_MSP_ID")).orElse("Org1MSP"),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_INET_ADDRESS")).orElse("true")),
                 Optional.ofNullable(System.getenv("RS_FABRIC_PEER_HOST")).orElse("localhost"),
                 Integer.parseInt(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_PORT")).orElse("7051")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_TLS_ENABLED")).orElse("true")),
-                Path.of(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_TLS_CERT_PATH")).orElse("tls-cert.pem")),
+                Optional.ofNullable(System.getenv("RS_FABRIC_PEER_TLS_CERT_PEM")).orElse(""),
                 Optional.ofNullable(System.getenv("RS_FABRIC_PEER_TLS_OVERRIDE_AUTHORITY")).orElse("peer0.org1.example.com")
         );
         this.fabricUpdaterProperties = new FabricUpdaterProperties(
