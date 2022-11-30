@@ -14,6 +14,7 @@ docker build --tag edublock-rs:local .
 
 ```sh
 docker run --name edublock-rs --interactive --rm --publish 7070:7070 edublock-rs:local
+docker run --name edublock-rs --interactive --rm --volume $PWD/docker-data:/data --publish 7070:7070 edublock-rs:local
 ```
 
 ## System Environment Variables
