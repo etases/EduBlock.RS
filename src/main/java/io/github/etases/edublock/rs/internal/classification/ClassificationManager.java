@@ -8,12 +8,11 @@ import io.github.etases.edublock.rs.model.output.element.ClassificationReportOut
 import io.github.etases.edublock.rs.model.output.element.RecordEntryOutput;
 import lombok.experimental.UtilityClass;
 import me.hsgamer.hscore.config.Config;
-import me.hsgamer.hscore.config.simpleconfiguration.SimpleConfig;
-import org.simpleyaml.configuration.file.YamlFile;
-import org.tinylog.Logger;
+import me.hsgamer.hscore.config.configurate.ConfigurateConfig;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
@@ -32,14 +31,7 @@ public class ClassificationManager {
             throw new IllegalStateException(e);
         }
 
-        Config config = new SimpleConfig<>(classificationFile, new YamlFile(), (file, yamlFile) -> {
-            yamlFile.setConfigurationFile(file);
-            try {
-                yamlFile.loadWithComments();
-            } catch (IOException e) {
-                Logger.warn(e);
-            }
-        });
+        Config config = new ConfigurateConfig(classificationFile, YamlConfigurationLoader.builder().nodeStyle(NodeStyle.BLOCK));
         config.setup();
 
         if (config.contains("classification")) {

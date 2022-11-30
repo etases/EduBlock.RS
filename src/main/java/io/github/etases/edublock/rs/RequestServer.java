@@ -7,13 +7,14 @@ import io.github.etases.edublock.rs.handler.*;
 import io.github.etases.edublock.rs.internal.terminal.ServerTerminal;
 import io.javalin.Javalin;
 import lombok.Getter;
+import me.hsgamer.hscore.config.configurate.ConfigurateConfig;
 import me.hsgamer.hscore.config.proxy.ConfigGenerator;
-import me.hsgamer.hscore.config.simpleconfiguration.SimpleConfig;
-import org.simpleyaml.configuration.file.YamlFile;
+import org.spongepowered.configurate.loader.HeaderMode;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import org.tinylog.Logger;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,15 +34,12 @@ public class RequestServer {
         if (SystemMainConfig.isSystemConfigEnabled()) {
             mainConfig = new SystemMainConfig();
         } else {
-            mainConfig = ConfigGenerator.newInstance(MainConfig.class,
-                    new SimpleConfig<>(new File("./config", "config.yml"), new YamlFile(), (file, yamlFile) -> {
-                        yamlFile.setConfigurationFile(file);
-                        try {
-                            yamlFile.loadWithComments();
-                        } catch (IOException e) {
-                            Logger.warn(e);
-                        }
-                    }));
+            mainConfig = ConfigGenerator.newInstance(MainConfig.class, new ConfigurateConfig(new File("./config", "config.yml"),
+                    YamlConfigurationLoader.builder()
+                            .nodeStyle(NodeStyle.BLOCK)
+                            .headerMode(HeaderMode.PRESERVE)
+                            .indent(2)
+            ));
         }
         commandManager = new CommandManager();
         serverBuilder = new ServerBuilder();
