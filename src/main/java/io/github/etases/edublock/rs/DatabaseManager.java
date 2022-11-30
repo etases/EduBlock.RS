@@ -35,7 +35,7 @@ public class DatabaseManager {
         if (databaseProperties.isMemory()) {
             driver = new H2MemoryDriver();
         } else if (databaseProperties.isFile()) {
-            driver = new H2LocalDriver();
+            driver = new H2LocalDriver(new File("db"));
         } else {
             driver = new H2ServerDriver(databaseProperties.isSSH());
         }
