@@ -25,6 +25,10 @@ public class SystemMainConfig implements MainConfig {
                 Optional.ofNullable(System.getenv("RS_DATABASE_NAME")).orElse("edublock"),
                 Optional.ofNullable(System.getenv("RS_DATABASE_USER")).orElse("root"),
                 Optional.ofNullable(System.getenv("RS_DATABASE_PASSWORD")).orElse(""),
+                Optional.ofNullable(System.getenv("RS_DATABASE_HOST")).orElse("localhost"),
+                Optional.ofNullable(System.getenv("RS_DATABASE_PORT")).orElse("3306"),
+                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_IS_SSH")).orElse("false")),
+                Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_IS_FILE")).orElse("false")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_IS_MEMORY")).orElse("true"))
         );
         this.serverProperties = new ServerProperties(

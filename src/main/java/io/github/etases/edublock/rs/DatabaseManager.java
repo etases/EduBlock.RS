@@ -9,6 +9,7 @@ import me.hsgamer.hscore.database.Setting;
 import me.hsgamer.hscore.database.client.hibernate.HibernateClient;
 import me.hsgamer.hscore.database.driver.h2.H2LocalDriver;
 import me.hsgamer.hscore.database.driver.h2.H2MemoryDriver;
+import me.hsgamer.hscore.database.driver.h2.H2ServerDriver;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
@@ -30,11 +31,20 @@ public class DatabaseManager {
         System.setProperty("org.jboss.logging.provider", "slf4j");
 
         DatabaseProperties databaseProperties = requestServer.getMainConfig().getDatabaseProperties();
-        Driver driver = databaseProperties.isMemory() ? new H2MemoryDriver() : new H2LocalDriver(new File("db"));
+        Driver driver;
+        if (databaseProperties.isMemory()) {
+            driver = new H2MemoryDriver();
+        } else if (databaseProperties.isFile()) {
+            driver = new H2LocalDriver();
+        } else {
+            driver = new H2ServerDriver(databaseProperties.isSSH());
+        }
         Setting setting = Setting.create(driver)
                 .setDatabaseName(databaseProperties.name())
                 .setUsername(databaseProperties.username())
                 .setPassword(databaseProperties.password())
+                .setHost(databaseProperties.host())
+                .setPort(databaseProperties.port())
                 .setClientProperty(AvailableSettings.DIALECT, H2Dialect.class.getName())
                 .setClientProperty(AvailableSettings.HBM2DDL_AUTO, "update");
 

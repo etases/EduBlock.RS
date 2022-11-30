@@ -28,6 +28,10 @@ docker run --name edublock-rs --interactive --rm --publish 7070:7070 edublock-rs
 | RS_DATABASE_NAME                      | str  | Database name                         | edublock               |
 | RS_DATABASE_USER                      | str  | Database user                         | root                   |
 | RS_DATABASE_PASSWORD                  | str  | Database password                     |                        |
+| RS_DATABASE_HOST                      | str  | Database host                         | localhost              |
+| RS_DATABASE_PORT                      | int  | Database port                         | 3306                   |
+| RS_DATABASE_IS_SSH_TUNNEL             | bool | Use SSH tunnel to connect to database | false                  |
+| RS_DATABASE_IS_FILE                   | bool | Use file to store database            | false                  |
 | RS_DATABASE_IS_MEMORY                 | bool | Use memory database                   | true                   |
 | RS_SERVER_HOST                        | str  | Server host                           | localhost              |
 | RS_SERVER_PORT                        | int  | Server port                           | 7070                   |
