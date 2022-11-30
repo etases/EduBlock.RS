@@ -9,9 +9,11 @@ import org.tinylog.Logger;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class LocalStudentUpdater extends TemporaryStudentUpdater {
     private final Gson gson = new Gson();
@@ -28,7 +30,7 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
     }
 
     public LocalStudentUpdater() {
-        this(new File("personal.json"), new File("recordHistory.json"));
+        this(new File("updater", "personal.json"), new File("updater", "recordHistory.json"));
     }
 
     @Override
@@ -55,23 +57,19 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
         super.stop();
 
         // Create file if not exists
-        if (!localPersonalFile.exists()) {
-            try {
-                if (localPersonalFile.createNewFile()) {
-                    Logger.info("Created personal file {}", localPersonalFile);
-                }
-            } catch (Exception e) {
-                Logger.error(e, "Failed to create personal file {}", localPersonalFile);
+        try {
+            if (!createFile(localPersonalFile)) {
+                Logger.error("Failed to create personal file {}", localPersonalFile);
             }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to create personal file {}", localPersonalFile);
         }
-        if (!localRecordHistoryFile.exists()) {
-            try {
-                if (localRecordHistoryFile.createNewFile()) {
-                    Logger.info("Created record history file {}", localRecordHistoryFile);
-                }
-            } catch (Exception e) {
-                Logger.error(e, "Failed to create record history file {}", localRecordHistoryFile);
+        try {
+            if (!createFile(localRecordHistoryFile)) {
+                Logger.error("Failed to create record history file {}", localRecordHistoryFile);
             }
+        } catch (Exception e) {
+            Logger.error(e, "Failed to create record history file {}", localRecordHistoryFile);
         }
 
         // Write to file
@@ -85,5 +83,13 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
         } catch (Exception e) {
             Logger.error(e, "Failed to save record history to {}", localRecordHistoryFile);
         }
+    }
+
+    private static boolean createFile(File file) throws IOException {
+        if (file.exists()) {
+            return true;
+        }
+        return Optional.ofNullable(file.getParentFile()).map(dir -> dir.exists() || dir.mkdirs()).orElse(true)
+                && file.createNewFile();
     }
 }

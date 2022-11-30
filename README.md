@@ -20,7 +20,7 @@ docker run --name edublock-rs --interactive --rm --publish 7070:7070 edublock-rs
 
 | Key                                   | Type | Description                           | Default                |
 |---------------------------------------|------|---------------------------------------|------------------------|
-| RS_CONFIG_USE_SYSTEM                  | bool | Use system environment config file    | false                  |
+| RS_CONFIG_USE_SYSTEM                  | bool | Use system environment config         | false                  |
 | RS_JWT_SECRET                         | str  | JWT secret                            | very_secret            |
 | RS_JWT_ISSUER                         | str  | JWT issuer                            | edublock               |
 | RS_JWT_AUDIENCE                       | str  | JWT audience                          | client                 |

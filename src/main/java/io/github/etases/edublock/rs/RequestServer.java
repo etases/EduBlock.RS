@@ -34,7 +34,7 @@ public class RequestServer {
             mainConfig = new SystemMainConfig();
         } else {
             mainConfig = ConfigGenerator.newInstance(MainConfig.class,
-                    new SimpleConfig<>(new File(".", "config.yml"), new YamlFile(), (file, yamlFile) -> {
+                    new SimpleConfig<>(new File("./config", "config.yml"), new YamlFile(), (file, yamlFile) -> {
                         yamlFile.setConfigurationFile(file);
                         try {
                             yamlFile.loadWithComments();

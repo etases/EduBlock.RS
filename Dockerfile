@@ -8,7 +8,7 @@ COPY src src
 
 COPY pom.xml .
 
-COPY config.yml .
+COPY config/config.yml ./config
 
 RUN mvn clean package
 
@@ -20,7 +20,7 @@ WORKDIR /project/app
 
 COPY --from=build /project/app/target/EduBlock.RS.jar edublock-rs.jar
 
-COPY --from=build /project/app/config.yml config.yml
+COPY --from=build /project/app/config.yml config/config.yml
 
 EXPOSE 7070
 

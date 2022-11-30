@@ -13,6 +13,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -29,7 +30,7 @@ public class DatabaseManager {
         System.setProperty("org.jboss.logging.provider", "slf4j");
 
         DatabaseProperties databaseProperties = requestServer.getMainConfig().getDatabaseProperties();
-        Driver driver = databaseProperties.isMemory() ? new H2MemoryDriver() : new H2LocalDriver();
+        Driver driver = databaseProperties.isMemory() ? new H2MemoryDriver() : new H2LocalDriver(new File("db"));
         Setting setting = Setting.create(driver)
                 .setDatabaseName(databaseProperties.name())
                 .setUsername(databaseProperties.username())
