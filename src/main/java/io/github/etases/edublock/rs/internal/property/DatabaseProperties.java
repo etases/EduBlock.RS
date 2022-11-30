@@ -12,7 +12,7 @@ public record DatabaseProperties(String name, String username, String password, 
                 Objects.toString(map.get("host"), "localhost"),
                 Objects.toString(map.get("port"), "3306"),
                 Boolean.parseBoolean(Objects.toString(map.get("is-ssh"), "false")),
-                Boolean.parseBoolean(Objects.toString(map.get("is-file"), "false")),
+                Boolean.parseBoolean(Objects.toString(map.get("is-file"), "true")),
                 Boolean.parseBoolean(Objects.toString(map.get("is-memory"), "true"))
         );
     }
