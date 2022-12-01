@@ -54,9 +54,12 @@ public class ServerTerminal {
                     runCommand(command);
                 }
             } catch (UserInterruptException e) {
-                shutdown(0);
+                System.exit(0);
+                return;
             } catch (EndOfFileException e) {
-                shutdown(1);
+                return;
+            } catch (Exception e) {
+                LOGGER.error("Failed to read the command", e);
             }
         }
     }
@@ -76,8 +79,7 @@ public class ServerTerminal {
     /**
      * Shut down the server
      */
-    public void shutdown(int statusCode) {
+    public void shutdown() {
         running = false;
-        System.exit(0);
     }
 }
