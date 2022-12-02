@@ -4,6 +4,7 @@ import io.github.etases.edublock.rs.entity.Record;
 import io.github.etases.edublock.rs.entity.RecordEntry;
 import io.github.etases.edublock.rs.internal.subject.Subject;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
+import io.github.etases.edublock.rs.internal.util.FileUtil;
 import io.github.etases.edublock.rs.model.output.element.ClassificationReportOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordEntryOutput;
 import lombok.experimental.UtilityClass;
@@ -22,11 +23,13 @@ public class ClassificationManager {
     private static final List<Classification> classifications = new ArrayList<>();
 
     static {
-        File classificationFile;
-        try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("classifications.yml")) {
-            classificationFile = File.createTempFile("classification", ".yml");
-            classificationFile.deleteOnExit();
-            Files.copy(Objects.requireNonNull(stream), classificationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        File classificationFile = new File("internal", "classifications.yml");
+        try {
+            if (!classificationFile.exists() && FileUtil.createFile(classificationFile)) {
+                try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("classifications.yml")) {
+                    Files.copy(Objects.requireNonNull(stream), classificationFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

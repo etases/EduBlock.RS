@@ -2,6 +2,7 @@ package io.github.etases.edublock.rs.internal.student;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import io.github.etases.edublock.rs.internal.util.FileUtil;
 import io.github.etases.edublock.rs.model.fabric.Personal;
 import io.github.etases.edublock.rs.model.fabric.RecordHistory;
 import org.tinylog.Logger;
@@ -9,11 +10,9 @@ import org.tinylog.Logger;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class LocalStudentUpdater extends TemporaryStudentUpdater {
     private final Gson gson = new Gson();
@@ -31,14 +30,6 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
 
     public LocalStudentUpdater() {
         this(new File("updater", "personal.json"), new File("updater", "recordHistory.json"));
-    }
-
-    private static boolean createFile(File file) throws IOException {
-        if (file.exists()) {
-            return true;
-        }
-        return Optional.ofNullable(file.getParentFile()).map(dir -> dir.exists() || dir.mkdirs()).orElse(true)
-                && file.createNewFile();
     }
 
     @Override
@@ -66,14 +57,14 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
 
         // Create file if not exists
         try {
-            if (!createFile(localPersonalFile)) {
+            if (!FileUtil.createFile(localPersonalFile)) {
                 Logger.error("Failed to create personal file {}", localPersonalFile);
             }
         } catch (Exception e) {
             Logger.error(e, "Failed to create personal file {}", localPersonalFile);
         }
         try {
-            if (!createFile(localRecordHistoryFile)) {
+            if (!FileUtil.createFile(localRecordHistoryFile)) {
                 Logger.error("Failed to create record history file {}", localRecordHistoryFile);
             }
         } catch (Exception e) {

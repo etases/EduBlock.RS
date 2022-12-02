@@ -1,5 +1,6 @@
 package io.github.etases.edublock.rs.internal.subject;
 
+import io.github.etases.edublock.rs.internal.util.FileUtil;
 import lombok.experimental.UtilityClass;
 import me.hsgamer.hscore.config.Config;
 import me.hsgamer.hscore.config.configurate.ConfigurateConfig;
@@ -19,11 +20,13 @@ public class SubjectManager {
     private static final Map<Long, Subject> subjects = new HashMap<>();
 
     static {
-        File subjectFile;
-        try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects.yml")) {
-            subjectFile = File.createTempFile("subject", ".yml");
-            subjectFile.deleteOnExit();
-            Files.copy(Objects.requireNonNull(stream), subjectFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        File subjectFile = new File("internal", "subjects.yml");
+        try {
+            if (!subjectFile.exists() && FileUtil.createFile(subjectFile)) {
+                try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects.yml")) {
+                    Files.copy(Objects.requireNonNull(stream), subjectFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
