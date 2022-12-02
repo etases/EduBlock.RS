@@ -41,4 +41,9 @@ public interface MainConfig {
     default int getUpdaterPeriod() {
         return 60;
     }
+
+    @ConfigPath(value = "student.one-class-per-year")
+    default boolean isOneClassPerYear() {
+        return true;
+    }
 }

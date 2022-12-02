@@ -13,6 +13,7 @@ public class SystemMainConfig implements MainConfig {
     private final FabricUpdaterProperties fabricUpdaterProperties;
     private final String accountDefaultPassword;
     private final int updaterPeriod;
+    private final boolean oneClassPerYear;
 
     public SystemMainConfig() {
         this.jwtProperties = new JwtProperties(
@@ -56,6 +57,7 @@ public class SystemMainConfig implements MainConfig {
         );
         this.accountDefaultPassword = Optional.ofNullable(System.getenv("RS_ACCOUNT_DEFAULT_PASSWORD")).orElse("password");
         this.updaterPeriod = Integer.parseInt(Optional.ofNullable(System.getenv("RS_UPDATER_PERIOD")).orElse("60"));
+        this.oneClassPerYear = Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_ONE_CLASS_PER_YEAR")).orElse("true"));
     }
 
     public static boolean isSystemConfigEnabled() {
@@ -96,5 +98,10 @@ public class SystemMainConfig implements MainConfig {
     @Override
     public int getUpdaterPeriod() {
         return updaterPeriod;
+    }
+
+    @Override
+    public boolean isOneClassPerYear() {
+        return oneClassPerYear;
     }
 }

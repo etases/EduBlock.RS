@@ -3,7 +3,8 @@ package io.github.etases.edublock.rs.internal.property;
 import java.util.Map;
 import java.util.Objects;
 
-public record DatabaseProperties(String name, String username, String password, String host, String port, boolean isSSH, boolean isFile, boolean isMemory) {
+public record DatabaseProperties(String name, String username, String password, String host, String port, boolean isSSH,
+                                 boolean isFile, boolean isMemory) {
     public static DatabaseProperties fromMap(Map<?, ?> map) {
         return new DatabaseProperties(
                 Objects.toString(map.get("name"), "edublock"),

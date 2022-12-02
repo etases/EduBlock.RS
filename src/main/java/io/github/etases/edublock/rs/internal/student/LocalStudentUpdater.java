@@ -33,6 +33,14 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
         this(new File("updater", "personal.json"), new File("updater", "recordHistory.json"));
     }
 
+    private static boolean createFile(File file) throws IOException {
+        if (file.exists()) {
+            return true;
+        }
+        return Optional.ofNullable(file.getParentFile()).map(dir -> dir.exists() || dir.mkdirs()).orElse(true)
+                && file.createNewFile();
+    }
+
     @Override
     public void start() {
         super.start();
@@ -83,13 +91,5 @@ public class LocalStudentUpdater extends TemporaryStudentUpdater {
         } catch (Exception e) {
             Logger.error(e, "Failed to save record history to {}", localRecordHistoryFile);
         }
-    }
-
-    private static boolean createFile(File file) throws IOException {
-        if (file.exists()) {
-            return true;
-        }
-        return Optional.ofNullable(file.getParentFile()).map(dir -> dir.exists() || dir.mkdirs()).orElse(true)
-                && file.createNewFile();
     }
 }
