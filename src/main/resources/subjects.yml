@@ -5,30 +5,45 @@ subject:
     otherNames:
       - Mathematics
       - Math
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 2
     identifier: "PHYSICS"
     name: "Vật lý"
     otherNames:
       - Physics
       - Phys
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 3
     identifier: "CHEMISTRY"
     name: "Hóa học"
     otherNames:
       - Chemistry
       - Chem
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 4
     identifier: "BIOLOGY"
     name: "Sinh học"
     otherNames:
       - Biology
       - Bio
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 5
     identifier: "INFORMATICS"
     name: "Tin học"
     otherNames:
       - Informatics
       - Info
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 6
     identifier: "LITERATURE"
     name: "Văn học"
@@ -37,24 +52,36 @@ subject:
       - Lit
       - Văn
       - Ngữ văn
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 7
     identifier: "HISTORY"
     name: "Lịch sử"
     otherNames:
       - History
       - Hist
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 8
     identifier: "GEOGRAPHY"
     name: "Địa lý"
     otherNames:
       - Geography
       - Geo
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 9
     identifier: "FOREIGN_LANGUAGE"
     name: "Ngoại ngữ"
     otherNames:
       - Foreign Language
       - FL
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 10
     identifier: "CITIZENSHIP"
     name: "Giáo dục công dân"
@@ -62,28 +89,43 @@ subject:
       - Citizenship
       - Cit
       - Đạo đức
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 11
     identifier: "TECHNOLOGY"
     name: "Công nghệ"
     otherNames:
       - Technology
       - Tech
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 12
     identifier: "PHYSICAL"
     name: "Thể dục"
     otherNames:
       - Physical Education
       - Phys Ed
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 13
     identifier: "ART"
     name: "Mỹ thuật"
     otherNames:
       - Art
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 14
     identifier: "MUSIC"
     name: "Âm nhạc"
     otherNames:
       - Music
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
   - id: 15
     identifier: "NATIONAL_EDUCATION"
     name: "Giáo dục quốc phòng"
@@ -94,3 +136,6 @@ subject:
       - Quốc phòng - An ninh
       - Giáo dục QP-AN
       - QP-AN
+    firstHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    secondHalfScoreRule: "( MAX(oral1, oral2, oral3) * 0.2 ) + ( MAX(minute1, minute2, minute3) * 0.2 ) + ( MAX(session1, session2, session3, session4, session5, session6) * 0.3 ) + ( final * 0.3 )"
+    finalScoreRule: "( first + ( second * 2 ) ) / 3"
