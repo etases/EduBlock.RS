@@ -25,12 +25,68 @@ public class RecordEntry implements Serializable {
     private Long id;
     @Column(nullable = false)
     private long subjectId;
+
+    @Column(nullable = false)
+    private float firstHalfOral1;
+    @Column(nullable = false)
+    private float firstHalfOral2;
+    @Column(nullable = false)
+    private float firstHalfOral3;
+    @Column(nullable = false)
+    private float firstHalfMinute1;
+    @Column(nullable = false)
+    private float firstHalfMinute2;
+    @Column(nullable = false)
+    private float firstHalfMinute3;
+    @Column(nullable = false)
+    private float firstHalfSession1;
+    @Column(nullable = false)
+    private float firstHalfSession2;
+    @Column(nullable = false)
+    private float firstHalfSession3;
+    @Column(nullable = false)
+    private float firstHalfSession4;
+    @Column(nullable = false)
+    private float firstHalfSession5;
+    @Column(nullable = false)
+    private float firstHalfSession6;
+    @Column(nullable = false)
+    private float firstHalfFinal;
     @Column(nullable = false)
     private float firstHalfScore;
+
+    @Column(nullable = false)
+    private float secondHalfOral1;
+    @Column(nullable = false)
+    private float secondHalfOral2;
+    @Column(nullable = false)
+    private float secondHalfOral3;
+    @Column(nullable = false)
+    private float secondHalfMinute1;
+    @Column(nullable = false)
+    private float secondHalfMinute2;
+    @Column(nullable = false)
+    private float secondHalfMinute3;
+    @Column(nullable = false)
+    private float secondHalfSession1;
+    @Column(nullable = false)
+    private float secondHalfSession2;
+    @Column(nullable = false)
+    private float secondHalfSession3;
+    @Column(nullable = false)
+    private float secondHalfSession4;
+    @Column(nullable = false)
+    private float secondHalfSession5;
+    @Column(nullable = false)
+    private float secondHalfSession6;
+    @Column(nullable = false)
+    private float secondHalfFinal;
     @Column(nullable = false)
     private float secondHalfScore;
+
     @Column(nullable = false)
     private float finalScore;
+
     @Column(nullable = false)
     private Date requestDate;
     @Column(nullable = false)
