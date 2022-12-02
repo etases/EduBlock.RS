@@ -248,9 +248,9 @@
 
         <!-- EvalEx -->
         <dependency>
-            <groupId>com.ezylang</groupId>
-            <artifactId>EvalEx</artifactId>
-            <version>3.0.1</version>
+            <groupId>me.hsgamer</groupId>
+            <artifactId>hscore-expression-ezylang</artifactId>
+            <version>${core.version}</version>
         </dependency>
     </dependencies>
 </project>

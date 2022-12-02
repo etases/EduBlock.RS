@@ -2,15 +2,14 @@ package io.github.etases.edublock.rs.internal.classification;
 
 import com.ezylang.evalex.EvaluationException;
 import com.ezylang.evalex.Expression;
-import com.ezylang.evalex.config.ExpressionConfiguration;
 import com.ezylang.evalex.parser.ParseException;
-import io.github.etases.edublock.rs.internal.classification.function.AverageFunction;
 import io.github.etases.edublock.rs.internal.subject.Subject;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import me.hsgamer.hscore.common.CollectionUtils;
 import me.hsgamer.hscore.common.Validate;
+import me.hsgamer.hscore.expression.ezylang.ExpressionUtils;
 import org.tinylog.Logger;
 
 import java.math.BigDecimal;
@@ -22,11 +21,6 @@ import java.util.*;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Classification {
-    private static final ExpressionConfiguration EXPRESSION_CONFIGURATION = ExpressionConfiguration.defaultConfiguration()
-            .withAdditionalFunctions(
-                    Map.entry("AVG", new AverageFunction())
-            );
-
     String identifier = "";
     String name = "";
     List<String> otherNames = Collections.emptyList();
@@ -59,7 +53,7 @@ public class Classification {
         variableMap.put("subject_avg_not_zero", subjectScoreMap.values().stream().mapToDouble(Float::floatValue).filter(value -> value != 0).average().orElse(0));
 
         for (String rule : rules) {
-            Expression expression = new Expression(rule, EXPRESSION_CONFIGURATION).withValues(variableMap);
+            Expression expression = ExpressionUtils.createExpression(rule).withValues(variableMap);
             try {
                 if (Boolean.FALSE.equals(expression.evaluate().getBooleanValue())) {
                     return false;
