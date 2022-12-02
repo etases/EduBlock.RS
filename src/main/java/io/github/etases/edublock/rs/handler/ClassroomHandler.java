@@ -3,6 +3,7 @@ package io.github.etases.edublock.rs.handler;
 import com.google.inject.Inject;
 import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
+import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.*;
 import io.github.etases.edublock.rs.internal.filter.ListSessionInputFilter;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
@@ -40,11 +41,13 @@ public class ClassroomHandler extends SimpleServerHandler {
                 return Integer.toString(o.getYear()).equals(input);
             });
     private final SessionFactory sessionFactory;
+    private final MainConfig mainConfig;
 
     @Inject
-    public ClassroomHandler(ServerBuilder serverBuilder, SessionFactory sessionFactory) {
+    public ClassroomHandler(ServerBuilder serverBuilder, SessionFactory sessionFactory, MainConfig mainConfig) {
         super(serverBuilder);
         this.sessionFactory = sessionFactory;
+        this.mainConfig = mainConfig;
     }
 
     @Override
@@ -617,6 +620,12 @@ public class ClassroomHandler extends SimpleServerHandler {
                         .uniqueResultOptional().isPresent()) {
                     errors.add(new AccountErrorListResponse.ErrorData(2, "Student already in class", accountId));
                     continue;
+                }
+                if (mainConfig.isOneClassPerYear() && session.createNamedQuery("ClassStudent.findByYearAndStudent", ClassStudent.class)
+                        .setParameter("year", classroom.getYear())
+                        .setParameter("studentId", accountId)
+                        .uniqueResultOptional().isPresent()) {
+                    errors.add(new AccountErrorListResponse.ErrorData(3, "Student already in a class on this year", accountId));
                 }
 
                 var classStudent = new ClassStudent();
