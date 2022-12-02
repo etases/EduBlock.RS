@@ -1,0 +1,96 @@
+subject:
+  - id: 1
+    identifier: "MATH"
+    name: "Toán"
+    otherNames:
+      - Mathematics
+      - Math
+  - id: 2
+    identifier: "PHYSICS"
+    name: "Vật lý"
+    otherNames:
+      - Physics
+      - Phys
+  - id: 3
+    identifier: "CHEMISTRY"
+    name: "Hóa học"
+    otherNames:
+      - Chemistry
+      - Chem
+  - id: 4
+    identifier: "BIOLOGY"
+    name: "Sinh học"
+    otherNames:
+      - Biology
+      - Bio
+  - id: 5
+    identifier: "INFORMATICS"
+    name: "Tin học"
+    otherNames:
+      - Informatics
+      - Info
+  - id: 6
+    identifier: "LITERATURE"
+    name: "Văn học"
+    otherNames:
+      - Literature
+      - Lit
+      - Văn
+      - Ngữ văn
+  - id: 7
+    identifier: "HISTORY"
+    name: "Lịch sử"
+    otherNames:
+      - History
+      - Hist
+  - id: 8
+    identifier: "GEOGRAPHY"
+    name: "Địa lý"
+    otherNames:
+      - Geography
+      - Geo
+  - id: 9
+    identifier: "FOREIGN_LANGUAGE"
+    name: "Ngoại ngữ"
+    otherNames:
+      - Foreign Language
+      - FL
+  - id: 10
+    identifier: "CITIZENSHIP"
+    name: "Giáo dục công dân"
+    otherNames:
+      - Citizenship
+      - Cit
+      - Đạo đức
+  - id: 11
+    identifier: "TECHNOLOGY"
+    name: "Công nghệ"
+    otherNames:
+      - Technology
+      - Tech
+  - id: 12
+    identifier: "PHYSICAL"
+    name: "Thể dục"
+    otherNames:
+      - Physical Education
+      - Phys Ed
+  - id: 13
+    identifier: "ART"
+    name: "Mỹ thuật"
+    otherNames:
+      - Art
+  - id: 14
+    identifier: "MUSIC"
+    name: "Âm nhạc"
+    otherNames:
+      - Music
+  - id: 15
+    identifier: "NATIONAL_EDUCATION"
+    name: "Giáo dục quốc phòng"
+    otherNames:
+      - National Education
+      - NE
+      - Quốc phòng
+      - Quốc phòng - An ninh
+      - Giáo dục QP-AN
+      - QP-AN

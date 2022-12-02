@@ -1,9 +1,14 @@
 package io.github.etases.edublock.rs.internal.subject;
 
 import lombok.experimental.UtilityClass;
+import me.hsgamer.hscore.config.Config;
+import me.hsgamer.hscore.config.configurate.ConfigurateConfig;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,41 +16,31 @@ import java.util.Objects;
 
 @UtilityClass
 public class SubjectManager {
-    private static final Map<Long, Subject> subjects;
-    private static final Object lock = new Object();
+    private static final Map<Long, Subject> subjects = new HashMap<>();
 
     static {
-        synchronized (lock) {
-            subjects = new HashMap<>();
-            try (
-                    var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects.csv");
-                    var reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(stream)))
-            ) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    var subject = parseSubject(line);
+        File subjectFile;
+        try (var stream = SubjectManager.class.getClassLoader().getResourceAsStream("subjects.yml")) {
+            subjectFile = File.createTempFile("subject", ".yml");
+            subjectFile.deleteOnExit();
+            Files.copy(Objects.requireNonNull(stream), subjectFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        Config config = new ConfigurateConfig(subjectFile, YamlConfigurationLoader.builder().nodeStyle(NodeStyle.BLOCK));
+        config.setup();
+
+        if (config.contains("subject") && config.getNormalized("subject") instanceof List<?> rawList) {
+            for (Object object : rawList) {
+                if (object instanceof Map<?, ?> rawMap) {
+                    Map<String, Object> map = new HashMap<>();
+                    rawMap.forEach((k, v) -> map.put(Objects.toString(k), v));
+                    var subject = Subject.fromMap(map);
                     subjects.put(subject.getId(), subject);
                 }
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
             }
         }
-    }
-
-    private static Subject parseSubject(String line) {
-        if (line == null || line.isBlank()) {
-            return null;
-        }
-        var parts = line.split(",");
-        if (parts.length < 3) {
-            return null;
-        }
-        var subject = new Subject();
-        subject.setId(Long.parseLong(parts[0].trim()));
-        subject.setIdentifier(parts[1].trim());
-        subject.setName(parts[2].trim());
-        subject.setOtherNames(List.of(parts).subList(3, parts.length).stream().map(String::trim).toList());
-        return subject;
     }
 
     public static Subject getSubject(long id) {
