@@ -126,6 +126,7 @@ public class StudentUpdateHandler implements ServerHandler {
             summary = "Create new key. Roles: STUDENT",
             description = "Create new key. Roles: STUDENT",
             tags = "Updater",
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
                             status = "200",
@@ -150,7 +151,7 @@ public class StudentUpdateHandler implements ServerHandler {
             session.save(updaterKey);
             transaction.commit();
 
-            ctx.json(new StringResponse(0, "OK", updaterKey.getId().toString()));
+            ctx.json(new StringResponse(0, "OK", updaterKey.getId()));
         }
     }
 
@@ -160,6 +161,7 @@ public class StudentUpdateHandler implements ServerHandler {
             summary = "Get key list. Roles: STUDENT",
             description = "Get key list. Roles: STUDENT",
             tags = "Updater",
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
                             status = "200",
@@ -180,7 +182,7 @@ public class StudentUpdateHandler implements ServerHandler {
 
             var list = new ArrayList<String>();
             for (var key : student.getUpdaterKey()) {
-                list.add(key.getId().toString());
+                list.add(key.getId());
             }
             ctx.json(new StringListResponse(0, "OK", list));
         }
@@ -193,6 +195,7 @@ public class StudentUpdateHandler implements ServerHandler {
             description = "Delete key. Roles: STUDENT",
             tags = "Updater",
             pathParams = @OpenApiParam(name = "key", description = "The account key", required = true),
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
             responses = {
                     @OpenApiResponse(
                             status = "200",
@@ -219,7 +222,7 @@ public class StudentUpdateHandler implements ServerHandler {
             ctx.json(new Response(1, "Invalid key"));
             return;
         }
-        var key = optionalKey.get();
+        var key = optionalKey.get().toString();
 
         try (var session = sessionFactory.openSession()) {
             var updaterKey = session.get(UpdaterKey.class, key);
@@ -267,7 +270,7 @@ public class StudentUpdateHandler implements ServerHandler {
             ctx.json(new AccountWithStudentProfileResponse(1, "Invalid key", null));
             return;
         }
-        var key = optionalKey.get();
+        var key = optionalKey.get().toString();
 
         long id;
         try (var session = sessionFactory.openSession()) {
@@ -322,7 +325,7 @@ public class StudentUpdateHandler implements ServerHandler {
             ctx.json(new RecordListResponse(1, "Invalid key", null));
             return;
         }
-        var key = optionalKey.get();
+        var key = optionalKey.get().toString();
 
         long id;
         try (var session = sessionFactory.openSession()) {
@@ -377,7 +380,7 @@ public class StudentUpdateHandler implements ServerHandler {
             ctx.json(new RecordHistoryResponse(1, "Invalid key", null));
             return;
         }
-        var key = optionalKey.get();
+        var key = optionalKey.get().toString();
 
         long id;
         try (var session = sessionFactory.openSession()) {
