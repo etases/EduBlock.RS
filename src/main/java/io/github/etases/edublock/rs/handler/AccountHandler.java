@@ -81,6 +81,7 @@ public class AccountHandler extends SimpleServerHandler {
                         : new RouteRole[]{JwtHandler.Role.ADMIN}
         );
         server.put("/account/list/password", this::bulkUpdatePassword, JwtHandler.Role.ADMIN);
+        server.put("/account/password", this::updatePassword, JwtHandler.Role.authenticated());
         server.get("/account/role/{role}/list", this::listByRole, JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
         server.get("/account/{id}", this::get, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.put("/account/self/profile", this::updateSelfProfile, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
@@ -329,6 +330,64 @@ public class AccountHandler extends SimpleServerHandler {
                 ctx.status(400);
                 ctx.json(new AccountLoginErrorListResponse(1, "There are errors in the account list", errors));
             }
+        }
+    }
+
+    @OpenApi(
+            path = "/account/password",
+            methods = HttpMethod.PUT,
+            summary = "Update password (own)",
+            description = "Update password (own)",
+            tags = "Account",
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = UpdatePasswordInput.class)),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "Success",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "400",
+                            description = "Invalid old password",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Account not found",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+            }
+    )
+    private void updatePassword(Context ctx) {
+        UpdatePasswordInput input = ctx.bodyValidator(UpdatePasswordInput.class)
+                .check(UpdatePasswordInput::validate, "Invalid input")
+                .get();
+        long userId = JwtHandler.getUserId(ctx);
+        try (var session = sessionFactory.openSession()) {
+            var account = session.get(Account.class, userId);
+
+            if (account == null) {
+                ctx.status(404);
+                ctx.json(new Response(1, "Account does not exist"));
+                return;
+            }
+
+            if (!PasswordUtil.verifyPassword(input.getOldPassword(), account.getHashedPassword(), account.getSalt())) {
+                ctx.status(400);
+                ctx.json(new Response(2, "Old password is incorrect"));
+            }
+
+            String salt = PasswordUtil.generateSalt();
+            String hashedPassword = PasswordUtil.hashPassword(input.getNewPassword(), salt);
+
+            Transaction transaction = session.beginTransaction();
+            account.setSalt(salt);
+            account.setHashedPassword(hashedPassword);
+            session.update(account);
+            transaction.commit();
+
+            ctx.json(new Response(0, "Update password successfully"));
         }
     }
 
