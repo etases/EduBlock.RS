@@ -18,6 +18,7 @@ import java.io.Serializable;
 @NamedQuery(name = "ClassTeacher.findByClassroomAndSubject", query = "FROM ClassTeacher WHERE classroom.id = :classroomId and subjectId = :subjectId")
 @NamedQuery(name = "ClassTeacher.findByClassroomAndTeacherAndSubject", query = "FROM ClassTeacher WHERE classroom.id = :classroomId and subjectId = :subjectId and teacher.id = :teacherId")
 @NamedQuery(name = "ClassTeacher.findByTeacher", query = "FROM ClassTeacher WHERE teacher.id = :teacherId")
+@NamedQuery(name = "ClassTeacher.findByClassroomAndTeacherAndSubject", query = "FROM ClassTeacher WHERE classroom.id = :classroomId and subjectId = :subjectId and teacher.id = :teacherId")
 public class ClassTeacher implements Serializable {
     @Id
     @GenericGenerator(name = "ExistOrGenerate", strategy = UseExistOrIncrementGenerator.CLASS_PATH)

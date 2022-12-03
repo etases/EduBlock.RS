@@ -45,6 +45,7 @@ public class RecordHandler extends SimpleServerHandler {
     protected void setupServer(Javalin server) {
         server.post("/record/request", this::request, JwtHandler.Role.STUDENT, JwtHandler.Role.TEACHER);
         server.post("/record/request/list", this::bulkRequest, JwtHandler.Role.STUDENT, JwtHandler.Role.TEACHER);
+        server.post("/record/entry", this::updateEntry, JwtHandler.Role.TEACHER);
         server.get("/record/pending/list", this::listPending, JwtHandler.Role.TEACHER);
         server.get("/record/pending/list/{studentId}", this::listPendingByStudent, JwtHandler.Role.TEACHER);
         server.post("/record/pending/verify", this::verify, JwtHandler.Role.TEACHER);
@@ -108,6 +109,17 @@ public class RecordHandler extends SimpleServerHandler {
             transaction.commit();
             return record;
         }
+    }
+
+    private Record getOrCreateRecord(Session session, Student student, Classroom classroom) {
+        var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
+                .setParameter("studentId", student.getId())
+                .setParameter("classroomId", classroom.getId());
+        return recordQuery.uniqueResultOptional().orElseGet(() -> {
+            var newRecord = createEmptyRecord(student, classroom);
+            session.save(newRecord);
+            return newRecord;
+        });
     }
 
     private void get(Context ctx, boolean isOwnRecordOnly) {
@@ -218,33 +230,26 @@ public class RecordHandler extends SimpleServerHandler {
             return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(1, "Subject not found", input));
         }
 
-        Student student = session.get(Student.class, input.getStudentId());
-        if (student == null) {
-            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(2, "Student not found", input));
+        var classStudentQuery = session.createNamedQuery("ClassStudent.findByClassroomAndStudent", ClassStudent.class)
+                .setParameter("classroomId", input.getClassroomId())
+                .setParameter("studentId", input.getStudentId());
+        var classStudent = classStudentQuery.uniqueResult();
+        if (classStudent == null) {
+            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(2, "ClassStudent not found", input));
         }
-
-        Classroom classroom = session.get(Classroom.class, input.getClassroomId());
-        if (classroom == null) {
-            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(3, "Classroom not found", input));
-        }
+        var student = classStudent.getStudent();
+        var classroom = classStudent.getClassroom();
 
         var classTeacherQuery = session.createNamedQuery("ClassTeacher.findByClassroomAndSubject", ClassTeacher.class)
                 .setParameter("classroomId", input.getClassroomId())
                 .setParameter("subjectId", input.getSubjectId());
         var classTeacher = classTeacherQuery.uniqueResult();
         if (classTeacher == null) {
-            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(4, "ClassTeacher not found", input));
+            return Optional.of(new PendingRecordEntryErrorListResponse.ErrorData(3, "ClassTeacher not found", input));
         }
         var teacher = classTeacher.getTeacher();
 
-        var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
-                .setParameter("studentId", input.getStudentId())
-                .setParameter("classroomId", input.getClassroomId());
-        var record = recordQuery.uniqueResultOptional().orElseGet(() -> {
-            var newRecord = createEmptyRecord(student, classroom);
-            session.save(newRecord);
-            return newRecord;
-        });
+        var record = getOrCreateRecord(session, student, classroom);
 
         var pending = new PendingRecordEntry();
         pending.setSubjectId(subject.getId());
@@ -296,6 +301,86 @@ public class RecordHandler extends SimpleServerHandler {
 
             transaction.commit();
             ctx.json(new Response(0, "Record validation requested"));
+        }
+    }
+
+    @OpenApi(
+            path = "/record/entry",
+            methods = HttpMethod.POST,
+            summary = "Update student record entry (Teacher with the subject). Roles: TEACHER",
+            description = "Update student record entry (Teacher with the subject). Roles: TEACHER",
+            tags = "Record",
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            requestBody = @OpenApiRequestBody(
+                    content = @OpenApiContent(from = PendingRecordEntryInput.class)
+            ),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "Success",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Student not found",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Teacher not found or not assigned to this subject",
+                            content = @OpenApiContent(from = Response.class)
+                    )
+            }
+    )
+    private void updateEntry(Context ctx) {
+        PendingRecordEntryInput input = ctx.bodyValidator(PendingRecordEntryInput.class).check(PendingRecordEntryInput::validate, "Invalid data").get();
+        long userId = JwtHandler.getUserId(ctx);
+
+        try (var session = sessionFactory.openSession()) {
+            var classStudentQuery = session.createNamedQuery("ClassStudent.findByClassroomAndStudent", ClassStudent.class)
+                    .setParameter("classroomId", input.getClassroomId())
+                    .setParameter("studentId", input.getStudentId());
+            var classStudent = classStudentQuery.uniqueResult();
+            if (classStudent == null) {
+                ctx.status(404);
+                ctx.json(new Response(1, "Student not found"));
+                return;
+            }
+            var student = classStudent.getStudent();
+            var classroom = classStudent.getClassroom();
+
+            var classTeacherQuery = session.createNamedQuery("ClassTeacher.findByClassroomAndTeacherAndSubject", ClassTeacher.class)
+                    .setParameter("classroomId", input.getClassroomId())
+                    .setParameter("teacherId", userId)
+                    .setParameter("subjectId", input.getSubjectId());
+            var classTeacher = classTeacherQuery.uniqueResult();
+            if (classTeacher == null) {
+                ctx.status(404);
+                ctx.json(new Response(2, "Teacher not found or not assigned to this subject"));
+                return;
+            }
+            var teacher = classTeacher.getTeacher();
+
+            Transaction transaction = session.beginTransaction();
+
+            var record = getOrCreateRecord(session, student, classroom);
+
+            var recordEntry = new RecordEntry();
+            recordEntry.setSubjectId(input.getSubjectId());
+            recordEntry.setFirstHalfScore(input.getFirstHalfScore());
+            recordEntry.setSecondHalfScore(input.getSecondHalfScore());
+            recordEntry.setFinalScore(input.getFinalScore());
+            recordEntry.setTeacher(teacher);
+            recordEntry.setRequester(teacher);
+            recordEntry.setRecord(record);
+            recordEntry.setRequestDate(new Date());
+            recordEntry.setApprovalDate(new Date());
+            recordEntry.setApprover(teacher);
+            recordEntry.setUpdateComplete(false);
+            session.save(recordEntry);
+
+            transaction.commit();
+            ctx.json(new Response(0, "Record entry updated"));
         }
     }
 
