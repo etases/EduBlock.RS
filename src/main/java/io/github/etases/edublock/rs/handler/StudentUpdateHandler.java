@@ -20,9 +20,7 @@ import io.github.etases.edublock.rs.model.fabric.ClassRecord;
 import io.github.etases.edublock.rs.model.fabric.Personal;
 import io.github.etases.edublock.rs.model.fabric.Record;
 import io.github.etases.edublock.rs.model.fabric.Subject;
-import io.github.etases.edublock.rs.model.output.AccountWithStudentProfileResponse;
-import io.github.etases.edublock.rs.model.output.RecordHistoryResponse;
-import io.github.etases.edublock.rs.model.output.RecordListResponse;
+import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordHistoryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
@@ -30,6 +28,7 @@ import io.javalin.http.Context;
 import io.javalin.openapi.*;
 import lombok.Getter;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.tinylog.Logger;
 
 import java.sql.Date;
@@ -75,9 +74,12 @@ public class StudentUpdateHandler implements ServerHandler {
         studentUpdater.start();
 
         serverBuilder.addHandler(javalin -> {
-            javalin.get("/updater/{id}/personal", this::getPersonal);
-            javalin.get("/updater/{id}/record", this::getRecord);
-            javalin.get("/updater/{id}/history", this::getHistory);
+            javalin.post("/updater", this::createNewKey, JwtHandler.Role.STUDENT);
+            javalin.get("/updater/list", this::getKeyList, JwtHandler.Role.STUDENT);
+            javalin.delete("/updater/{key}", this::deleteKey, JwtHandler.Role.STUDENT);
+            javalin.get("/updater/{key}/personal", this::getPersonal);
+            javalin.get("/updater/{key}/record", this::getRecord);
+            javalin.get("/updater/{key}/history", this::getHistory);
         });
 
         var updaterPeriod = Math.max(mainConfig.getUpdaterPeriod(), 1);
@@ -107,13 +109,139 @@ public class StudentUpdateHandler implements ServerHandler {
         }
     }
 
+    private Optional<UUID> getKeyOrSetStatus(Context ctx) {
+        var rawKey = ctx.pathParam("key");
+        UUID key;
+        try {
+            key = UUID.fromString(rawKey);
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+        return Optional.of(key);
+    }
+
     @OpenApi(
-            path = "/updater/{id}/personal",
+            path = "/updater",
+            methods = HttpMethod.POST,
+            summary = "Create new key. Roles: STUDENT",
+            description = "Create new key. Roles: STUDENT",
+            tags = "Updater",
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The key",
+                            content = @OpenApiContent(from = StringResponse.class)
+                    )
+            }
+    )
+    private void createNewKey(Context ctx) {
+        long userId = JwtHandler.getUserId(ctx);
+        try (var session = sessionFactory.openSession()) {
+            var student = session.get(Student.class, userId);
+            if (student == null) {
+                ctx.status(404);
+                ctx.json(new StringResponse(1, "Student not found", null));
+                return;
+            }
+
+            Transaction transaction = session.beginTransaction();
+            var updaterKey = new UpdaterKey();
+            updaterKey.setStudent(student);
+            session.save(updaterKey);
+            transaction.commit();
+
+            ctx.json(new StringResponse(0, "OK", updaterKey.getId().toString()));
+        }
+    }
+
+    @OpenApi(
+            path = "/updater/list",
+            methods = HttpMethod.GET,
+            summary = "Get key list. Roles: STUDENT",
+            description = "Get key list. Roles: STUDENT",
+            tags = "Updater",
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The key list",
+                            content = @OpenApiContent(from = StringListResponse.class)
+                    )
+            }
+    )
+    private void getKeyList(Context ctx) {
+        long userId = JwtHandler.getUserId(ctx);
+        try (var session = sessionFactory.openSession()) {
+            var student = session.get(Student.class, userId);
+            if (student == null) {
+                ctx.status(404);
+                ctx.json(new StringListResponse(1, "Student not found", null));
+                return;
+            }
+
+            var list = new ArrayList<String>();
+            for (var key : student.getUpdaterKey()) {
+                list.add(key.getId().toString());
+            }
+            ctx.json(new StringListResponse(0, "OK", list));
+        }
+    }
+
+    @OpenApi(
+            path = "/updater/{key}",
+            methods = HttpMethod.DELETE,
+            summary = "Delete key. Roles: STUDENT",
+            description = "Delete key. Roles: STUDENT",
+            tags = "Updater",
+            pathParams = @OpenApiParam(name = "key", description = "The account key", required = true),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "Success",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Key not found",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "400",
+                            description = "Invalid key",
+                            content = @OpenApiContent(from = Response.class)
+                    )
+            }
+    )
+    private void deleteKey(Context ctx) {
+        long userId = JwtHandler.getUserId(ctx);
+        var optionalKey = getKeyOrSetStatus(ctx);
+        if (optionalKey.isEmpty()) {
+            ctx.status(400);
+            ctx.json(new Response(1, "Invalid key"));
+            return;
+        }
+        var key = optionalKey.get();
+
+        try (var session = sessionFactory.openSession()) {
+            var updaterKey = session.get(UpdaterKey.class, key);
+            if (updaterKey == null || updaterKey.getStudent().getId() != userId) {
+                ctx.status(404);
+                ctx.json(new Response(2, "Key not found"));
+                return;
+            }
+            Transaction transaction = session.beginTransaction();
+            session.delete(updaterKey);
+            transaction.commit();
+            ctx.json(new Response(0, "OK"));
+        }
+    }
+
+    @OpenApi(
+            path = "/updater/{key}/personal",
             methods = HttpMethod.GET,
             summary = "Get student personal.",
             description = "Get student personal.",
             tags = "Updater",
-            pathParams = @OpenApiParam(name = "id", description = "The account id", required = true),
+            pathParams = @OpenApiParam(name = "key", description = "The account key", required = true),
             responses = {
                     @OpenApiResponse(
                             status = "200",
@@ -125,14 +253,37 @@ public class StudentUpdateHandler implements ServerHandler {
                             description = "Personal not found",
                             content = @OpenApiContent(from = AccountWithStudentProfileResponse.class)
                     ),
+                    @OpenApiResponse(
+                            status = "400",
+                            description = "Invalid key",
+                            content = @OpenApiContent(from = AccountWithStudentProfileResponse.class)
+                    )
             }
     )
     private void getPersonal(Context ctx) {
-        var id = Long.parseLong(ctx.pathParam("id"));
+        var optionalKey = getKeyOrSetStatus(ctx);
+        if (optionalKey.isEmpty()) {
+            ctx.status(400);
+            ctx.json(new AccountWithStudentProfileResponse(1, "Invalid key", null));
+            return;
+        }
+        var key = optionalKey.get();
+
+        long id;
+        try (var session = sessionFactory.openSession()) {
+            var updaterKey = session.get(UpdaterKey.class, key);
+            if (updaterKey == null) {
+                ctx.status(404);
+                ctx.json(new AccountWithStudentProfileResponse(2, "Key not found", null));
+                return;
+            }
+            id = updaterKey.getStudent().getId();
+        }
+
         ctx.future(() -> studentUpdater.getStudentPersonal(id).thenAccept(personal -> {
             if (personal == null) {
                 ctx.status(404);
-                ctx.json(new AccountWithStudentProfileResponse(1, "Personal not found", null));
+                ctx.json(new AccountWithStudentProfileResponse(3, "Personal not found", null));
                 return;
             }
             ctx.json(new AccountWithStudentProfileResponse(0, "Get personal", AccountWithStudentProfileOutput.fromFabricModel(id, personal)));
@@ -140,12 +291,12 @@ public class StudentUpdateHandler implements ServerHandler {
     }
 
     @OpenApi(
-            path = "/updater/{id}/record",
+            path = "/updater/{key}/record",
             methods = HttpMethod.GET,
             summary = "Get student record.",
             description = "Get student record.",
             tags = "Updater",
-            pathParams = @OpenApiParam(name = "id", description = "The account id", required = true),
+            pathParams = @OpenApiParam(name = "key", description = "The account key", required = true),
             responses = {
                     @OpenApiResponse(
                             status = "200",
@@ -157,14 +308,37 @@ public class StudentUpdateHandler implements ServerHandler {
                             description = "Record not found",
                             content = @OpenApiContent(from = RecordListResponse.class)
                     ),
+                    @OpenApiResponse(
+                            status = "400",
+                            description = "Invalid key",
+                            content = @OpenApiContent(from = RecordListResponse.class)
+                    )
             }
     )
     private void getRecord(Context ctx) {
-        var id = Long.parseLong(ctx.pathParam("id"));
+        var optionalKey = getKeyOrSetStatus(ctx);
+        if (optionalKey.isEmpty()) {
+            ctx.status(400);
+            ctx.json(new RecordListResponse(1, "Invalid key", null));
+            return;
+        }
+        var key = optionalKey.get();
+
+        long id;
+        try (var session = sessionFactory.openSession()) {
+            var updaterKey = session.get(UpdaterKey.class, key);
+            if (updaterKey == null) {
+                ctx.status(404);
+                ctx.json(new RecordListResponse(2, "Key not found", null));
+                return;
+            }
+            id = updaterKey.getStudent().getId();
+        }
+
         ctx.future(() -> studentUpdater.getStudentRecord(id).thenAccept(record -> {
             if (record == null) {
                 ctx.status(404);
-                ctx.json(new RecordListResponse(1, "Record not found", null));
+                ctx.json(new RecordListResponse(3, "Record not found", null));
                 return;
             }
             ctx.json(new RecordListResponse(0, "OK", RecordOutput.fromFabricModel(record)));
@@ -172,12 +346,12 @@ public class StudentUpdateHandler implements ServerHandler {
     }
 
     @OpenApi(
-            path = "/updater/{id}/history",
+            path = "/updater/{key}/history",
             methods = HttpMethod.GET,
             summary = "Get student record history.",
             description = "Get student record history.",
             tags = "Updater",
-            pathParams = @OpenApiParam(name = "id", description = "The account id", required = true),
+            pathParams = @OpenApiParam(name = "key", description = "The account key", required = true),
             responses = {
                     @OpenApiResponse(
                             status = "200",
@@ -189,14 +363,37 @@ public class StudentUpdateHandler implements ServerHandler {
                             description = "Record history not found",
                             content = @OpenApiContent(from = RecordHistoryResponse.class)
                     ),
+                    @OpenApiResponse(
+                            status = "400",
+                            description = "Invalid key",
+                            content = @OpenApiContent(from = RecordHistoryResponse.class)
+                    )
             }
     )
     private void getHistory(Context ctx) {
-        var id = Long.parseLong(ctx.pathParam("id"));
+        var optionalKey = getKeyOrSetStatus(ctx);
+        if (optionalKey.isEmpty()) {
+            ctx.status(400);
+            ctx.json(new RecordHistoryResponse(1, "Invalid key", null));
+            return;
+        }
+        var key = optionalKey.get();
+
+        long id;
+        try (var session = sessionFactory.openSession()) {
+            var updaterKey = session.get(UpdaterKey.class, key);
+            if (updaterKey == null) {
+                ctx.status(404);
+                ctx.json(new RecordHistoryResponse(2, "Key not found", null));
+                return;
+            }
+            id = updaterKey.getStudent().getId();
+        }
+
         ctx.future(() -> studentUpdater.getStudentRecordHistory(id).thenAccept(history -> {
             if (history == null) {
                 ctx.status(404);
-                ctx.json(new RecordHistoryResponse(1, "Record history not found", null));
+                ctx.json(new RecordHistoryResponse(3, "Record history not found", null));
                 return;
             }
             var output = history.stream().map(RecordHistoryOutput::fromFabricModel).toList();

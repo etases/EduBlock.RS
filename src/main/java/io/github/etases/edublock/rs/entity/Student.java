@@ -42,4 +42,6 @@ public class Student implements Serializable {
     private List<ClassStudent> classrooms;
     @OneToMany(mappedBy = "student")
     private List<Record> records;
+    @OneToMany(mappedBy = "student")
+    private List<UpdaterKey> updaterKey;
 }
