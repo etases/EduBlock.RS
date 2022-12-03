@@ -53,16 +53,16 @@ public class ClassroomHandler extends SimpleServerHandler {
     @Override
     protected void setupServer(Javalin server) {
         server.post("/classroom", this::create, JwtHandler.Role.STAFF);
-        server.get("/classroom", this::list, JwtHandler.Role.STAFF);
+        server.get("/classroom", this::list, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.get("/classroom/teacher", this::listTeacher, JwtHandler.Role.TEACHER);
         server.get("/classroom/student", this::listStudent, JwtHandler.Role.STUDENT);
         server.get("/classroom/homeroom", this::listHomeroom, JwtHandler.Role.TEACHER);
-        server.get("/classroom/{id}", this::get, JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
+        server.get("/classroom/{id}", this::get, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.put("/classroom/{id}", this::update, JwtHandler.Role.STAFF);
-        server.get("/classroom/{id}/teacher", this::teacherList, JwtHandler.Role.STAFF, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
+        server.get("/classroom/{id}/teacher", this::teacherList, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.post("/classroom/{id}/teacher", this::addTeacher, JwtHandler.Role.STAFF);
         server.delete("/classroom/{id}/teacher", this::removeTeacher, JwtHandler.Role.STAFF);
-        server.get("/classroom/{id}/student", this::studentList, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF);
+        server.get("/classroom/{id}/student", this::studentList, JwtHandler.Role.TEACHER, JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
         server.post("/classroom/{id}/student", this::addStudent, JwtHandler.Role.STAFF);
         server.delete("/classroom/{id}/student", this::removeStudent, JwtHandler.Role.STAFF);
     }
@@ -105,8 +105,8 @@ public class ClassroomHandler extends SimpleServerHandler {
     @OpenApi(
             path = "/classroom",
             methods = HttpMethod.GET,
-            summary = "Get classroom list. Roles: STAFF",
-            description = "Get classroom list. Roles: STAFF",
+            summary = "Get classroom list. Roles: STAFF, ADMIN",
+            description = "Get classroom list. Roles: STAFF, ADMIN",
             tags = "Classroom",
             queryParams = {
                     @OpenApiParam(name = "pageNumber", description = "Page number"),
@@ -197,8 +197,8 @@ public class ClassroomHandler extends SimpleServerHandler {
     @OpenApi(
             path = "/classroom/{id}",
             methods = HttpMethod.GET,
-            summary = "Get class. Roles: STAFF, TEACHER, STUDENT",
-            description = "Get class. Roles: STAFF, TEACHER, STUDENT",
+            summary = "Get class. Roles: STAFF, TEACHER, STUDENT, ADMIN",
+            description = "Get class. Roles: STAFF, TEACHER, STUDENT, ADMIN",
             tags = "Classroom",
             pathParams = @OpenApiParam(name = "id", description = "Classroom ID", required = true),
             security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
@@ -358,8 +358,8 @@ public class ClassroomHandler extends SimpleServerHandler {
     @OpenApi(
             path = "/classroom/{id}/student",
             methods = HttpMethod.GET,
-            summary = "Get list of students of a class. Roles: STAFF, TEACHER",
-            description = "Get list of students of a class. Roles: STAFF, TEACHER",
+            summary = "Get list of students of a class. Roles: STAFF, TEACHER, ADMIN",
+            description = "Get list of students of a class. Roles: STAFF, TEACHER, ADMIN",
             tags = "Classroom",
             pathParams = @OpenApiParam(name = "id", description = "Classroom ID", required = true),
             queryParams = {
@@ -404,8 +404,8 @@ public class ClassroomHandler extends SimpleServerHandler {
     @OpenApi(
             path = "/classroom/{id}/teacher",
             methods = HttpMethod.GET,
-            summary = "Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT",
-            description = "Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT",
+            summary = "Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT, ADMIN",
+            description = "Get list of teachers of a class. Roles: STAFF, TEACHER, STUDENT, ADMIN",
             tags = "Classroom",
             pathParams = @OpenApiParam(name = "id", description = "Classroom ID", required = true),
             queryParams = {

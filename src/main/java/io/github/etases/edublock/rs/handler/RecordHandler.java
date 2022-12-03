@@ -49,9 +49,9 @@ public class RecordHandler extends SimpleServerHandler {
         server.get("/record/pending/list/{studentId}", this::listPendingByStudent, JwtHandler.Role.TEACHER);
         server.post("/record/pending/verify", this::verify, JwtHandler.Role.TEACHER);
         server.get("/record/{classroomId}", this::getOwn, JwtHandler.Role.STUDENT);
-        server.get("/record/{classroomId}/{studentId}", this::get, JwtHandler.Role.TEACHER);
-        server.get("/record/list/classroom/{classroomId}", this::listByClassroom, JwtHandler.Role.STAFF);
-        server.get("/record/list/grade/{grade}/{year}", this::listByGradeAndYear, JwtHandler.Role.STAFF);
+        server.get("/record/{classroomId}/{studentId}", this::get, JwtHandler.Role.TEACHER, JwtHandler.Role.ADMIN, JwtHandler.Role.STAFF);
+        server.get("/record/list/classroom/{classroomId}", this::listByClassroom, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
+        server.get("/record/list/grade/{grade}/{year}", this::listByGradeAndYear, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
     }
 
     private CompletableFuture<RecordOutput> insertRecordFromUpdater(long studentId, RecordOutput recordOutput) {
@@ -148,12 +148,15 @@ public class RecordHandler extends SimpleServerHandler {
     }
 
     @OpenApi(
-            path = "/record/{classroomId}",
+            path = "/record/{classroomId}/{studentId}",
             methods = HttpMethod.GET,
-            summary = "Get own record. Roles: STUDENT",
-            description = "Get own record. Roles: STUDENT",
+            summary = "Get student record. Roles: TEACHER, ADMIN, STAFF",
+            description = "Get student record. Roles: TEACHER, ADMIN, STAFF",
             tags = "Record",
-            pathParams = @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
+            pathParams = {
+                    @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
+                    @OpenApiParam(name = "studentId", description = "Student ID", required = true)
+            },
             queryParams = {
                     @OpenApiParam(name = "updater", description = "Add entries from updater"),
                     @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries"),
@@ -179,15 +182,12 @@ public class RecordHandler extends SimpleServerHandler {
     }
 
     @OpenApi(
-            path = "/record/{classroomId}/{studentId}",
+            path = "/record/{classroomId}",
             methods = HttpMethod.GET,
-            summary = "Get student record. Roles: TEACHER",
-            description = "Get student record. Roles: TEACHER",
+            summary = "Get own record. Roles: STUDENT",
+            description = "Get own record. Roles: STUDENT",
             tags = "Record",
-            pathParams = {
-                    @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
-                    @OpenApiParam(name = "studentId", description = "Student ID", required = true)
-            },
+            pathParams = @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true),
             queryParams = {
                     @OpenApiParam(name = "updater", description = "Add entries from updater"),
                     @OpenApiParam(name = "filterUpdated", description = "Filter local updated entries"),
@@ -394,8 +394,8 @@ public class RecordHandler extends SimpleServerHandler {
     @OpenApi(
             path = "/record/list/classroom/{classroomId}",
             methods = HttpMethod.GET,
-            summary = "Get list of records by classroom. Roles: STAFF",
-            description = "Get list of records by classroom. Roles: STAFF",
+            summary = "Get list of records by classroom. Roles: TEACHER, ADMIN, STAFF",
+            description = "Get list of records by classroom. Roles: TEACHER, ADMIN, STAFF",
             tags = "Record",
             pathParams = {
                     @OpenApiParam(name = "classroomId", description = "Classroom ID", required = true)
@@ -420,8 +420,8 @@ public class RecordHandler extends SimpleServerHandler {
     @OpenApi(
             path = "/record/list/grade/{grade}/{year}",
             methods = HttpMethod.GET,
-            summary = "Get list of records by grade and year. Roles: STAFF",
-            description = "Get list of records by grade and year. Roles: STAFF",
+            summary = "Get list of records by grade and year. Roles: TEACHER, ADMIN, STAFF",
+            description = "Get list of records by grade and year. Roles: TEACHER, ADMIN, STAFF",
             tags = "Record",
             pathParams = {
                     @OpenApiParam(name = "grade", description = "Grade", required = true),
