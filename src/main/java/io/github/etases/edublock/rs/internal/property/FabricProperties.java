@@ -15,7 +15,7 @@ public record FabricProperties(boolean enabled, String certPem, String keyPem, S
                 getPem(map.get("key-pem")),
                 Objects.toString(map.get("msp-id"), "Org1MSP"),
                 Boolean.parseBoolean(Objects.toString(map.get("inet-address"), "true")),
-                Objects.toString(map.get("host"), "localhost"),
+                Objects.toString(map.get("host"), "0.0.0.0"),
                 Integer.parseInt(Objects.toString(map.get("port"), "7051")),
                 Boolean.parseBoolean(Objects.toString(map.get("tls-enabled"), "false")),
                 getPem(map.get("tls-cert-pem")),

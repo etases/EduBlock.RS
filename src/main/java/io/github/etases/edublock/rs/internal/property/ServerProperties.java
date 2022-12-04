@@ -8,7 +8,7 @@ public record ServerProperties(String host, int port, boolean devMode, boolean b
                                List<String> allowedOrigins) {
     public static ServerProperties fromMap(Map<?, ?> map) {
         return new ServerProperties(
-                Objects.toString(map.get("host"), "localhost"),
+                Objects.toString(map.get("host"), "0.0.0.0"),
                 Integer.parseInt(Objects.toString(map.get("port"), "7070")),
                 Boolean.parseBoolean(Objects.toString(map.get("dev-mode"), "true")),
                 Boolean.parseBoolean(Objects.toString(map.get("bypass-cors"), "true")),

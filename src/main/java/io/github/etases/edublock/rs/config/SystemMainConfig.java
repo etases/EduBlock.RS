@@ -26,14 +26,14 @@ public class SystemMainConfig implements MainConfig {
                 Optional.ofNullable(System.getenv("RS_DATABASE_NAME")).orElse("edublock"),
                 Optional.ofNullable(System.getenv("RS_DATABASE_USER")).orElse("root"),
                 Optional.ofNullable(System.getenv("RS_DATABASE_PASSWORD")).orElse(""),
-                Optional.ofNullable(System.getenv("RS_DATABASE_HOST")).orElse("localhost"),
+                Optional.ofNullable(System.getenv("RS_DATABASE_HOST")).orElse("0.0.0.0"),
                 Optional.ofNullable(System.getenv("RS_DATABASE_PORT")).orElse("3306"),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_IS_SSH")).orElse("false")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_IS_FILE")).orElse("true")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_IS_MEMORY")).orElse("true"))
         );
         this.serverProperties = new ServerProperties(
-                Optional.ofNullable(System.getenv("RS_SERVER_HOST")).orElse("localhost"),
+                Optional.ofNullable(System.getenv("RS_SERVER_HOST")).orElse("0.0.0.0"),
                 Integer.parseInt(Optional.ofNullable(System.getenv("RS_SERVER_PORT")).orElse("7070")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_DEV_MODE")).orElse("true")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_BYPASS_CORS")).orElse("true")),
@@ -45,7 +45,7 @@ public class SystemMainConfig implements MainConfig {
                 Optional.ofNullable(System.getenv("RS_FABRIC_PEER_KEY_PEM")).orElse(""),
                 Optional.ofNullable(System.getenv("RS_FABRIC_PEER_MSP_ID")).orElse("Org1MSP"),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_INET_ADDRESS")).orElse("true")),
-                Optional.ofNullable(System.getenv("RS_FABRIC_PEER_HOST")).orElse("localhost"),
+                Optional.ofNullable(System.getenv("RS_FABRIC_PEER_HOST")).orElse("0.0.0.0"),
                 Integer.parseInt(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_PORT")).orElse("7051")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_FABRIC_PEER_TLS_ENABLED")).orElse("true")),
                 Optional.ofNullable(System.getenv("RS_FABRIC_PEER_TLS_CERT_PEM")).orElse(""),
