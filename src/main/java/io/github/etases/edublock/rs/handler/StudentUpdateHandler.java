@@ -27,6 +27,7 @@ import io.github.etases.edublock.rs.model.output.element.RecordOutput;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
 import lombok.Getter;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.tinylog.Logger;
@@ -109,7 +110,7 @@ public class StudentUpdateHandler implements ServerHandler {
         }
     }
 
-    private Optional<UUID> getKeyOrSetStatus(Context ctx) {
+    private Optional<UUID> getKey(Context ctx) {
         var rawKey = ctx.pathParam("key");
         UUID key;
         try {
@@ -118,6 +119,10 @@ public class StudentUpdateHandler implements ServerHandler {
             return Optional.empty();
         }
         return Optional.of(key);
+    }
+
+    private Optional<UpdaterKey> getKey(Session session, Context ctx) {
+        return getKey(ctx).map(key -> session.get(UpdaterKey.class, key.toString()));
     }
 
     @OpenApi(
@@ -206,29 +211,16 @@ public class StudentUpdateHandler implements ServerHandler {
                             status = "404",
                             description = "Key not found",
                             content = @OpenApiContent(from = Response.class)
-                    ),
-                    @OpenApiResponse(
-                            status = "400",
-                            description = "Invalid key",
-                            content = @OpenApiContent(from = Response.class)
                     )
             }
     )
     private void deleteKey(Context ctx) {
         long userId = JwtHandler.getUserId(ctx);
-        var optionalKey = getKeyOrSetStatus(ctx);
-        if (optionalKey.isEmpty()) {
-            ctx.status(400);
-            ctx.json(new Response(1, "Invalid key"));
-            return;
-        }
-        var key = optionalKey.get().toString();
-
         try (var session = sessionFactory.openSession()) {
-            var updaterKey = session.get(UpdaterKey.class, key);
+            var updaterKey = getKey(session, ctx).orElse(null);
             if (updaterKey == null || updaterKey.getStudent().getId() != userId) {
                 ctx.status(404);
-                ctx.json(new Response(2, "Key not found"));
+                ctx.json(new Response(1, "Key not found"));
                 return;
             }
             Transaction transaction = session.beginTransaction();
@@ -255,38 +247,25 @@ public class StudentUpdateHandler implements ServerHandler {
                             status = "404",
                             description = "Personal not found",
                             content = @OpenApiContent(from = AccountWithStudentProfileResponse.class)
-                    ),
-                    @OpenApiResponse(
-                            status = "400",
-                            description = "Invalid key",
-                            content = @OpenApiContent(from = AccountWithStudentProfileResponse.class)
                     )
             }
     )
     private void getPersonal(Context ctx) {
-        var optionalKey = getKeyOrSetStatus(ctx);
-        if (optionalKey.isEmpty()) {
-            ctx.status(400);
-            ctx.json(new AccountWithStudentProfileResponse(1, "Invalid key", null));
-            return;
-        }
-        var key = optionalKey.get().toString();
-
         long id;
         try (var session = sessionFactory.openSession()) {
-            var updaterKey = session.get(UpdaterKey.class, key);
-            if (updaterKey == null) {
+            var updaterKey = getKey(session, ctx);
+            if (updaterKey.isEmpty()) {
                 ctx.status(404);
-                ctx.json(new AccountWithStudentProfileResponse(2, "Key not found", null));
+                ctx.json(new AccountWithStudentProfileResponse(1, "Key not found", null));
                 return;
             }
-            id = updaterKey.getStudent().getId();
+            id = updaterKey.get().getStudent().getId();
         }
 
         ctx.future(() -> studentUpdater.getStudentPersonal(id).thenAccept(personal -> {
             if (personal == null) {
                 ctx.status(404);
-                ctx.json(new AccountWithStudentProfileResponse(3, "Personal not found", null));
+                ctx.json(new AccountWithStudentProfileResponse(2, "Personal not found", null));
                 return;
             }
             ctx.json(new AccountWithStudentProfileResponse(0, "Get personal", AccountWithStudentProfileOutput.fromFabricModel(id, personal)));
@@ -310,38 +289,25 @@ public class StudentUpdateHandler implements ServerHandler {
                             status = "404",
                             description = "Record not found",
                             content = @OpenApiContent(from = RecordListResponse.class)
-                    ),
-                    @OpenApiResponse(
-                            status = "400",
-                            description = "Invalid key",
-                            content = @OpenApiContent(from = RecordListResponse.class)
                     )
             }
     )
     private void getRecord(Context ctx) {
-        var optionalKey = getKeyOrSetStatus(ctx);
-        if (optionalKey.isEmpty()) {
-            ctx.status(400);
-            ctx.json(new RecordListResponse(1, "Invalid key", null));
-            return;
-        }
-        var key = optionalKey.get().toString();
-
         long id;
         try (var session = sessionFactory.openSession()) {
-            var updaterKey = session.get(UpdaterKey.class, key);
-            if (updaterKey == null) {
+            var updaterKey = getKey(session, ctx);
+            if (updaterKey.isEmpty()) {
                 ctx.status(404);
-                ctx.json(new RecordListResponse(2, "Key not found", null));
+                ctx.json(new RecordListResponse(1, "Key not found", null));
                 return;
             }
-            id = updaterKey.getStudent().getId();
+            id = updaterKey.get().getStudent().getId();
         }
 
         ctx.future(() -> studentUpdater.getStudentRecord(id).thenAccept(record -> {
             if (record == null) {
                 ctx.status(404);
-                ctx.json(new RecordListResponse(3, "Record not found", null));
+                ctx.json(new RecordListResponse(2, "Record not found", null));
                 return;
             }
             ctx.json(new RecordListResponse(0, "OK", RecordOutput.fromFabricModel(record)));
@@ -365,38 +331,25 @@ public class StudentUpdateHandler implements ServerHandler {
                             status = "404",
                             description = "Record history not found",
                             content = @OpenApiContent(from = RecordHistoryResponse.class)
-                    ),
-                    @OpenApiResponse(
-                            status = "400",
-                            description = "Invalid key",
-                            content = @OpenApiContent(from = RecordHistoryResponse.class)
                     )
             }
     )
     private void getHistory(Context ctx) {
-        var optionalKey = getKeyOrSetStatus(ctx);
-        if (optionalKey.isEmpty()) {
-            ctx.status(400);
-            ctx.json(new RecordHistoryResponse(1, "Invalid key", null));
-            return;
-        }
-        var key = optionalKey.get().toString();
-
         long id;
         try (var session = sessionFactory.openSession()) {
-            var updaterKey = session.get(UpdaterKey.class, key);
-            if (updaterKey == null) {
+            var updaterKey = getKey(session, ctx);
+            if (updaterKey.isEmpty()) {
                 ctx.status(404);
-                ctx.json(new RecordHistoryResponse(2, "Key not found", null));
+                ctx.json(new RecordHistoryResponse(1, "Key not found", null));
                 return;
             }
-            id = updaterKey.getStudent().getId();
+            id = updaterKey.get().getStudent().getId();
         }
 
         ctx.future(() -> studentUpdater.getStudentRecordHistory(id).thenAccept(history -> {
             if (history == null) {
                 ctx.status(404);
-                ctx.json(new RecordHistoryResponse(3, "Record history not found", null));
+                ctx.json(new RecordHistoryResponse(2, "Record history not found", null));
                 return;
             }
             var output = history.stream().map(RecordHistoryOutput::fromFabricModel).toList();
