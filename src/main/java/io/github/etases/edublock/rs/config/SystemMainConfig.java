@@ -33,7 +33,7 @@ public class SystemMainConfig implements MainConfig {
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_DATABASE_IS_MEMORY")).orElse("true"))
         );
         this.serverProperties = new ServerProperties(
-                Optional.ofNullable(System.getenv("RS_SERVER_HOST")).orElse("0.0.0.0"),
+                Optional.ofNullable(System.getenv("RS_SERVER_HOST")).orElse(""),
                 Integer.parseInt(Optional.ofNullable(System.getenv("RS_SERVER_PORT")).orElse("7070")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_DEV_MODE")).orElse("true")),
                 Boolean.parseBoolean(Optional.ofNullable(System.getenv("RS_SERVER_BYPASS_CORS")).orElse("true")),

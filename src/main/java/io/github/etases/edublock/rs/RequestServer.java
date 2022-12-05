@@ -68,7 +68,11 @@ public class RequestServer {
         serverHandlers.values().forEach(ServerHandler::postSetup);
 
         server = serverBuilder.build();
-        server.start(mainConfig.getServerProperties().host(), mainConfig.getServerProperties().port());
+        if (mainConfig.getServerProperties().host().isEmpty()) {
+            server.start(mainConfig.getServerProperties().port());
+        } else {
+            server.start(mainConfig.getServerProperties().host(), mainConfig.getServerProperties().port());
+        }
         terminal.start();
     }
 
