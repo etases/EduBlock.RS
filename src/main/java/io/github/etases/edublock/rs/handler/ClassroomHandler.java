@@ -56,6 +56,7 @@ public class ClassroomHandler extends SimpleServerHandler {
         server.get("/classroom", this::list, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.get("/classroom/teacher", this::listTeacher, JwtHandler.Role.TEACHER);
         server.get("/classroom/student", this::listStudent, JwtHandler.Role.STUDENT);
+        server.get("/classroom/student/{id}", this::listSpecificStudent, JwtHandler.Role.TEACHER, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
         server.get("/classroom/homeroom", this::listHomeroom, JwtHandler.Role.TEACHER);
         server.get("/classroom/{id}", this::get, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN, JwtHandler.Role.TEACHER, JwtHandler.Role.STUDENT);
         server.put("/classroom/{id}", this::update, JwtHandler.Role.STAFF);
@@ -67,7 +68,7 @@ public class ClassroomHandler extends SimpleServerHandler {
         server.delete("/classroom/{id}/student", this::removeStudent, JwtHandler.Role.STAFF);
     }
 
-    private void list(Context ctx, boolean isTeacher, boolean isStudent, boolean isHomeroom) {
+    private void list(Context ctx, boolean isTeacher, boolean isStudent, boolean isHomeroom, boolean isSpecificStudent) {
         var paginationParameter = PaginationParameter.fromQuery(ctx);
         try (var session = sessionFactory.openSession()) {
             List<Classroom> classrooms;
@@ -78,7 +79,12 @@ public class ClassroomHandler extends SimpleServerHandler {
                 var classTeachers = query.getResultList();
                 classrooms = classTeachers.stream().map(ClassTeacher::getClassroom).toList();
             } else if (isStudent) {
-                long userId = JwtHandler.getUserId(ctx);
+                long userId;
+                if (isSpecificStudent) {
+                    userId = Long.parseLong(ctx.pathParam("id"));
+                } else {
+                    userId = JwtHandler.getUserId(ctx);
+                }
                 var query = session.createNamedQuery("ClassStudent.findByStudent", ClassStudent.class)
                         .setParameter("studentId", userId);
                 var classStudents = query.getResultList();
@@ -122,7 +128,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             )
     )
     private void list(Context ctx) {
-        list(ctx, false, false, false);
+        list(ctx, false, false, false, false);
     }
 
     @OpenApi(
@@ -145,7 +151,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             )
     )
     private void listTeacher(Context ctx) {
-        list(ctx, true, false, false);
+        list(ctx, true, false, false, false);
     }
 
     @OpenApi(
@@ -168,7 +174,31 @@ public class ClassroomHandler extends SimpleServerHandler {
             )
     )
     private void listStudent(Context ctx) {
-        list(ctx, false, true, false);
+        list(ctx, false, true, false, false);
+    }
+
+    @OpenApi(
+            path = "/classroom/student/{id}",
+            methods = HttpMethod.GET,
+            summary = "Get classroom list of a student. Roles: TEACHER, ADMIN, STAFF",
+            description = "Get classroom list of a student. Roles: TEACHER, ADMIN, STAFF",
+            tags = "Classroom",
+            queryParams = {
+                    @OpenApiParam(name = "pageNumber", description = "Page number"),
+                    @OpenApiParam(name = "pageSize", description = "Page size"),
+                    @OpenApiParam(name = "filter", description = "Filter Type"),
+                    @OpenApiParam(name = "input", description = "Filter Input"),
+            },
+            pathParams = @OpenApiParam(name = "id", description = "Student ID", required = true),
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            responses = @OpenApiResponse(
+                    status = "200",
+                    content = @OpenApiContent(from = ClassroomListResponse.class),
+                    description = "The list of classroom"
+            )
+    )
+    private void listSpecificStudent(Context ctx) {
+        list(ctx, false, true, false, true);
     }
 
     @OpenApi(
@@ -191,7 +221,7 @@ public class ClassroomHandler extends SimpleServerHandler {
             )
     )
     private void listHomeroom(Context ctx) {
-        list(ctx, false, false, true);
+        list(ctx, false, false, true, false);
     }
 
     @OpenApi(
