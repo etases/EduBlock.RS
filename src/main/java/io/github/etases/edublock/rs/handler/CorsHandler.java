@@ -23,7 +23,6 @@ public class CorsHandler extends SimpleServerHandler {
         corsContainer.add(
                 corsPluginConfig -> {
                     if (mainConfig.getServerProperties().bypassCors()) {
-                        corsPluginConfig.anyHost();
                         corsPluginConfig.allowCredentials = true;
                         corsPluginConfig.reflectClientOrigin = true;
                     } else {
