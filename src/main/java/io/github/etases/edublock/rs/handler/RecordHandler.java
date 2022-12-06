@@ -87,7 +87,7 @@ public class RecordHandler extends SimpleServerHandler {
         });
     }
 
-    private Record createEmptyRecord(Student student, Classroom classroom) {
+    private static Record createEmptyRecord(Student student, Classroom classroom) {
         var record = new Record();
         record.setStudent(student);
         record.setClassroom(classroom);
@@ -111,7 +111,7 @@ public class RecordHandler extends SimpleServerHandler {
         }
     }
 
-    private Record getOrCreateRecord(Session session, Student student, Classroom classroom) {
+    public static Record getOrCreateRecord(Session session, Student student, Classroom classroom) {
         var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
                 .setParameter("studentId", student.getId())
                 .setParameter("classroomId", classroom.getId());

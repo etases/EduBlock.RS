@@ -662,6 +662,8 @@ public class ClassroomHandler extends SimpleServerHandler {
                 classStudent.setClassroom(classroom);
                 classStudent.setStudent(student);
                 session.save(classStudent);
+
+                RecordHandler.getOrCreateRecord(session, student, classroom);
             }
             if (errors.isEmpty()) {
                 transaction.commit();
@@ -700,11 +702,22 @@ public class ClassroomHandler extends SimpleServerHandler {
         try (var session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
             for (var accountId : input.getAccounts()) {
-                session.createNamedQuery("ClassStudent.findByClassroomAndStudent", ClassStudent.class)
+                var classStudentQuery = session.createNamedQuery("ClassStudent.findByClassroomAndStudent", ClassStudent.class)
                         .setParameter("classroomId", classroomId)
+                        .setParameter("studentId", accountId);
+
+                var classStudentList = classStudentQuery.list();
+                for (var classStudent : classStudentList) {
+                    session.delete(classStudent);
+                }
+
+                var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom")
                         .setParameter("studentId", accountId)
-                        .stream()
-                        .forEach(session::delete);
+                        .setParameter("classroomId", classroomId);
+                var recordList = recordQuery.list();
+                for (var record : recordList) {
+                    session.delete(record);
+                }
             }
             transaction.commit();
             ctx.json(new Response(0, "Students removed"));
