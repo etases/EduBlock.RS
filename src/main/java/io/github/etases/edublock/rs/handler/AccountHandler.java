@@ -376,6 +376,7 @@ public class AccountHandler extends SimpleServerHandler {
             if (!PasswordUtil.verifyPassword(input.getOldPassword(), account.getSalt(), account.getHashedPassword())) {
                 ctx.status(400);
                 ctx.json(new Response(2, "Old password is incorrect"));
+                return;
             }
 
             String salt = PasswordUtil.generateSalt();
