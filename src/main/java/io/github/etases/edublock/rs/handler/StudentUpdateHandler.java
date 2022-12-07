@@ -20,10 +20,12 @@ import io.github.etases.edublock.rs.model.fabric.ClassRecord;
 import io.github.etases.edublock.rs.model.fabric.Personal;
 import io.github.etases.edublock.rs.model.fabric.Record;
 import io.github.etases.edublock.rs.model.fabric.Subject;
+import io.github.etases.edublock.rs.model.input.StatisticKeyCreateInput;
 import io.github.etases.edublock.rs.model.output.*;
 import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordHistoryOutput;
 import io.github.etases.edublock.rs.model.output.element.RecordOutput;
+import io.github.etases.edublock.rs.model.output.element.RecordWithStudentOutput;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
 import lombok.Getter;
@@ -40,6 +42,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class StudentUpdateHandler implements ServerHandler {
     private final AtomicReference<CompletableFuture<Void>> currentFutureRef = new AtomicReference<>();
@@ -81,6 +84,11 @@ public class StudentUpdateHandler implements ServerHandler {
             javalin.get("/updater/{key}/personal", this::getPersonal);
             javalin.get("/updater/{key}/record", this::getRecord);
             javalin.get("/updater/{key}/history", this::getHistory);
+
+            javalin.post("/statistic", this::createNewStatisticKey, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
+            javalin.get("/statistic/list", this::getStatisticKeyList, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
+            javalin.delete("/statistic/{key}", this::deleteStatisticKey, JwtHandler.Role.STAFF, JwtHandler.Role.ADMIN);
+            javalin.get("/statistic/{key}", this::getStatistic);
         });
 
         var updaterPeriod = Math.max(mainConfig.getUpdaterPeriod(), 1);
@@ -123,6 +131,10 @@ public class StudentUpdateHandler implements ServerHandler {
 
     private Optional<UpdaterKey> getKey(Session session, Context ctx) {
         return getKey(ctx).map(key -> session.get(UpdaterKey.class, key.toString()));
+    }
+
+    private Optional<StatisticKey> getStatisticKey(Session session, Context ctx) {
+        return getKey(ctx).map(key -> session.get(StatisticKey.class, key.toString()));
     }
 
     @OpenApi(
@@ -185,10 +197,7 @@ public class StudentUpdateHandler implements ServerHandler {
                 return;
             }
 
-            var list = new ArrayList<String>();
-            for (var key : student.getUpdaterKey()) {
-                list.add(key.getId());
-            }
+            var list = student.getUpdaterKey().stream().map(UpdaterKey::getId).toList();
             ctx.json(new StringListResponse(0, "OK", list));
         }
     }
@@ -354,6 +363,155 @@ public class StudentUpdateHandler implements ServerHandler {
             }
             var output = history.stream().map(RecordHistoryOutput::fromFabricModel).toList();
             ctx.json(new RecordHistoryResponse(0, "OK", output));
+        }));
+    }
+
+    @OpenApi(
+            path = "/statistic",
+            methods = HttpMethod.POST,
+            summary = "Create new statistic key. Roles: ADMIN, STAFF",
+            description = "Create new statistic key. Roles: ADMIN, STAFF",
+            tags = "Updater",
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            requestBody = @OpenApiRequestBody(content = @OpenApiContent(from = StatisticKeyCreateInput.class)),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The key",
+                            content = @OpenApiContent(from = StringResponse.class)
+                    )
+            }
+    )
+    private void createNewStatisticKey(Context ctx) {
+        StatisticKeyCreateInput input = ctx.bodyValidator(StatisticKeyCreateInput.class)
+                .check(StatisticKeyCreateInput::validate, "Invalid input")
+                .get();
+        try (var session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            var key = new StatisticKey();
+            key.setGrade(input.getGrade());
+            key.setYear(input.getYear());
+            session.save(key);
+            transaction.commit();
+            ctx.json(new StringResponse(0, "OK", key.getId()));
+        }
+    }
+
+    @OpenApi(
+            path = "/statistic/list",
+            methods = HttpMethod.GET,
+            summary = "Get statistic key list. Roles: ADMIN, STAFF",
+            description = "Get statistic key list. Roles: ADMIN, STAFF",
+            tags = "Updater",
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The key list",
+                            content = @OpenApiContent(from = StringListResponse.class)
+                    )
+            }
+    )
+    private void getStatisticKeyList(Context ctx) {
+        try (var session = sessionFactory.openSession()) {
+            var keys = session.createNamedQuery("StatisticKey.findAll", StatisticKey.class).list();
+            var output = keys.stream().map(StatisticKey::getId).toList();
+            ctx.json(new StringListResponse(0, "OK", output));
+        }
+    }
+
+    @OpenApi(
+            path = "/statistic/{key}",
+            methods = HttpMethod.DELETE,
+            summary = "Delete statistic key. Roles: ADMIN, STAFF",
+            description = "Delete statistic key. Roles: ADMIN, STAFF",
+            tags = "Updater",
+            pathParams = @OpenApiParam(name = "key", description = "The statistic key", required = true),
+            security = @OpenApiSecurity(name = SwaggerHandler.AUTH_KEY),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "Success",
+                            content = @OpenApiContent(from = Response.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Key not found",
+                            content = @OpenApiContent(from = Response.class)
+                    )
+            }
+    )
+    private void deleteStatisticKey(Context ctx) {
+        try (var session = sessionFactory.openSession()) {
+            var key = getStatisticKey(session, ctx);
+            if (key.isEmpty()) {
+                ctx.status(404);
+                ctx.json(new Response(1, "Key not found"));
+                return;
+            }
+            Transaction transaction = session.beginTransaction();
+            session.delete(key.get());
+            transaction.commit();
+            ctx.json(new Response(0, "OK"));
+        }
+    }
+
+    @OpenApi(
+            path = "/statistic/{key}",
+            methods = HttpMethod.GET,
+            summary = "Get records.",
+            description = "Get records.",
+            tags = "Updater",
+            pathParams = @OpenApiParam(name = "key", description = "The statistic key", required = true),
+            responses = {
+                    @OpenApiResponse(
+                            status = "200",
+                            description = "The student records",
+                            content = @OpenApiContent(from = RecordWithStudentListResponse.class)
+                    ),
+                    @OpenApiResponse(
+                            status = "404",
+                            description = "Key not found",
+                            content = @OpenApiContent(from = RecordWithStudentListResponse.class)
+                    )
+            }
+    )
+    private void getStatistic(Context ctx) {
+        StatisticKey key;
+        try (var session = sessionFactory.openSession()) {
+            var keyOpt = getStatisticKey(session, ctx);
+            if (keyOpt.isEmpty()) {
+                ctx.status(404);
+                ctx.json(new RecordWithStudentListResponse(1, "Key not found", null));
+                return;
+            }
+            key = keyOpt.get();
+        }
+
+        AtomicReference<Map<Long, Personal>> personalMapRef = new AtomicReference<>();
+        AtomicReference<Map<Long, Record>> recordMapRef = new AtomicReference<>();
+        CompletableFuture<Void> personalFuture = studentUpdater.getAllStudentPersonal().thenAccept(personalMapRef::set);
+        CompletableFuture<Void> recordFuture = studentUpdater.getAllStudentRecord().thenAccept(recordMapRef::set);
+        ctx.future(() -> CompletableFuture.allOf(personalFuture, recordFuture).thenAccept(v -> {
+            var personalOutputMap = personalMapRef.get().entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, e -> AccountWithStudentProfileOutput.fromFabricModel(e.getKey(), e.getValue())));
+            var recordOutputMap = recordMapRef.get().entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, e -> RecordOutput.fromFabricModel(e.getValue())));
+            List<RecordWithStudentOutput> output = new ArrayList<>();
+            for (var recordListEntry : recordOutputMap.entrySet()) {
+                var recordList = recordListEntry.getValue();
+                var personal = personalOutputMap.get(recordListEntry.getKey());
+                if (personal == null) {
+                    continue;
+                }
+                for (var record : recordList) {
+                    if (record.getClassroom().getGrade() != key.getGrade() || record.getClassroom().getYear() != key.getYear()) {
+                        continue;
+                    }
+                    output.add(new RecordWithStudentOutput(record.getClassroom(), record.getEntries(), record.getClassification(), personal));
+                }
+            }
+            ctx.json(new RecordWithStudentListResponse(0, "OK", output));
         }));
     }
 

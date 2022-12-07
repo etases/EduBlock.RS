@@ -70,7 +70,8 @@ public class DatabaseManager {
                 Record.class,
                 RecordEntry.class,
                 Student.class,
-                UpdaterKey.class
+                UpdaterKey.class,
+                StatisticKey.class
         );
     }
 }
