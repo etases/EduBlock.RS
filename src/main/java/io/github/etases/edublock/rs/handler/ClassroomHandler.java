@@ -5,6 +5,7 @@ import io.github.etases.edublock.rs.ServerBuilder;
 import io.github.etases.edublock.rs.api.SimpleServerHandler;
 import io.github.etases.edublock.rs.config.MainConfig;
 import io.github.etases.edublock.rs.entity.*;
+import io.github.etases.edublock.rs.internal.account.AccountUtil;
 import io.github.etases.edublock.rs.internal.filter.ListSessionInputFilter;
 import io.github.etases.edublock.rs.internal.pagination.PaginationUtil;
 import io.github.etases.edublock.rs.internal.subject.SubjectManager;
@@ -28,8 +29,8 @@ public class ClassroomHandler extends SimpleServerHandler {
             .addFilter("grade", (input, o) -> Integer.toString(o.getGrade()).equals(input))
             .addFilter("homeroomTeacherId", (input, o) -> o.getHomeroomTeacher() != null && Long.toString(o.getHomeroomTeacher().getId()).equals(input))
             .addFilter("homeroomTeacherUserName", (input, o) -> o.getHomeroomTeacher() != null && o.getHomeroomTeacher().getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("homeroomTeacherFirstName", (session, input, o) -> o.getHomeroomTeacher() != null && Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getFirstName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("homeroomTeacherLastName", (session, input, o) -> o.getHomeroomTeacher() != null && Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getLastName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("homeroomTeacherFirstName", (session, input, o) -> o.getHomeroomTeacher() != null && AccountUtil.containsUnaccent(Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getFirstName(), input))
+            .addFilter("homeroomTeacherLastName", (session, input, o) -> o.getHomeroomTeacher() != null && AccountUtil.containsUnaccent(Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getLastName(), input))
             .addFilter("homeroomTeacherEmail", (session, input, o) -> o.getHomeroomTeacher() != null && Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getEmail().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
             .addFilter("homeroomTeacherPhone", (session, input, o) -> o.getHomeroomTeacher() != null && Profile.getOrDefault(session, o.getHomeroomTeacher().getId()).getPhone().contains(input))
             .addFilter("year", (input, o) -> {

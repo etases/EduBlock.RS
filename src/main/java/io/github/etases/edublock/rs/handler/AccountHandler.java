@@ -32,8 +32,8 @@ public class AccountHandler extends SimpleServerHandler {
     private static final ListSessionInputFilter<Account> ACCOUNTS_FILTER = ListSessionInputFilter.<Account>create()
             .addFilter("id", (input, o) -> Long.toString(o.getId()).equals(input))
             .addFilter("username", (input, o) -> o.getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("firstname", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getFirstName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("lastname", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getLastName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("firstname", (session, input, o) -> AccountUtil.containsUnaccent(Profile.getOrDefault(session, o.getId()).getFirstName(), input))
+            .addFilter("lastname", (session, input, o) -> AccountUtil.containsUnaccent(Profile.getOrDefault(session, o.getId()).getLastName(), input))
             .addFilter("email", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getEmail().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
             .addFilter("phone", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getPhone().contains(input))
             .addFilter("year", (input, o) -> {
@@ -48,8 +48,8 @@ public class AccountHandler extends SimpleServerHandler {
     private static final ListSessionInputFilter<Student> STUDENTS_FILTER = ListSessionInputFilter.<Student>create()
             .addFilter("id", (input, o) -> Long.toString(o.getId()).equals(input))
             .addFilter("username", (input, o) -> o.getAccount().getUsername().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("firstname", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getFirstName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
-            .addFilter("lastname", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getLastName().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
+            .addFilter("firstname", (session, input, o) -> AccountUtil.containsUnaccent(Profile.getOrDefault(session, o.getId()).getFirstName(), input))
+            .addFilter("lastname", (session, input, o) -> AccountUtil.containsUnaccent(Profile.getOrDefault(session, o.getId()).getLastName(), input))
             .addFilter("email", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getEmail().toLowerCase(Locale.ROOT).contains(input.toLowerCase(Locale.ROOT)))
             .addFilter("phone", (session, input, o) -> Profile.getOrDefault(session, o.getId()).getPhone().contains(input))
             .addFilter("year", (input, o) -> {

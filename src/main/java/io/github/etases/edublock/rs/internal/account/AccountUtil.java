@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 @UtilityClass
 public final class AccountUtil {
+    private static final Pattern normalizePattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+
     public static Account createAccount(Session session, String initialUsername, String password) {
         long count = session.createNamedQuery("Account.countByUsernameRegex", Long.class)
                 .setParameter("username", initialUsername + "%")
@@ -66,11 +68,14 @@ public final class AccountUtil {
 
         try {
             String temp = Normalizer.normalize(str, Normalizer.Form.NFD);
-            Pattern pattern = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
-            return pattern.matcher(temp).replaceAll("").replace(" ", "-");
+            return normalizePattern.matcher(temp).replaceAll("").replace(" ", "-");
         } catch (Exception ex) {
             Logger.error(ex, "Error when unaccenting string");
             return str;
         }
+    }
+
+    public static boolean containsUnaccent(String text, String string) {
+        return unaccent(text).toLowerCase().contains(unaccent(string).toLowerCase());
     }
 }

@@ -41,6 +41,26 @@ public class RecordHandler extends SimpleServerHandler {
         this.requestServer = requestServer;
     }
 
+    private static Record createEmptyRecord(Student student, Classroom classroom) {
+        var record = new Record();
+        record.setStudent(student);
+        record.setClassroom(classroom);
+        record.setRecordEntry(new ArrayList<>());
+        record.setPendingRecordEntry(new ArrayList<>());
+        return record;
+    }
+
+    public static Record getOrCreateRecord(Session session, Student student, Classroom classroom) {
+        var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
+                .setParameter("studentId", student.getId())
+                .setParameter("classroomId", classroom.getId());
+        return recordQuery.uniqueResultOptional().orElseGet(() -> {
+            var newRecord = createEmptyRecord(student, classroom);
+            session.save(newRecord);
+            return newRecord;
+        });
+    }
+
     @Override
     protected void setupServer(Javalin server) {
         server.post("/record/request", this::request, JwtHandler.Role.STUDENT, JwtHandler.Role.TEACHER);
@@ -87,15 +107,6 @@ public class RecordHandler extends SimpleServerHandler {
         });
     }
 
-    private static Record createEmptyRecord(Student student, Classroom classroom) {
-        var record = new Record();
-        record.setStudent(student);
-        record.setClassroom(classroom);
-        record.setRecordEntry(new ArrayList<>());
-        record.setPendingRecordEntry(new ArrayList<>());
-        return record;
-    }
-
     private Record createEmptyRecord(long studentId, long classroomId) {
         try (var session = sessionFactory.openSession()) {
             var student = session.get(Student.class, studentId);
@@ -109,17 +120,6 @@ public class RecordHandler extends SimpleServerHandler {
             transaction.commit();
             return record;
         }
-    }
-
-    public static Record getOrCreateRecord(Session session, Student student, Classroom classroom) {
-        var recordQuery = session.createNamedQuery("Record.findByStudentAndClassroom", Record.class)
-                .setParameter("studentId", student.getId())
-                .setParameter("classroomId", classroom.getId());
-        return recordQuery.uniqueResultOptional().orElseGet(() -> {
-            var newRecord = createEmptyRecord(student, classroom);
-            session.save(newRecord);
-            return newRecord;
-        });
     }
 
     private void get(Context ctx, boolean isOwnRecordOnly) {
