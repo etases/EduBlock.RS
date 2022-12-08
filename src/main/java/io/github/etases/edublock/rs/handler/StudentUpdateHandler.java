@@ -22,10 +22,7 @@ import io.github.etases.edublock.rs.model.fabric.Record;
 import io.github.etases.edublock.rs.model.fabric.Subject;
 import io.github.etases.edublock.rs.model.input.StatisticKeyCreateInput;
 import io.github.etases.edublock.rs.model.output.*;
-import io.github.etases.edublock.rs.model.output.element.AccountWithStudentProfileOutput;
-import io.github.etases.edublock.rs.model.output.element.RecordHistoryOutput;
-import io.github.etases.edublock.rs.model.output.element.RecordOutput;
-import io.github.etases.edublock.rs.model.output.element.RecordWithStudentOutput;
+import io.github.etases.edublock.rs.model.output.element.*;
 import io.javalin.http.Context;
 import io.javalin.openapi.*;
 import lombok.Getter;
@@ -408,15 +405,15 @@ public class StudentUpdateHandler implements ServerHandler {
                     @OpenApiResponse(
                             status = "200",
                             description = "The key list",
-                            content = @OpenApiContent(from = StringListResponse.class)
+                            content = @OpenApiContent(from = StatisticKeyListResponse.class)
                     )
             }
     )
     private void getStatisticKeyList(Context ctx) {
         try (var session = sessionFactory.openSession()) {
             var keys = session.createNamedQuery("StatisticKey.findAll", StatisticKey.class).list();
-            var output = keys.stream().map(StatisticKey::getId).toList();
-            ctx.json(new StringListResponse(0, "OK", output));
+            var output = keys.stream().map(StatisticKeyOutput::fromEntity).toList();
+            ctx.json(new StatisticKeyListResponse(0, "OK", output));
         }
     }
 
